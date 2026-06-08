@@ -6,8 +6,8 @@ export default class VideoViewPage extends CheckinBasePage {
 
   heading(): Locator          { return this.page.locator('h1') }
   continueLink(): Locator     { return this.page.locator('a.govuk-button', { hasText: 'Continue' }) }
-  tryAgainLink(): Locator     { return this.page.locator('a.govuk-button', { hasText: 'Record again' }) }
-  submitAnywayLink(): Locator { return this.page.locator('a.govuk-button--secondary', { hasText: 'Submit anyway' }) }
+  recordAgainLink(): Locator     { return this.page.locator('a.govuk-button', { hasText: 'Record again' }) }
+  submitAnywayLink(): Locator { return this.page.locator('a.govuk-button--secondary', { hasText: 'Submit video anyway' }) }
 
   async clickContinue(): Promise<void>     { await this.continueLink().click() }
   async clickSubmitAnyway(): Promise<void> { await this.submitAnywayLink().click() }

@@ -11,6 +11,5 @@ export default class LivenessOutcomePage extends CheckinBasePage {
   continueLink(): Locator            { return this.page.locator('a.govuk-button', { hasText: 'Continue' }) }
   verifyAgainLink(): Locator         { return this.page.locator('a.govuk-button', { hasText: 'Verify identity again' }) }
   recordVideoInsteadLink(): Locator  { return this.page.locator('a.govuk-button', { hasText: 'Record a video instead' }) }
-
   async clickContinue(): Promise<void> { await this.continueLink().click() }
 }

@@ -1,7 +1,8 @@
 import { Page, expect } from "@playwright/test";
 import PopBasePage from "./checkinBasePage";
 import CheckinBasePage from "./checkinBasePage";
-import { MentalHealthOption } from "../../models/mentalHealth";
+import { MentalHealthOption } from "../../data/models";
+
 
 export default class MentalHealthPage extends CheckinBasePage {
   constructor(page: Page) {

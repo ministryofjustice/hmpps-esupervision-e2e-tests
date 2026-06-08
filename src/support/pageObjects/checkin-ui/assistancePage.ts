@@ -1,6 +1,7 @@
 import { Page, Locator } from "@playwright/test"
 import CheckinBasePage from "./checkinBasePage"
-import { AssistanceOption, AssistanceOptionWithComment, AssistanceSelection } from "../../models/assistance"
+import { AssistanceOption, AssistanceOptionWithComment, AssistanceSelection } from "../../data/models"
+
 
 export default class AssistancePage extends CheckinBasePage {
   constructor(page: Page) {

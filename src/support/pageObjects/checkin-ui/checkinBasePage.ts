@@ -2,7 +2,7 @@ import { expect, Locator, Page } from "@playwright/test";
 import BasePage from "../base/basePage";
 
 export default abstract class CheckinBasePage extends BasePage {
-  protected constructor(page: Page, title?: string | RegExp) {
+  constructor(page: Page, title?: string | RegExp) {
     super(page, title);
   }
 

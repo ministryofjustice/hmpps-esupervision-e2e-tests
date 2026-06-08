@@ -2,7 +2,7 @@ import { Locator, Page } from "@playwright/test";
 import CheckinBasePage from "./checkinBasePage";
 
 
-export default class CheckinIndexPage extends CheckinBasePage {
+export default class HomePage extends CheckinBasePage {
   constructor(page: Page) {
     super(page, 'Check in with your probation officer')
   }

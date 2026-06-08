@@ -10,7 +10,6 @@ month:string
 year:string
 }
 
-
 export default class PersonalDetailsPage extends CheckinBasePage {
       constructor(page: Page) {
            super(page,'Personal details')

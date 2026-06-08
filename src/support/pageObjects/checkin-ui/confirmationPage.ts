@@ -4,11 +4,7 @@ import CheckinBasePage from "./checkinBasePage";
 
 export default class ConfirmationPage extends CheckinBasePage  {
 constructor(page: Page) {
-         super(page)
+      super(page, 'Check in completed')
      }
-
-    async assertOnPage() {
-      await expect(this.page.getByRole("heading",{ name:"Check in completed"})).toBeVisible()
-    }
    
 }

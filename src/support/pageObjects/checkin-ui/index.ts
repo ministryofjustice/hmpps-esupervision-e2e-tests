@@ -1,10 +1,9 @@
 import { Page } from "playwright/types/test";
 import AssistancePage from "./assistancePage";
-import CheckinIndexPage from "./homePage";
 import ConfirmationPage from "./confirmationPage";
 import VideoInformPage from "./livenessInformPage";
 import MentalHealthPage from "./mentalHealthPage";
-import PersonalDetailsPage, { PersonDetails } from "./personalDetailsPage";
+import PersonalDetailsPage from "./personalDetailsPage";
 import CheckAnswersPage from "./checkAnswersPage";
 import LivenessInformPage from "./livenessInformPage";
 import LivenessOutcomePage from "./livenessOutcomePage";
@@ -12,9 +11,10 @@ import LivenessRecordPage from "./livenessRecordPage";
 import LivenessViewPage from "./livenessViewPage";
 import VideoViewPage from "./videoViewPage";
 import VideoRecordPage from "./videoRecordPage";
+import HomePage from "./homePage";
 
 export class CheckinPages {
-  readonly checkinIndex: CheckinIndexPage;
+  readonly homepage: HomePage;
   readonly personalDetails: PersonalDetailsPage;
   readonly mentalHealth: MentalHealthPage;
   readonly assistance: AssistancePage;
@@ -26,12 +26,9 @@ export class CheckinPages {
 
   //Liveness (local requires MOCK_LIVENESS=true)
   readonly livenessInform: LivenessInformPage;
-  readonly livenessRecord: LivenessRecordPage;
-  readonly livenessOutcome: LivenessOutcomePage;
-  readonly livenessView: LivenessViewPage;
 
   constructor(page: Page) {
-    this.checkinIndex = new CheckinIndexPage(page);
+    this.homepage = new HomePage(page);
     this.personalDetails = new PersonalDetailsPage(page);
     this.mentalHealth = new MentalHealthPage(page);
     this.videoInform = new VideoInformPage(page);
@@ -40,9 +37,6 @@ export class CheckinPages {
 
     this.assistance = new AssistancePage(page);
     this.livenessInform = new LivenessInformPage(page);
-    this.livenessRecord = new LivenessRecordPage(page);
-    this.livenessOutcome = new LivenessOutcomePage(page);
-    this.livenessView = new LivenessViewPage(page);
     this.checkAnswers = new CheckAnswersPage(page);
     this.confirmation = new ConfirmationPage(page);
   }

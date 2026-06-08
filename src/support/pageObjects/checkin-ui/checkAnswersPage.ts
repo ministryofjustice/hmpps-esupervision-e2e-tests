@@ -11,6 +11,10 @@ export default class CheckAnswersPage extends CheckinBasePage {
   confirmCheckbox(): Locator       { return this.page.locator('input[name="checkAnswers"][value="CONFIRM"]') }
   completeCheckinButton(): Locator { return this.page.locator('button', { hasText: 'Complete check in' }) }
   
+  async clickChangeLink(key:string):Promise<void> {
+    await this.getSummaryChangeLink(key).click()
+
+  }
   async submitCheckin(): Promise<void> {
     await this.confirmCheckbox().check()
     await this.completeCheckinButton().click()
