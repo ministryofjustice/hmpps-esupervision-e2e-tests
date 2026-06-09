@@ -14,7 +14,7 @@ export default class MentalHealthPage extends CheckinBasePage {
   veryWellRadio() {
     return this.radio("VERY_WELL");
   }
-  WellRadio() {
+  wellRadio() {
     return this.radio("WELL");
   }
   okRadio() {

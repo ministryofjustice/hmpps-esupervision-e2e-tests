@@ -53,7 +53,7 @@ export default class CheckinJourney {
         "VERY_WELL radio must be present",
       ).toBeAttached();
       await expect(
-        this.pages.mentalHealth.WellRadio(),
+        this.pages.mentalHealth.wellRadio(),
         "WELL radio must be present",
       ).toBeAttached();
       await expect(

@@ -1,4 +1,4 @@
-import { Page } from "playwright/test";
+import { Page } from "@playwright/test";
 import AssistancePage from "./assistancePage";
 import ConfirmationPage from "./confirmationPage";
 import MentalHealthPage from "./mentalHealthPage";
