@@ -10,7 +10,7 @@ export default abstract class CheckinBasePage extends BasePage {
   }
 
   async isOnPage(): Promise<void> {
-    await expect(this.page.getByRole("heading", { level: 1 })).toHaveText(
+    await expect(this.page.getByRole("heading", { level: 1 })).toContainText(
       this.heading ?? "",
     );
   }

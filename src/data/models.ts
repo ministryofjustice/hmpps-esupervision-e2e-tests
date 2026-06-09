@@ -1,4 +1,4 @@
-import { randomPicker, randomItems } from "../support/utils/common";
+import { randomPicker, randomItems } from "../support/utils/random";
 
 export type MentalHealthOption =
   | "VERY_WELL"

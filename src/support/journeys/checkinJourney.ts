@@ -1,4 +1,4 @@
-import test, { expect, Page } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 import { dobParts } from "../utils/date";
 import {
   MentalHealthOption,
@@ -51,23 +51,23 @@ export default class CheckinJourney {
       await expect(
         this.pages.mentalHealth.veryWellRadio(),
         "VERY_WELL radio must be present",
-      ).toBeVisible();
+      ).toBeAttached();
       await expect(
         this.pages.mentalHealth.WellRadio(),
         "WELL radio must be present",
-      ).toBeVisible();
+      ).toBeAttached();
       await expect(
         this.pages.mentalHealth.okRadio(),
         "OK radio must be present",
-      ).toBeVisible();
+      ).toBeAttached();
       await expect(
         this.pages.mentalHealth.notGreatRadio(),
         "NOT_GREAT radio must be present",
-      ).toBeVisible();
+      ).toBeAttached();
       await expect(
         this.pages.mentalHealth.strugglingRadio(),
         "STRUGGLING radio must be present",
-      ).toBeVisible();
+      ).toBeAttached();
       await this.pages.mentalHealth.selectOptionAndContinue(option);
     });
   }

@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import CheckinBasePage from "../base/checkinBasePage";
 import { MentalHealthOption } from "../../../data/models";
 
@@ -7,26 +7,28 @@ export default class MentalHealthPage extends CheckinBasePage {
     super(page, "How have you been feeling since we last spoke?");
   }
 
+  radio(option: MentalHealthOption): Locator {
+    return this.page.locator(`input[name="mentalHealth"][value="${option}"]`);
+  }
+
   veryWellRadio() {
-    return this.page.locator(`input[name="mentalHealth"][value="VERY_WELL"]`);
+    return this.radio("VERY_WELL");
   }
   WellRadio() {
-    return this.page.locator(`input[name="mentalHealth"][value="VERY_WELL"]`);
+    return this.radio("WELL");
   }
   okRadio() {
-    return this.page.locator(`input[name="mentalHealth"][value="VERY_WELL"]`);
+    return this.radio("OK");
   }
   notGreatRadio() {
-    return this.page.locator(`input[name="mentalHealth"][value="VERY_WELL"]`);
+    return this.radio("NOT_GREAT");
   }
   strugglingRadio() {
-    return this.page.locator(`input[name="mentalHealth"][value="VERY_WELL"]`);
+    return this.radio("STRUGGLING");
   }
 
   async selectOption(option: MentalHealthOption) {
-    return this.page
-      .locator(`input[name="mentalHealth"][value="${option}"]`)
-      .check();
+    return this.radio(option).check();
   }
 
   async selectOptionAndContinue(option: MentalHealthOption): Promise<void> {
