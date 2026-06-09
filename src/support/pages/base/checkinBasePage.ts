@@ -2,9 +2,9 @@ import { expect, Locator, Page } from "@playwright/test";
 import BasePage from "./basePage";
 
 export default abstract class CheckinBasePage extends BasePage {
-  protected readonly heading?: string | RegExp;
+  protected readonly heading: string | RegExp;
 
-  constructor(page: Page, heading?: string | RegExp) {
+  constructor(page: Page, heading: string | RegExp) {
     super(page);
     this.heading = heading;
   }

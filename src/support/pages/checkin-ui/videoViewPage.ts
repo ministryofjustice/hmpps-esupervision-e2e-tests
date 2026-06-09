@@ -3,7 +3,7 @@ import CheckinBasePage from "../base/checkinBasePage";
 
 export default class VideoViewPage extends CheckinBasePage {
   constructor(page: Page) {
-    super(page, "you");
+    super(page, "We cannot confirm this is you");
   }
 
   noMatchScreen(): Locator {
