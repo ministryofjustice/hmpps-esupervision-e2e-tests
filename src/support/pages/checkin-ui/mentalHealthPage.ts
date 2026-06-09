@@ -1,8 +1,6 @@
-import { Page, expect } from "@playwright/test";
-import PopBasePage from "./checkinBasePage";
-import CheckinBasePage from "./checkinBasePage";
-import { MentalHealthOption } from "../../data/models";
-
+import { Page } from "@playwright/test";
+import CheckinBasePage from "../base/checkinBasePage";
+import { MentalHealthOption } from "../../../data/models";
 
 export default class MentalHealthPage extends CheckinBasePage {
   constructor(page: Page) {
@@ -26,13 +24,13 @@ export default class MentalHealthPage extends CheckinBasePage {
   }
 
   async selectOption(option: MentalHealthOption) {
-    return this.page.locator(`input[name="mentalHealth"][value="${option}"]`).check();
+    return this.page
+      .locator(`input[name="mentalHealth"][value="${option}"]`)
+      .check();
   }
 
   async selectOptionAndContinue(option: MentalHealthOption): Promise<void> {
-    await this.selectOption(option)
-    await this.clickContinue()
+    await this.selectOption(option);
+    await this.clickContinue();
   }
-
-  
 }

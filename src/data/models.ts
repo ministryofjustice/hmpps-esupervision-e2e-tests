@@ -1,4 +1,4 @@
-import { randomPicker, randomItems } from "../utils/common";
+import { randomPicker, randomItems } from "../support/utils/common";
 
 export type MentalHealthOption =
   | "VERY_WELL"
@@ -7,7 +7,7 @@ export type MentalHealthOption =
   | "NOT_GREAT"
   | "STRUGGLING";
 
-export const MENTAL_HEALTH_OPTIONS:  MentalHealthOption[] = [
+export const MENTAL_HEALTH_OPTIONS: MentalHealthOption[] = [
   "VERY_WELL",
   "WELL",
   "OK",
@@ -15,17 +15,18 @@ export const MENTAL_HEALTH_OPTIONS:  MentalHealthOption[] = [
   "STRUGGLING",
 ];
 
-export const randomMentalHealthOption = (): MentalHealthOption=> randomPicker(MENTAL_HEALTH_OPTIONS)
+export const randomMentalHealthOption = (): MentalHealthOption =>
+  randomPicker(MENTAL_HEALTH_OPTIONS);
 
 export interface AssistanceDetails {
-    money?:string
-    housing?:string
-    employmentEducation?:string
-    mentalHealth?:string
-    alcohol?:string
-    drugs?:string
-    relationships?:string
-    other?:string
+  money?: string;
+  housing?: string;
+  employmentEducation?: string;
+  mentalHealth?: string;
+  alcohol?: string;
+  drugs?: string;
+  relationships?: string;
+  other?: string;
 }
 
 export type AssistanceOption =
@@ -58,18 +59,18 @@ const ALL_OPTIONS: AssistanceOptionWithComment[] = [
 ];
 
 export const randomAssistanceSelection = (): AssistanceSelection => {
-  const option = randomPicker(ALL_OPTIONS)
-  return { option,comment:`Test comment for ${option}`}
+  const option = randomPicker(ALL_OPTIONS);
+  return { option, comment: `Test comment for ${option}` };
+};
+
+export const randomAssistanceSelections = (count = 1): AssistanceSelection[] =>
+  randomItems(ALL_OPTIONS, count).map((option) => ({
+    option,
+    comment: `Test comment for ${option}`,
+  }));
+
+export interface CheckInPerson {
+  firstName: string;
+  lastName: string;
+  dob: Date;
 }
-
-export const randomAssistanceSelections=(count=1):AssistanceSelection[] => 
-    randomItems(ALL_OPTIONS,count).map(option => ({
-        option,
-        comment:`Test comment for ${option}`
-    }))
-
-    export interface CheckInPerson {
-        firstName:string,
-        lastName:string,
-        dob:Date
-    }
