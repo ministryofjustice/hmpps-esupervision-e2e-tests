@@ -1,0 +1,46 @@
+{
+  "name": "hmpps-esupervision-e2e-tests",
+  "version": "1.0.0",
+  "description": "Playwright E2E tests for online check ins and eSupervision user journeys",
+  "main": "index.js",
+  "scripts": {
+    "test": "ENV=dev playwright test",
+    "test:headed":"ENV=dev playwright test --headed",
+    "report":"playwright show-report",
+    "typecheck":"tsc --noEmit",
+    "lint":"eslint . ",
+    "lint:fix":"eslint . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ministryofjustice/hmpps-esupervision-e2e-tests.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ministryofjustice/hmpps-esupervision-e2e-tests/issues"
+  },
+  "homepage": "https://github.com/ministryofjustice/hmpps-esupervision-e2e-tests#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.1",
+    "@typescript-eslint/parser": "^8.0.1",
+     "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "@playwright/test": "^1.60.0",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^25.9.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "luxon": "^3.5.0"
+  }
+}
