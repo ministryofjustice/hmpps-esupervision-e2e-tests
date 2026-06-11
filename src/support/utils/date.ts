@@ -6,6 +6,10 @@ export const dueDateString = (date: DateTime): string => {
   return date.toFormat("yyyy-M-d");
 };
 
+export const displayDateString = (date: DateTime): string => {
+  return date.toFormat("d MMMM yyyy");
+};
+
 export const dobParts = (
   dob: Date,
 ): { day: string; month: string; year: string } => ({

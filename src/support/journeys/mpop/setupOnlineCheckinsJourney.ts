@@ -35,6 +35,21 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.overview.clickSetupOnlineCheckIns();
     });
   }
+
+  async completePhotoSteps(photo: PhotoOptions): Promise<void> {
+    await this.pages.photoOptions.assertOnPage;
+    await this.pages.photoOptions.completePage(photo);
+
+    if (photo === PhotoOptions.UPLOAD) {
+      await this.pages.uploadPhoto.assertOnPage;
+      await this.pages.uploadPhoto.completePage();
+    } else {
+      await this.pages.takePhoto.assertOnPage;
+      await this.pages.takePhoto.completePage();
+    }
+    await this.pages.photoMeetRules.assertOnPage;
+    await this.pages.photoMeetRules.completePage();
+  }
   async completeSetupToSummary(
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
@@ -57,19 +72,7 @@ export default class SetupOnlineCheckinsJourney {
         setup.contact,
       );
 
-      await this.pages.photoOptions.assertOnPage;
-      await this.pages.photoOptions.completePage(setup.photo);
-
-      if (setup.photo === PhotoOptions.UPLOAD) {
-        await this.pages.uploadPhoto.assertOnPage;
-        await this.pages.uploadPhoto.completePage();
-      } else {
-        await this.pages.takePhoto.assertOnPage;
-        await this.pages.takePhoto.completePage();
-      }
-      await this.pages.photoMeetRules.assertOnPage;
-      await this.pages.photoMeetRules.completePage();
-
+      await this.completePhotoSteps(setup.photo);
       await this.pages.summary.assertOnPage;
       return this.pages.summary;
     });

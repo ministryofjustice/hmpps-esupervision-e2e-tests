@@ -14,7 +14,7 @@ export default abstract class MPopBasePage {
   }
 
   async assertOnPage(): Promise<void> {
-    expect(this.getQA("pageHeading")).toContainText(this.heading);
+    await expect(this.getQA("pageHeading")).toContainText(this.heading);
   }
   async clickRadioById(qa: string, id: number): Promise<void> {
     const radio = this.getQA(qa).getByRole("radio").nth(id);
@@ -27,15 +27,17 @@ export default abstract class MPopBasePage {
     await this.getQA(qa).getByRole("radio", { name }).check();
   }
 
-  async submit() {
-    await this.getQA("submit-btn").click();
+  async submit(): Promise<void> {
+    await this.continueButton();
   }
 
-  async continueButton() {
-    const submitButton = this.getQA("submitBtn");
-    await expect(submitButton).toBeVisible();
-    await expect(submitButton).toBeEnabled();
-    await submitButton.click();
+  async continueButton(): Promise<void> {
+    const btn = this.page
+      .locator('[data-qa="submitBtn"],[data-qa="submit-btn"]')
+      .first();
+    await expect(btn).toBeVisible();
+    await expect(btn).toBeEnabled();
+    await btn.click();
   }
 
   async fillText(qa: string, note: string) {

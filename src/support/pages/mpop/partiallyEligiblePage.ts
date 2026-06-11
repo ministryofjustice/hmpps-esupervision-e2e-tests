@@ -9,7 +9,7 @@ export default class PartiallyEligiblePage extends MPopBasePage {
     );
   }
 
-  async completePage() {
+  async completePage(): Promise<void> {
     await this.submit();
   }
 }

@@ -20,16 +20,11 @@ export default class ContactDetailsPage extends MPopBasePage {
       await this.fillText("mobileNumber", contacts.mobile);
     }
     if (contacts.email != undefined) {
-      try {
-        await this.fillText("emailAddress", contacts.email);
-      } catch {
-        await this.fillText("editEmail", contacts.email);
-      }
+      await this.page
+        .locator('[data-qa="emailAddress"],[data-qa="editEmail"]')
+        .getByRole("textbox")
+        .fill(contacts.email);
     }
-    try {
-      await this.getQA("submitBtn").click();
-    } catch {
-      await this.submit();
-    }
+    await this.continueButton();
   }
 }

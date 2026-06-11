@@ -21,24 +21,28 @@ export default class ContactPreferencePage extends MPopBasePage {
   }
 
   async completePage(preference: Preference, contact?: ContactDetails) {
-    await this.changePage(contact, preference);
+    await this.changePage(preference, contact);
   }
 
-  async changePage(contact?: ContactDetails, preference?: Preference) {
-    if (contact?.email || contact?.mobile) {
-      if (contact.mobile) {
-        await this.getQA("mobileNumberAction").click();
-      } else {
-        await this.getQA("emailAddressAction").click();
-      }
-      const contactDetailsPage = new ContactDetailsPage(this.page);
-      await contactDetailsPage.assertOnPage();
-      await contactDetailsPage.completePage(contact);
+  async changePage(
+    preference?: Preference,
+    contact?: ContactDetails,
+  ): Promise<void> {
+    if (contact?.mobile !== undefined || contact?.email !== undefined) {
+      await this.getQA(
+        contact.mobile !== undefined
+          ? "mobileNumberAction"
+          : "emailAddressAction",
+      ).click();
+
+      const details = new ContactDetailsPage(this.page);
+      await details.assertOnPage();
+      await details.completePage(contact);
     }
 
     if (preference !== undefined) {
       await this.clickRadioById("checkInPreferredComs", preference);
     }
-    await this.getQA("submitBtn").click();
+    await this.continueButton();
   }
 }
