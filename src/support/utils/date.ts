@@ -13,3 +13,6 @@ export const dobParts = (
   month: (dob.getMonth() + 1).toString(),
   year: dob.getFullYear().toString(),
 });
+
+export const firstCheckinDateString = (daysAhead = 7): string =>
+  today.plus({ days: daysAhead }).toFormat("d/M/yyyy");
