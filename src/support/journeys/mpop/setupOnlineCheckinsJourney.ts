@@ -44,7 +44,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.uploadPhoto.assertOnPage();
       await this.pages.uploadPhoto.completePage();
     } else {
-      await this.pages.takePhoto.assertOnPage;
+      await this.pages.takePhoto.assertOnPage();
       await this.pages.takePhoto.completePage();
     }
     await this.pages.photoMeetRules.assertOnPage;
@@ -89,23 +89,24 @@ export default class SetupOnlineCheckinsJourney {
 
   async changeContactPreferenceFromSummary(
     summary: CheckInSummaryPage,
-    preference: Preference,
-    contact?: ContactDetails,
+    opts: { preference?: Preference; contact?: ContactDetails },
   ): Promise<void> {
     await summary.clickChange("contactPreference");
     await this.pages.contactPreference.assertOnPage();
-    await this.pages.contactPreference.changePage(preference, contact);
+    await this.pages.contactPreference.changePage(
+      opts.preference,
+      opts.contact,
+    );
     await summary.assertOnPage();
   }
 
-
   async changeDateFrequencyFromSummary(
     summary: CheckInSummaryPage,
-  opts: {date?:string; frequency?:FrequencyOptions}
+    opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
-    await summary.clickChange("frequency");
+    await summary.clickChange(opts.date! == undefined ? "date" : "frequency");
     await this.pages.dateFrequency.assertOnPage();
-    await this.pages.dateFrequency.changePage(opts.date,opts.frequency);
+    await this.pages.dateFrequency.changePage(opts.date, opts.frequency);
     await summary.assertOnPage();
   }
 }

@@ -4,9 +4,7 @@ import MPopBasePage from "../base/mpopBasePage";
 import { env } from "../../../config/env";
 
 export default class OverviewPage extends MPopBasePage {
-  constructor(
-    page: Page
-  ) {
+  constructor(page: Page) {
     super(page, "Overview");
   }
   async goTo(crn: string): Promise<void> {

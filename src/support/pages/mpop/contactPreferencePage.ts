@@ -24,11 +24,11 @@ export default class ContactPreferencePage extends MPopBasePage {
     await this.fillFields(preference, contact);
   }
 
-    async changePage(preference: Preference, contact?: ContactDetails) {
+  async changePage(preference?: Preference, contact?: ContactDetails) {
     await this.fillFields(preference, contact);
   }
 
-  async fillFields(
+  private async fillFields(
     preference?: Preference,
     contact?: ContactDetails,
   ): Promise<void> {
