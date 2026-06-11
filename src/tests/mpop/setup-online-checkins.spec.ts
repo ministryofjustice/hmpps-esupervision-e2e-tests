@@ -6,8 +6,6 @@ import { PhotoOptions } from "../../support/pages/mpop/photoOptionsPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
 import { TEST_CONTACT } from "../../data/mpop/testData";
-import { terminateSetup } from "../../api/offenderSetup";
-import { getToken } from "../../api/auth";
 
 const crn = env.mpopTestCrn();
 
