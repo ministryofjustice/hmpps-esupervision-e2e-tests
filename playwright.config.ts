@@ -17,8 +17,7 @@ export default defineConfig({
     ["github"],
     ["line"],
     ["html", { open: "never" }],
-    ["junit", { outputFile: "junit.xml" }],
-    ["json", { outputFile: "results.json" }],
+    ["junit", { outputFile: "junit.xml" }]
   ],
   use: {
     timezoneId: "Europe/London",
