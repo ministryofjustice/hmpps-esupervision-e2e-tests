@@ -47,7 +47,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.takePhoto.assertOnPage();
       await this.pages.takePhoto.completePage();
     }
-    await this.pages.photoMeetRules.assertOnPage;
+    await this.pages.photoMeetRules.assertOnPage();
     await this.pages.photoMeetRules.completePage();
   }
   async completeSetupToSummary(
@@ -104,7 +104,7 @@ export default class SetupOnlineCheckinsJourney {
     summary: CheckInSummaryPage,
     opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
-    await summary.clickChange(opts.date! == undefined ? "date" : "frequency");
+    await summary.clickChange(opts.date !== undefined ? "date" : "frequency");
     await this.pages.dateFrequency.assertOnPage();
     await this.pages.dateFrequency.changePage(opts.date, opts.frequency);
     await summary.assertOnPage();

@@ -37,7 +37,7 @@ test("practitioner sets up online check ins for an offender", async ({
       summary.summaryValueLocator("contactPreference"),
     ).toContainText("Email");
     await expect(summary.summaryValueLocator("mobile")).toContainText(
-      " 07771900900",
+      "07771900900",
     );
     await expect(summary.summaryValueLocator("email")).toContainText(
       "test@example.com",
