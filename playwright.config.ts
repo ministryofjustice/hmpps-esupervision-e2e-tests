@@ -2,7 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 import process from "process";
 
-dotenv.config({ path: process.env.ENV ? `.env.${process.env.ENV}` : ".env" });
+dotenv.config({
+  path: process.env.ENV ? `.env.${process.env.ENV}` : ".env",
+  quiet: true,
+});
 
 export default defineConfig({
   fullyParallel: true,
@@ -10,7 +13,13 @@ export default defineConfig({
   retries: 0,
   timeout: 60000,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  reporter: [
+    ["github"],
+    ["line"],
+    ["html", { open: "never" }],
+    ["junit", { outputFile: "junit.xml" }],
+    ["json", { outputFile: "results.json" }],
+  ],
   use: {
     timezoneId: "Europe/London",
     screenshot: "only-on-failure",

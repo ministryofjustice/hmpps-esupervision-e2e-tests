@@ -9,4 +9,5 @@ node_modules/
 .env.dev
 .env.local
 settings.json
-
+junit.xml
+results.json
