@@ -44,7 +44,7 @@ export default class ContactPreferencePage extends MPopBasePage {
       contact.mobile !== undefined &&
       (await this.isMissing("mobileNumberValue"));
     const addEmail =
-      contact.mobile !== undefined &&
+      contact.email !== undefined &&
       (await this.isMissing("emailAddressValue"));
     if (!addMobile && !addEmail) return;
 
