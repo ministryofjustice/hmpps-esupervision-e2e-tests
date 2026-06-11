@@ -5,6 +5,7 @@ import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../support/pages/mpop/photoOptionsPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
+import { TEST_CONTACT } from "../../data/mpop/testData";
 
 const crn = env.mpopTestCrn();
 
@@ -17,7 +18,7 @@ test("practitioner changes answers from the summary", async ({ page }) => {
     date: firstCheckinDateString(8),
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.TEXT,
-    contact: { mobile: "07771900900" },
+    contact: { mobile: TEST_CONTACT.mobile },
     photo: PhotoOptions.UPLOAD,
     eligibilityIds: [9],
   });

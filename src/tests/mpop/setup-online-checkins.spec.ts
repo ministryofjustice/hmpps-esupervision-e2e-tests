@@ -5,6 +5,9 @@ import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../support/pages/mpop/photoOptionsPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
+import { TEST_CONTACT } from "../../data/mpop/testData";
+import { terminateSetup } from "../../api/offenderSetup";
+import { getToken } from "../../api/auth";
 
 const crn = env.mpopTestCrn();
 
@@ -21,7 +24,7 @@ test("practitioner sets up online check ins for an offender", async ({
     date: firstCheckinDateString(7),
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.EMAIL,
-    contact: { mobile: " 07771900900", email: "test@example.com" },
+    contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
     photo: PhotoOptions.UPLOAD,
     eligibilityIds: [9],
   });
@@ -37,10 +40,10 @@ test("practitioner sets up online check ins for an offender", async ({
       summary.summaryValueLocator("contactPreference"),
     ).toContainText("Email");
     await expect(summary.summaryValueLocator("mobile")).toContainText(
-      "07771900900",
+      TEST_CONTACT.mobile,
     );
     await expect(summary.summaryValueLocator("email")).toContainText(
-      "test@example.com",
+      TEST_CONTACT.email,
     );
     await expect(
       summary.summaryValueLocator("photo").locator("img"),
