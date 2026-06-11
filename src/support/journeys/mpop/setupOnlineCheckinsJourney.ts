@@ -1,4 +1,4 @@
-import { Page } from "playwright-core";
+import { Page } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
@@ -37,11 +37,11 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   async completePhotoSteps(photo: PhotoOptions): Promise<void> {
-    await this.pages.photoOptions.assertOnPage;
+    await this.pages.photoOptions.assertOnPage();
     await this.pages.photoOptions.completePage(photo);
 
     if (photo === PhotoOptions.UPLOAD) {
-      await this.pages.uploadPhoto.assertOnPage;
+      await this.pages.uploadPhoto.assertOnPage();
       await this.pages.uploadPhoto.completePage();
     } else {
       await this.pages.takePhoto.assertOnPage;
@@ -54,27 +54,58 @@ export default class SetupOnlineCheckinsJourney {
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
     return test.step("Compete set up online check ins", async () => {
-      await this.pages.eligibility.assertOnPage;
+      await this.pages.eligibility.assertOnPage();
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
-      await this.pages.eligible.assertOnPage;
+      await this.pages.eligible.assertOnPage();
       await this.pages.eligible.completePage(0);
 
-      await this.pages.spoApproval.assertOnPage;
+      await this.pages.spoApproval.assertOnPage();
       await this.pages.spoApproval.completePage();
 
-      await this.pages.dateFrequency.assertOnPage;
+      await this.pages.dateFrequency.assertOnPage();
       await this.pages.dateFrequency.completePage(setup.date, setup.frequency);
 
-      await this.pages.contactPreference.assertOnPage;
+      await this.pages.contactPreference.assertOnPage();
       await this.pages.contactPreference.completePage(
         setup.preference,
         setup.contact,
       );
 
       await this.completePhotoSteps(setup.photo);
-      await this.pages.summary.assertOnPage;
+      await this.pages.summary.assertOnPage();
       return this.pages.summary;
     });
+  }
+
+  async changePhotoSummary(
+    summary: CheckInSummaryPage,
+    photo: PhotoOptions,
+  ): Promise<void> {
+    await summary.clickChange("photo");
+    await this.completePhotoSteps(photo);
+    await summary.assertOnPage();
+  }
+
+  async changeContactPreferenceFromSummary(
+    summary: CheckInSummaryPage,
+    preference: Preference,
+    contact?: ContactDetails,
+  ): Promise<void> {
+    await summary.clickChange("contactPreference");
+    await this.pages.contactPreference.assertOnPage();
+    await this.pages.contactPreference.changePage(preference, contact);
+    await summary.assertOnPage();
+  }
+
+
+  async changeDateFrequencyFromSummary(
+    summary: CheckInSummaryPage,
+  opts: {date?:string; frequency?:FrequencyOptions}
+  ): Promise<void> {
+    await summary.clickChange("frequency");
+    await this.pages.dateFrequency.assertOnPage();
+    await this.pages.dateFrequency.changePage(opts.date,opts.frequency);
+    await summary.assertOnPage();
   }
 }

@@ -14,10 +14,14 @@ export default class DateFrequencyPage extends MPopBasePage {
   }
 
   async completePage(date: string, frequencyId: number) {
-    await this.changePage(date, frequencyId);
+    await this.fillFields(date, frequencyId);
   }
 
-  async changePage(date?: string, frequencyId?: number) {
+    async changePage(date?: string, frequencyId?: number) {
+    await this.fillFields(date, frequencyId);
+  }
+
+  async fillFields(date?: string, frequencyId?: number) {
     if (date !== undefined) {
       await this.getClass("moj-datepicker").locator('[type="text"]').fill(date);
     }

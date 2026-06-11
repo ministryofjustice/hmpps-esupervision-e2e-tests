@@ -10,7 +10,7 @@ const crn = env.mpopTestCrn();
 
 const firstCheckin = firstCheckinDateString();
 
-test("practitioner sets up onlie check ins for an offender", async ({
+test("practitioner sets up online check ins for an offender", async ({
   page,
 }) => {
   const journey = new SetupOnlineCheckinsJourney(page);
@@ -21,7 +21,7 @@ test("practitioner sets up onlie check ins for an offender", async ({
     date: firstCheckinDateString(7),
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.EMAIL,
-    contact: { email: "test@example.com" },
+    contact: { mobile:" 07771 900 900", email: "test@example.com" },
     photo: PhotoOptions.UPLOAD,
     eligibilityIds: [9],
   });
@@ -33,12 +33,11 @@ test("practitioner sets up onlie check ins for an offender", async ({
     await expect(summary.summaryValueLocator("frequency")).toContainText(
       "Every week",
     );
-    await page.pause();
     await expect(
       summary.summaryValueLocator("contactPreference"),
     ).toContainText("Email");
     await expect(summary.summaryValueLocator("mobile")).toContainText(
-      "No mobile number",
+      " 07771 900 900",
     );
     await expect(summary.summaryValueLocator("email")).toContainText(
       "test@example.com",

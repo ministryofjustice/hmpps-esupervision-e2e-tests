@@ -1,12 +1,11 @@
-import { Locator, Page } from "playwright-core";
+import { Locator, Page } from "@playwright/test";
 import { expect } from "playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 import { env } from "../../../config/env";
 
 export default class OverviewPage extends MPopBasePage {
   constructor(
-    page: Page,
-    private readonly crn?: string,
+    page: Page
   ) {
     super(page, "Overview");
   }

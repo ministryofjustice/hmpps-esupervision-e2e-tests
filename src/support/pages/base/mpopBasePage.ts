@@ -10,7 +10,7 @@ export default abstract class MPopBasePage {
     return locator.locator(`[data-qa="${qa}"]`);
   }
   getClass(cssClass: string, locator: Locator | Page = this.page): Locator {
-    return locator.locator(`[class="${cssClass}"]`);
+    return locator.locator(`.${cssClass}`);
   }
 
   async assertOnPage(): Promise<void> {
