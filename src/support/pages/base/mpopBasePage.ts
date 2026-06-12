@@ -23,7 +23,7 @@ export default abstract class MPopBasePage {
     await expect(radio).toBeChecked();
   }
 
-  /** the app has two ids for same button ("submitBtn and submit-btn") */
+  /** the app has two ids for same button ("submitBtn and submit-btn") **/
 
   async clickContinue(): Promise<void> {
     const btn = this.page

@@ -15,6 +15,8 @@ cp .env.example .env.dev   # then fill in the values
 ```bash
 npm test            # run against dev (ENV=dev)
 npm run test:headed # watch it run in a browser
+npm run test:mpop  # run only mpop setup specs (src/tests/mpop)
+npm run test:mpop:headed # run only mpop setup specs (src/tests/mpop) in browser
 npm run report      # open the last HTML report
 npm run typecheck   # tsc --noEmit
 npm run lint        # eslint
