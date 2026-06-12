@@ -7,6 +7,6 @@ export default class OutcomePage extends MPopBasePage {
   }
 
   async completePage(): Promise<void> {
-    await this.submit();
+    await this.clickContinue();
   }
 }

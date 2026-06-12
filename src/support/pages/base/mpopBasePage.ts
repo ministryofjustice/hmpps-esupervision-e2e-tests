@@ -23,19 +23,12 @@ export default abstract class MPopBasePage {
     await expect(radio).toBeChecked();
   }
 
-  async clickRadioByName(qa: string, name: string): Promise<void> {
-    await this.getQA(qa).getByRole("radio", { name }).check();
-  }
+  /** the app has two ids for same button ("submitBtn and submit-btn") */
 
-  async submit(): Promise<void> {
-    await this.continueButton();
-  }
-
-  async continueButton(): Promise<void> {
+  async clickContinue(): Promise<void> {
     const btn = this.page
       .locator('[data-qa="submitBtn"],[data-qa="submit-btn"]')
       .first();
-    await expect(btn).toBeVisible();
     await expect(btn).toBeEnabled();
     await btn.click();
   }
@@ -43,13 +36,5 @@ export default abstract class MPopBasePage {
   async fillText(qa: string, note: string) {
     await this.getQA(qa).getByRole("textbox").clear();
     await this.getQA(qa).getByRole("textbox").fill(note);
-  }
-
-  summaryValueByKey(key: string | RegExp): Locator {
-    return this.getClass("govuk-summary-list__row")
-      .filter({
-        has: this.page.locator(".govuk-summary-list__key", { hasText: key }),
-      })
-      .locator(".govuk-summary-list__value");
   }
 }

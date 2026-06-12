@@ -8,6 +8,6 @@ export default class EligiblePage extends MPopBasePage {
 
   async completePage(id: number) {
     await this.clickRadioById("eligibility-options", id);
-    await this.submit();
+     await this.clickContinue();
   }
 }

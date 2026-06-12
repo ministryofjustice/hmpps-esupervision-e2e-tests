@@ -47,8 +47,4 @@ export default class CheckInSummaryPage extends MPopBasePage {
   async clickChange(field: SummaryField): Promise<void> {
     await this.getQA(CHANGE_LINK_QA[field]).click();
   }
-
-  async submitSetup(): Promise<void> {
-    await this.submit();
-  }
 }

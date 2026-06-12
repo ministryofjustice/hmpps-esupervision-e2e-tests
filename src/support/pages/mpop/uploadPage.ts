@@ -12,7 +12,7 @@ export default class UploadPhotoPage extends MPopBasePage {
 
   async completePage() {
     await this.uploadPhoto();
-    await this.submit();
+    await this.clickContinue();
   }
 
   fileUploadInput() {

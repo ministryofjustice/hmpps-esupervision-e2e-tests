@@ -28,6 +28,6 @@ export default class DateFrequencyPage extends MPopBasePage {
     if (frequencyId !== undefined) {
       await this.clickRadioById("checkInFrequency", frequencyId);
     }
-    await this.submit();
+    await this.clickContinue();
   }
 }

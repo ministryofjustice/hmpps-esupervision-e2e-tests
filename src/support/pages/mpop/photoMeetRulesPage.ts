@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export default class PhotoMeetRulesPage extends MPopBasePage {
@@ -7,10 +7,6 @@ export default class PhotoMeetRulesPage extends MPopBasePage {
   }
 
   async completePage(): Promise<void> {
-    await this.submit();
-  }
-
-  async checkPhotoRulesDisplayed() {
-    await expect(this.page.locator("#main-content form ul")).toBeVisible();
+   await this.clickContinue();
   }
 }

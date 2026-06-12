@@ -16,6 +16,6 @@ export default class TakePhotoPage extends MPopBasePage {
 
   async completePage() {
     await this.takePhoto();
-    await this.submit();
+    await this.clickContinue();
   }
 }

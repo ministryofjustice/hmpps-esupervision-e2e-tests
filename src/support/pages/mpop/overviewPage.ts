@@ -1,4 +1,4 @@
-import { Locator, Page, expect } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 import { env } from "../../../config/env";
 
@@ -15,8 +15,5 @@ export default class OverviewPage extends MPopBasePage {
     });
     await expect(link).toBeVisible();
     await link.click();
-  }
-  nextCheckInDue(): Locator {
-    return this.summaryValueByKey("Next check in due");
   }
 }

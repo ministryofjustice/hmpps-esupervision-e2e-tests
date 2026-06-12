@@ -7,12 +7,12 @@ export interface ContactDetails {
   email?: string;
 }
 
-export default class ContactDetailsPage extends MPopBasePage {
+export default class UpdateContactDetailsPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Edit contact details for");
   }
 
-  async completePage(contacts: ContactDetails) {
+  async completePage(contacts: ContactDetails):Promise<void> {
     if (contacts.phone != undefined) {
       await this.fillText("phoneNumber", contacts.phone);
     }
@@ -20,11 +20,12 @@ export default class ContactDetailsPage extends MPopBasePage {
       await this.fillText("mobileNumber", contacts.mobile);
     }
     if (contacts.email != undefined) {
-      await this.page
+      const email =  this.page
         .locator('[data-qa="emailAddress"],[data-qa="editEmail"]')
         .getByRole("textbox")
-        .fill(contacts.email);
+        await email.clear()
+        await email.fill(contacts.email);
     }
-    await this.continueButton();
+    await this.clickContinue();
   }
 }

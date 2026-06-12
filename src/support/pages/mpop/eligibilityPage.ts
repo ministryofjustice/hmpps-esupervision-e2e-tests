@@ -10,6 +10,6 @@ export default class EligibilityPage extends MPopBasePage {
     for (const id of ids) {
       await this.page.getByRole("checkbox").nth(id).check();
     }
-    await this.submit();
+    await this.clickContinue();
   }
 }

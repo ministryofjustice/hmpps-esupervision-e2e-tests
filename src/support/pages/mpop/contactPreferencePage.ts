@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import ContactDetailsPage, { ContactDetails } from "./updateContactDetailsPage";
+import UpdateContactDetailsPage, { ContactDetails } from "./updateContactDetailsPage";
 
 export enum Preference {
   TEXT = 0,
@@ -8,12 +8,6 @@ export enum Preference {
 }
 
 export type { ContactDetails };
-
-export type contactMethod =
-  | "Text message"
-  | "email"
-  | "textUpdate"
-  | "emailUpdate";
 
 export default class ContactPreferencePage extends MPopBasePage {
   constructor(page: Page) {
@@ -34,7 +28,7 @@ export default class ContactPreferencePage extends MPopBasePage {
     if (preference !== undefined) {
       await this.clickRadioById("checkInPreferredComs", preference);
     }
-    await this.continueButton();
+    await this.clickContinue();
   }
 
   private async addMissingContactDetails(
@@ -52,7 +46,7 @@ export default class ContactPreferencePage extends MPopBasePage {
       addMobile ? "mobileNumberAction" : "emailAddressAction",
     ).click();
 
-    const details = new ContactDetailsPage(this.page);
+    const details = new UpdateContactDetailsPage(this.page);
     await details.assertOnPage();
     await details.completePage({
       mobile: addMobile ? contact.mobile : undefined,
