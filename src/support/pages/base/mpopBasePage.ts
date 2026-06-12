@@ -13,8 +13,10 @@ export default abstract class MPopBasePage {
     return locator.locator(`.${cssClass}`);
   }
 
-  async assertOnPage(): Promise<void> {
-    await expect(this.getQA("pageHeading")).toContainText(this.heading);
+  async assertOnPage(timeout = 10000): Promise<void> {
+    await expect(this.getQA("pageHeading")).toContainText(this.heading, {
+      timeout,
+    });
   }
   async clickRadioById(qa: string, id: number): Promise<void> {
     const radio = this.getQA(qa).getByRole("radio").nth(id);
