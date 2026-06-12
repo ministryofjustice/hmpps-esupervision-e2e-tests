@@ -13,6 +13,6 @@ export default class PhotoOptionsPage extends MPopBasePage {
 
   async completePage(optionId: PhotoOptions) {
     await this.clickRadioById("uploadOptions", optionId);
-     await this.clickContinue();
+    await this.clickContinue();
   }
 }

@@ -1,6 +1,8 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import UpdateContactDetailsPage, { ContactDetails } from "./updateContactDetailsPage";
+import UpdateContactDetailsPage, {
+  ContactDetails,
+} from "./updateContactDetailsPage";
 
 export enum Preference {
   TEXT = 0,

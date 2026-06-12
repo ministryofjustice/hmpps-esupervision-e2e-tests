@@ -8,6 +8,6 @@ export default class SpoApprovalPage extends MPopBasePage {
 
   async completePage() {
     await this.page.getByRole("checkbox").check();
-   await this.clickContinue();
+    await this.clickContinue();
   }
 }

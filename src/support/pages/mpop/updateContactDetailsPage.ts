@@ -12,7 +12,7 @@ export default class UpdateContactDetailsPage extends MPopBasePage {
     super(page, "Edit contact details for");
   }
 
-  async completePage(contacts: ContactDetails):Promise<void> {
+  async completePage(contacts: ContactDetails): Promise<void> {
     if (contacts.phone != undefined) {
       await this.fillText("phoneNumber", contacts.phone);
     }
@@ -20,11 +20,11 @@ export default class UpdateContactDetailsPage extends MPopBasePage {
       await this.fillText("mobileNumber", contacts.mobile);
     }
     if (contacts.email != undefined) {
-      const email =  this.page
+      const email = this.page
         .locator('[data-qa="emailAddress"],[data-qa="editEmail"]')
-        .getByRole("textbox")
-        await email.clear()
-        await email.fill(contacts.email);
+        .getByRole("textbox");
+      await email.clear();
+      await email.fill(contacts.email);
     }
     await this.clickContinue();
   }

@@ -7,6 +7,6 @@ export default class PhotoMeetRulesPage extends MPopBasePage {
   }
 
   async completePage(): Promise<void> {
-   await this.clickContinue();
+    await this.clickContinue();
   }
 }
