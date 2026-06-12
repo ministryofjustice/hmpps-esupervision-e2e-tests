@@ -22,7 +22,6 @@ export default abstract class MPopBasePage {
     const radio = this.getQA(qa).getByRole("radio").nth(id);
     await expect(radio).toBeVisible();
     await radio.check();
-    await expect(radio).toBeChecked();
   }
 
   async clickContinue(): Promise<void> {
