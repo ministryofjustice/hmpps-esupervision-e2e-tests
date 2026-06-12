@@ -45,7 +45,6 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.uploadPhoto.completePage();
     } else {
       await this.pages.takePhoto.assertOnPage();
-      await this.pages.takePhoto.completePage();
     }
     await this.pages.photoMeetRules.assertOnPage();
     await this.pages.photoMeetRules.completePage();
@@ -53,7 +52,7 @@ export default class SetupOnlineCheckinsJourney {
   async completeSetupToSummary(
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
-    return test.step("Compete set up online check ins", async () => {
+    return test.step("Complete set up online check ins", async () => {
       await this.pages.eligibility.assertOnPage();
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 

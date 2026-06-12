@@ -26,7 +26,7 @@ export default abstract class MPopBasePage {
   }
 
   async clickContinue(): Promise<void> {
-    // the app has two ids for same button ("submitBtn and submit-btn")
+    // the app has two data-qa for same button ("submitBtn and submit-btn")
     const btn = this.page
       .locator('[data-qa="submitBtn"],[data-qa="submit-btn"]')
       .first();

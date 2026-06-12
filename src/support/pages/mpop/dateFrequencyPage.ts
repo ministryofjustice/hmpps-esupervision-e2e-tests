@@ -13,20 +13,20 @@ export default class DateFrequencyPage extends MPopBasePage {
     super(page, "Set up online check ins");
   }
 
-  async completePage(date: string, frequencyId: number) {
-    await this.fillFields(date, frequencyId);
+  async completePage(date: string, frequency: FrequencyOptions) {
+    await this.fillFields(date, frequency);
   }
 
-  async changePage(date?: string, frequencyId?: number) {
-    await this.fillFields(date, frequencyId);
+  async changePage(date?: string, frequency?: FrequencyOptions) {
+    await this.fillFields(date, frequency);
   }
 
-  private async fillFields(date?: string, frequencyId?: number) {
+  private async fillFields(date?: string, frequency?: FrequencyOptions) {
     if (date !== undefined) {
       await this.getClass("moj-datepicker").locator('[type="text"]').fill(date);
     }
-    if (frequencyId !== undefined) {
-      await this.clickRadioById("checkInFrequency", frequencyId);
+    if (frequency !== undefined) {
+      await this.clickRadioById("checkInFrequency", frequency);
     }
     await this.clickContinue();
   }

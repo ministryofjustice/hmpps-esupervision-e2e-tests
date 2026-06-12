@@ -7,9 +7,8 @@ import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
 import { TEST_CONTACT } from "../../data/mpop/testData";
 
-const crn = env.mpopTestCrn();
-
 test("practitioner changes answers from the summary", async ({ page }) => {
+  const crn = env.mpopTestCrn();
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(crn);

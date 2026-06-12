@@ -3,9 +3,10 @@ import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineC
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { env } from "../../config/env";
 
-const crn = env.mpopTestCrn();
+
 
 const startEligibility = async (page: Page): Promise<MpopPages> => {
+    const crn = env.mpopTestCrn();
   const pages = new MpopPages(page);
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
@@ -14,7 +15,7 @@ const startEligibility = async (page: Page): Promise<MpopPages> => {
   return pages;
 };
 
-test("eligibility answers lead to the NOT ELIGIBLE outcome", async ({
+test("eligibility answer leads to the NOT ELIGIBLE outcome", async ({
   page,
 }) => {
   const pages = await startEligibility(page);
@@ -22,7 +23,7 @@ test("eligibility answers lead to the NOT ELIGIBLE outcome", async ({
   await pages.ineligible.assertOnPage();
 });
 
-test("eligibility answers leads to the PARTIALLY ELIGIBLE outcome", async ({
+test("eligibility answer leads to the PARTIALLY ELIGIBLE outcome", async ({
   page,
 }) => {
   const pages = await startEligibility(page);
