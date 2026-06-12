@@ -11,13 +11,13 @@ test("practitioner sets up online check ins for an offender", async ({
   page,
 }) => {
   const crn = env.mpopTestCrn();
-  const firstCheckin = firstCheckinDateString();
+  const firstCheckin = firstCheckinDateString(7);
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(crn);
 
   const summary = await journey.completeSetupToSummary({
-    date: firstCheckinDateString(7),
+    date: firstCheckin,
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.EMAIL,
     contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },

@@ -106,7 +106,7 @@ export default class SetupOnlineCheckinsJourney {
   ): Promise<void> {
     if (opts.date === undefined && opts.frequency === undefined) {
       throw new Error(
-        "changeDateFrequencyFromSummary requires atleast one of date or frequency",
+        "changeDateFrequencyFromSummary requires at least one of date or frequency",
       );
     }
     await summary.clickChange(opts.date !== undefined ? "date" : "frequency");
