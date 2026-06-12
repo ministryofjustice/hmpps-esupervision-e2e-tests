@@ -104,6 +104,11 @@ export default class SetupOnlineCheckinsJourney {
     summary: CheckInSummaryPage,
     opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
+    if (opts.date === undefined && opts.frequency === undefined) {
+      throw new Error(
+        "changeDateFrequencyFromSummary requires atleast one of date or frequency",
+      );
+    }
     await summary.clickChange(opts.date !== undefined ? "date" : "frequency");
     await this.pages.dateFrequency.assertOnPage();
     await this.pages.dateFrequency.changePage(opts.date, opts.frequency);

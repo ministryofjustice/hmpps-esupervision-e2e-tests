@@ -10,7 +10,7 @@
     "test:mpop:headed": "ENV=dev playwright test src/tests/mpop --headed",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . ",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "repository": {

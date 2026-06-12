@@ -6,10 +6,6 @@ export const dueDateString = (date: DateTime): string => {
   return date.toFormat("yyyy-M-d");
 };
 
-export const displayDateString = (date: DateTime): string => {
-  return date.toFormat("d MMMM yyyy");
-};
-
 export const dobParts = (
   dob: Date,
 ): { day: string; month: string; year: string } => ({
@@ -19,4 +15,4 @@ export const dobParts = (
 });
 
 export const firstCheckinDateString = (daysAhead = 7): string =>
-  today.plus({ days: daysAhead }).toFormat("d/M/yyyy");
+  DateTime.now().plus({ days: daysAhead }).toFormat("d/M/yyyy");
