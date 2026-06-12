@@ -11,7 +11,7 @@ export default class TakePhotoPage extends MPopBasePage {
       const takePhotoButton = document.getElementById("take-photo");
       takePhotoButton?.removeAttribute("disabled");
       takePhotoButton?.removeAttribute("aria-disabled");
-       await this.clickContinue();
+      await this.clickContinue();
     });
   }
 }

@@ -7,8 +7,6 @@ import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
 import { TEST_CONTACT } from "../../data/mpop/testData";
 
-
-
 const firstCheckin = firstCheckinDateString();
 
 test("practitioner sets up online check ins for an offender", async ({

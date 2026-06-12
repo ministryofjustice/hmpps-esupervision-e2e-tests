@@ -3,10 +3,8 @@ import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineC
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { env } from "../../config/env";
 
-
-
 const startEligibility = async (page: Page): Promise<MpopPages> => {
-    const crn = env.mpopTestCrn();
+  const crn = env.mpopTestCrn();
   const pages = new MpopPages(page);
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
