@@ -13,13 +13,13 @@ export default class UpdateContactDetailsPage extends MPopBasePage {
   }
 
   async completePage(contacts: ContactDetails): Promise<void> {
-    if (contacts.phone != undefined) {
+    if (contacts.phone !== undefined) {
       await this.fillText("phoneNumber", contacts.phone);
     }
-    if (contacts.mobile != undefined) {
+    if (contacts.mobile !== undefined) {
       await this.fillText("mobileNumber", contacts.mobile);
     }
-    if (contacts.email != undefined) {
+    if (contacts.email !== undefined) {
       const email = this.page
         .locator('[data-qa="emailAddress"],[data-qa="editEmail"]')
         .getByRole("textbox");

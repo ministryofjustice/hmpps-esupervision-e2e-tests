@@ -7,6 +7,9 @@ export default class EligibilityPage extends MPopBasePage {
   }
 
   async completePage(ids: number[]) {
+    // selects eligibility criteria by checkbox position, which is fragile
+    // if the form's question order changes. To be migrated to value based
+    // selection in a later PR
     for (const id of ids) {
       await this.page.getByRole("checkbox").nth(id).check();
     }
