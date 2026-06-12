@@ -34,6 +34,7 @@ test("practitioner changes answers from the summary", async ({ page }) => {
   await test.step("Change contact preference: Text message -> Email", async () => {
     await journey.changeContactPreferenceFromSummary(summary, {
       preference: Preference.EMAIL,
+      contact: { email: TEST_CONTACT.email },
     });
     await expect(
       summary.summaryValueLocator("contactPreference"),

@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export default class TakePhotoPage extends MPopBasePage {
@@ -7,12 +7,10 @@ export default class TakePhotoPage extends MPopBasePage {
   }
 
   async takePhoto() {
-    await this.page.evaluate(async () => {
-      const takePhotoButton = document.getElementById("take-photo");
-      takePhotoButton?.removeAttribute("disabled");
-      takePhotoButton?.removeAttribute("aria-disabled");
-      takePhotoButton?.click();
-    });
+    const btn = this.page.locator("#take-photo");
+    await expect(btn).toBeEnabled({ timeout: 10000 });
+    await btn.click();
+    btn?.click();
   }
 
   async completePage() {
