@@ -45,6 +45,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.uploadPhoto.completePage();
     } else {
       await this.pages.takePhoto.assertOnPage();
+      await this.pages.uploadPhoto.completePage();
     }
     await this.pages.photoMeetRules.assertOnPage();
     await this.pages.photoMeetRules.completePage();
