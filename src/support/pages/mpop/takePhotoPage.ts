@@ -10,7 +10,6 @@ export default class TakePhotoPage extends MPopBasePage {
     const btn = this.page.locator("#take-photo");
     await expect(btn).toBeEnabled({ timeout: 10000 });
     await btn.click();
-    btn?.click();
   }
 
   async completePage() {
