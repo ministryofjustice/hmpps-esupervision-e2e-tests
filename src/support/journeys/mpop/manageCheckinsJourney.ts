@@ -5,7 +5,7 @@ import {
 } from "../../pages/mpop/contactPreferencePage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import ManageCheckInsPage from "../../pages/mpop/manageCheckinsPage";
+import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 
 export interface RestartValues {

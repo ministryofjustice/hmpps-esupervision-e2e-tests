@@ -9,11 +9,11 @@ import PhotoOptionsPage from "./photoOptionsPage";
 import TakePhotoPage from "./takePhotoPage";
 import UploadPhotoPage from "./uploadPage";
 import SpoApprovalPage from "./spoApprovalPage";
-import CheckInSummaryPage from "./checkinSummaryPage";
+import CheckInSummaryPage from "./checkInSummaryPage";
 import OutcomePage from "./outcomePage";
-import CheckInConfirmationPage from "./checkinConfirmationPage";
-import StopCheckInsPage from "./stopCheckinsPage";
-import ManageCheckInsPage from "./manageCheckinsPage";
+import CheckInConfirmationPage from "./checkInConfirmationPage";
+import StopCheckInsPage from "./stopCheckInsPage";
+import ManageCheckInsPage from "./manageCheckInsPage";
 
 const INELIGIBLE_HEADING = /[^\s]+ is not eligible to use online check ins/;
 const PARTIALLY_ELIGIBLE_HEADING =

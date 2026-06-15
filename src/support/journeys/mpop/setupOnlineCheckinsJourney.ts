@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import CheckInSummaryPage from "../../pages/mpop/checkinSummaryPage";
+import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
