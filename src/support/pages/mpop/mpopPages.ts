@@ -11,6 +11,9 @@ import UploadPhotoPage from "./uploadPage";
 import SpoApprovalPage from "./spoApprovalPage";
 import CheckInSummaryPage from "./checkInSummaryPage";
 import OutcomePage from "./outcomePage";
+import ManageCheckInsPage from "./managecheckInsPage";
+import CheckInConfirmationPage from "./checkInConfirmationPage";
+import StopCheckInsPage from "./stopCheckInsPage";
 
 const INELIGIBLE_HEADING = /[^\s]+ is not eligible to use online check ins/;
 const PARTIALLY_ELIGIBLE_HEADING =
@@ -30,6 +33,13 @@ export class MpopPages {
   readonly takePhoto: TakePhotoPage;
   readonly photoMeetRules: PhotoMeetRulesPage;
   readonly summary: CheckInSummaryPage;
+  readonly manage: ManageCheckInsPage;
+  readonly stop: StopCheckInsPage;
+
+  readonly restartDateFrequency: DateFrequencyPage;
+  readonly restartContactPreference: ContactPreferencePage;
+  readonly restartSummary: CheckInSummaryPage;
+  readonly restartConfirmation: CheckInConfirmationPage;
 
   constructor(page: Page) {
     this.overview = new OverviewPage(page);
@@ -45,5 +55,12 @@ export class MpopPages {
     this.takePhoto = new TakePhotoPage(page);
     this.photoMeetRules = new PhotoMeetRulesPage(page);
     this.summary = new CheckInSummaryPage(page);
+    this.manage = new ManageCheckInsPage(page);
+    this.stop = new StopCheckInsPage(page);
+
+    this.restartDateFrequency = new DateFrequencyPage(page, true);
+    this.restartContactPreference = new ContactPreferencePage(page, true);
+    this.restartSummary = new CheckInSummaryPage(page, true);
+    this.restartConfirmation = new CheckInConfirmationPage(page, true);
   }
 }

@@ -9,8 +9,11 @@ export enum FrequencyOptions {
 }
 
 export default class DateFrequencyPage extends MPopBasePage {
-  constructor(page: Page) {
-    super(page, "Set up online check ins");
+  constructor(page: Page, restart = false) {
+    super(
+      page,
+      restart ? "Online check in settings" : "Set up online check ins",
+    );
   }
 
   async completePage(date: string, frequency: FrequencyOptions) {

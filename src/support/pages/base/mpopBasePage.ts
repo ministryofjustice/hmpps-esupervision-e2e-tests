@@ -24,6 +24,12 @@ export default abstract class MPopBasePage {
     await radio.check();
   }
 
+  async clickRadioByName(qa: string, label: string): Promise<void> {
+    const radio = this.getQA(qa).getByRole("radio", { name: label });
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
   async clickContinue(): Promise<void> {
     // the app has two data-qa for same button ("submitBtn and submit-btn")
     const btn = this.page

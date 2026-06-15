@@ -38,4 +38,5 @@ export const env = {
     dob: required("TEST_PERSON_DOB"),
   }),
   mpopTestCrn: (): string => required("TEST_MPOP_CRN"),
+  mpopStopRestartCrn: (): string => required("TEST_MPOP_STOP_RESTART_CRN"),
 };

@@ -12,8 +12,8 @@ export enum Preference {
 export type { ContactDetails };
 
 export default class ContactPreferencePage extends MPopBasePage {
-  constructor(page: Page) {
-    super(page, "Contact preferences");
+  constructor(page: Page, restart = false) {
+    super(page, restart ? "Contact details" : "Contact preferences");
   }
 
   async completePage(preference: Preference, contact?: ContactDetails) {

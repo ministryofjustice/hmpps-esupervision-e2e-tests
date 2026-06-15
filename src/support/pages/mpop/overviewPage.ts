@@ -16,4 +16,15 @@ export default class OverviewPage extends MPopBasePage {
     await expect(link).toBeVisible();
     await link.click();
   }
+
+  async clickViewAllOnlineCheckinDetails(): Promise<void> {
+    const link = this.getQA("checkinCard").getByRole("link", {
+      name: "View all online check in details",
+    });
+    await expect(
+      link,
+      "No, View all online check in details link - offender may not be set up",
+    ).toBeVisible();
+    await link.click();
+  }
 }

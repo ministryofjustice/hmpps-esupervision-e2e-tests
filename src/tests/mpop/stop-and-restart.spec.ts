@@ -1,0 +1,66 @@
+import test, { expect } from "@playwright/test";
+import { env } from "../../config/env";
+import { getToken } from "../../api/auth";
+import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
+import {
+  getOffenderByCrn,
+  getOffenderUuidByCrn,
+  reactivateOffender,
+} from "../../api/checkin";
+import {
+  firstCheckinDateString,
+  isoDateString,
+  today,
+} from "../../support/utils/date";
+import { Preference } from "../../support/pages/mpop/contactPreferencePage";
+import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
+
+/* 
+stop then restart online check ins (MPOP UI) for an already setup offender
+Serial: stop->INACTIVE, restart->verified, so the CRN ends as it started and stays reusable.
+Uses its own MPOP_STOP_RESTART_CRN */
+
+test.describe.serial("stop then restart online checkin (existing CRN)", () => {
+  const crn = env.mpopStopRestartCrn();
+
+//   start from VERIFIED: reactivate only if a prior run left it inactive
+  test.beforeAll(async () => {
+    const token = await getToken();
+    if ((await getOffenderByCrn(crn, token))?.status === "INACTIVE") {
+      const uuid = await getOffenderUuidByCrn(crn, token);
+      if (uuid) {
+        await reactivateOffender(uuid, token, {
+          firstCheckin: isoDateString(today.plus({ days: 7 })),
+          checkinInterval: "WEEKLY",
+          contactPreference: "EMAIL"
+        });
+      }
+    }
+  });
+
+  test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE ", async ({
+    page,
+  }) => {
+    const token = await getToken();
+    const journey = new ManageCheckInsJourney(page);
+    await journey.login();
+    await journey.stopCheckIns(crn, "E2E test stop");
+    await expect
+      .poll(async () => (await getOffenderByCrn(crn, token))?.status)
+      .toBe("INACTIVE");
+  });
+
+  test("practitioner restarts online check ins for the stopped offender -> offender returns to  VERIFIED ", async ({
+    page,
+  }) => {
+    const token = await getToken();
+    const journey = new ManageCheckInsJourney(page);
+    await journey.login();
+    await journey.restartCheckIns(crn, {
+      date: firstCheckinDateString(7),
+      frequency: FrequencyOptions.EVERY_8_WEEKS,
+      preference: Preference.EMAIL,
+    });
+    expect((await getOffenderByCrn(crn, token))?.status).toBe("VERIFIED");
+  });
+});
