@@ -1,12 +1,11 @@
-import { Page } from "playwright-core";
-import test from "playwright/test";
+import { Page, test } from "@playwright/test";
 import {
   ContactDetails,
   Preference,
 } from "../../pages/mpop/contactPreferencePage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import ManageCheckInsPage from "../../pages/mpop/managecheckInsPage";
+import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 
 export interface RestartValues {
