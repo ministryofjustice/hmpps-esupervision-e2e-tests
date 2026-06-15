@@ -10,11 +10,7 @@ import {
 } from "../../support/utils/date";
 import { Preference } from "../../support/pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
-import {
-  getOffenderByCrn,
-  getOffenderUuidByCrn,
-  reactivateOffender,
-} from "../../api/offender";
+import { getOffenderByCrn, reactivateOffender } from "../../api/offender";
 
 /* 
 stop then restart online check ins (MPOP UI) for an already setup offender
@@ -28,19 +24,17 @@ test.describe.serial("stop then restart online checkin (existing CRN)", () => {
   //   start from VERIFIED: reactivate only if a prior run left it inactive
   test.beforeAll(async () => {
     token = await getToken();
-    if ((await getOffenderByCrn(crn, token))?.status === "INACTIVE") {
-      const uuid = await getOffenderUuidByCrn(crn, token);
-      if (uuid) {
-        await reactivateOffender(uuid, token, {
-          firstCheckin: isoDateString(today.plus({ days: 7 })),
-          checkinInterval: "WEEKLY",
-          contactPreference: "EMAIL",
-        });
-      }
+    const offender = await getOffenderByCrn(crn, token);
+    if (offender?.status === "INACTIVE" && offender.uuid) {
+      await reactivateOffender(offender.uuid, token, {
+        firstCheckin: isoDateString(today.plus({ days: 7 })),
+        checkinInterval: "WEEKLY",
+        contactPreference: "EMAIL",
+      });
     }
   });
 
-  test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE ", async ({
+  test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE", async ({
     page,
   }) => {
     const journey = new ManageCheckInsJourney(page);
@@ -51,7 +45,7 @@ test.describe.serial("stop then restart online checkin (existing CRN)", () => {
       .toBe("INACTIVE");
   });
 
-  test("practitioner restarts online check ins for the stopped offender -> offender returns to  VERIFIED ", async ({
+  test("practitioner restarts online check ins for the stopped offender -> offender returns to VERIFIED ", async ({
     page,
   }) => {
     const journey = new ManageCheckInsJourney(page);

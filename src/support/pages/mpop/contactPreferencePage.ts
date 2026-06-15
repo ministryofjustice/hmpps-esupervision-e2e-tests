@@ -16,7 +16,10 @@ export default class ContactPreferencePage extends MPopBasePage {
     super(page, restart ? "Contact details" : "Contact preferences");
   }
 
-  async completePage(preference: Preference, contact?: ContactDetails) {
+  async completePage(
+    preference: Preference,
+    contact?: ContactDetails,
+  ): Promise<void> {
     await this.changePage(preference, contact);
   }
 

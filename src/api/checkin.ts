@@ -5,8 +5,8 @@ export const createEsupervisionCheckin = async (
   crn: string,
   dueDate: string,
   token: string,
-) =>
-  withApiContext(async (ctx) => {
+): Promise<string> =>
+  withApiContext<string>(async (ctx) => {
     const response = await ctx.post(`/v2/offender_checkins/crn`, {
       headers: authHeader(token),
       data: { practitioner: env.practitionerName(), offender: crn, dueDate },

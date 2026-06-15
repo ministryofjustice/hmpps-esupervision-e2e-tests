@@ -28,7 +28,7 @@ export default class CheckInSummaryPage extends MPopBasePage {
     super(
       page,
       restart
-        ? " Check your answers before restarting online check ins"
+        ? "Check your answers before restarting online check ins"
         : "Check your answers before adding",
     );
   }

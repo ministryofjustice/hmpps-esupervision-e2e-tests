@@ -61,7 +61,7 @@ export default class ManageCheckInsJourney {
         values.contact,
       );
       await this.pages.restartSummary.assertOnPage();
-      await this.pages.restartSummary.clickContinue();
+      await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
     });
   }

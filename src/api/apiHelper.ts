@@ -25,6 +25,6 @@ export const assertOk = async (
   }
 };
 
-export const authHeader = (token: string) => ({
+export const authHeader = (token: string): { Authorization: string } => ({
   Authorization: `Bearer ${token}`,
 });

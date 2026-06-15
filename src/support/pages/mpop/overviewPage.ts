@@ -23,7 +23,7 @@ export default class OverviewPage extends MPopBasePage {
     });
     await expect(
       link,
-      "No, View all online check in details link - offender may not be set up",
+      "View all online check in details link not found - offender may not be set up",
     ).toBeVisible();
     await link.click();
   }
