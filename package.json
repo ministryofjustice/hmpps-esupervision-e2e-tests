@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "ENV=dev playwright test",
-    "test:headed":"ENV=dev playwright test --headed",
-    "report":"playwright show-report",
-    "typecheck":"tsc --noEmit",
-    "lint":"eslint . ",
-    "lint:fix":"eslint . --fix"
+    "test:headed": "ENV=dev playwright test --headed",
+    "test:mpop": "ENV=dev playwright test src/tests/mpop",
+    "test:mpop:headed": "ENV=dev playwright test src/tests/mpop --headed",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -26,7 +28,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.1",
     "@typescript-eslint/parser": "^8.0.1",
-     "@eslint/eslintrc": "^3.3.5",
+    "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
