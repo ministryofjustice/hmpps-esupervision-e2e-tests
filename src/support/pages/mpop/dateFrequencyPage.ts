@@ -16,15 +16,18 @@ export default class DateFrequencyPage extends MPopBasePage {
     );
   }
 
-  async completePage(date: string, frequency: FrequencyOptions) {
+  async completePage(date: string, frequency: FrequencyOptions): Promise<void> {
     await this.fillFields(date, frequency);
   }
 
-  async changePage(date?: string, frequency?: FrequencyOptions) {
+  async changePage(date?: string, frequency?: FrequencyOptions): Promise<void> {
     await this.fillFields(date, frequency);
   }
 
-  private async fillFields(date?: string, frequency?: FrequencyOptions) {
+  private async fillFields(
+    date?: string,
+    frequency?: FrequencyOptions,
+  ): Promise<void> {
     if (date !== undefined) {
       await this.getClass("moj-datepicker").locator('[type="text"]').fill(date);
     }

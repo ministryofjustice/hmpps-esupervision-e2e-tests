@@ -45,7 +45,7 @@ test.describe.serial("stop then restart online checkin (existing CRN)", () => {
       .toBe("INACTIVE");
   });
 
-  test("practitioner restarts online check ins for the stopped offender -> offender returns to VERIFIED ", async ({
+  test("practitioner restarts online check ins for the stopped offender -> offender returns to VERIFIED", async ({
     page,
   }) => {
     const journey = new ManageCheckInsJourney(page);
