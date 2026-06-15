@@ -16,7 +16,7 @@ export const getOffenderByCrn = async (
       headers: authHeader(token),
     });
     await assertOk(response, `Get offender ${crn}`);
-    return response.json();
+    return (await response.json()) as Offender;
   });
 
 export interface CheckinScheduleOpts {
