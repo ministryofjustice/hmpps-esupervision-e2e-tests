@@ -9,19 +9,25 @@ export enum FrequencyOptions {
 }
 
 export default class DateFrequencyPage extends MPopBasePage {
-  constructor(page: Page) {
-    super(page, "Set up online check ins");
+  constructor(page: Page, restart = false) {
+    super(
+      page,
+      restart ? "Online check in settings" : "Set up online check ins",
+    );
   }
 
-  async completePage(date: string, frequency: FrequencyOptions) {
+  async completePage(date: string, frequency: FrequencyOptions): Promise<void> {
     await this.fillFields(date, frequency);
   }
 
-  async changePage(date?: string, frequency?: FrequencyOptions) {
+  async changePage(date?: string, frequency?: FrequencyOptions): Promise<void> {
     await this.fillFields(date, frequency);
   }
 
-  private async fillFields(date?: string, frequency?: FrequencyOptions) {
+  private async fillFields(
+    date?: string,
+    frequency?: FrequencyOptions,
+  ): Promise<void> {
     if (date !== undefined) {
       await this.getClass("moj-datepicker").locator('[type="text"]').fill(date);
     }

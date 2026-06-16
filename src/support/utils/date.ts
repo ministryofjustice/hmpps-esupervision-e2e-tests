@@ -16,3 +16,7 @@ export const dobParts = (
 
 export const firstCheckinDateString = (daysAhead = 7): string =>
   DateTime.now().plus({ days: daysAhead }).toFormat("d/M/yyyy");
+
+export const isoDateString = (date: DateTime): string => {
+  return date.toFormat("yyyy-MM-dd");
+};

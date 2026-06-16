@@ -24,8 +24,13 @@ const VALUE_ROW_QA: Record<SummaryField, string> = {
 };
 
 export default class CheckInSummaryPage extends MPopBasePage {
-  constructor(page: Page) {
-    super(page, "Check your answers before adding");
+  constructor(page: Page, restart = false) {
+    super(
+      page,
+      restart
+        ? "Check your answers before restarting online check ins"
+        : "Check your answers before adding",
+    );
   }
 
   private summaryRow(actionQa: string): Locator {
@@ -46,5 +51,9 @@ export default class CheckInSummaryPage extends MPopBasePage {
 
   async clickChange(field: SummaryField): Promise<void> {
     await this.getQA(CHANGE_LINK_QA[field]).click();
+  }
+
+  async submitSetUp(): Promise<void> {
+    await this.clickContinue();
   }
 }
