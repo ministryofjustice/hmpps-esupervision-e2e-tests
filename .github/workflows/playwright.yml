@@ -28,7 +28,7 @@ jobs:
           ENV: dev
 
           # URLs
-          E_SUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
+          ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
           PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
           AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
           MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
@@ -54,4 +54,3 @@ jobs:
         with:
           check_name: End-to-end test results
           report_paths: junit.xml
-          
