@@ -46,6 +46,7 @@ jobs:
           DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
           TEST_MPOP_CRN: ${{secrets.TEST_MPOP_CRN }}
           TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
+          PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
 
       - name: Publish JUnit report
         if: always()
