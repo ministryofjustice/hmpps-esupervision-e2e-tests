@@ -1,27 +1,57 @@
 name: Playwright Tests
 on:
-  push:
-    branches: [main, master]
+  # Run manually via GitHub API / Action tab
+  workflow_dispatch:
   pull_request:
-    branches: [main, master]
+    branches: [main]
+
 jobs:
   test:
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, hmpps-github-actions-runner ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version-file: .nvmrc
+      - name: Clean npm cache
+        run: npm cache clean --force
       - name: Install dependencies
-        run: npm ci
+        run: npm run setup
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install
       - name: Run Playwright tests
-        run: npx playwright test
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        id: tests
+        run: npx playwright test --workers=1 --retries=0
+        env:
+          TZ: Europe/London
+          ENV: dev
+
+          # URLs
+          E_SUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
+          PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
+          AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
+          MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
+
+          # Credentials
+          AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
+          AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
+
+          # test data
+          TEST_CRN: ${{secrets.TEST_CRN }}
+          TEST_PERSON_FIRST_NAME: ${{secrets.TEST_PERSON_FIRST_NAME }}
+          TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
+          TEST_PERSON_DOB: ${{secrets.TEST_PERSON_DOB }}
+          DELIUS_USERNAME: ${{secrets.DELIUS_USERNAME }}
+          DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
+          TEST_MPOP_CRN: ${{secrets.TEST_MPOP_CRN }}
+          TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
+
+      - name: Publish JUnit report
+        if: always()
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386
+        id: junit
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+          check_name: End-to-end test results
+          report_paths: junit.xml
+          

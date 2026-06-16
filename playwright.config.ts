@@ -13,7 +13,12 @@ export default defineConfig({
   retries: 0,
   timeout: 60000,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  reporter: [
+    ["github"],
+    ["line"],
+    ["html", { open: "never" }],
+    ["junit", { outputFile: "junit.xml" }]
+  ],
   use: {
     timezoneId: "Europe/London",
     screenshot: "only-on-failure",
