@@ -11,8 +11,7 @@
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "setup": "npm ci"
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
