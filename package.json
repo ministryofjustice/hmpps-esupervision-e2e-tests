@@ -4,8 +4,8 @@
   "description": "Playwright E2E tests for online check ins and eSupervision user journeys",
   "main": "index.js",
   "scripts": {
-    "test": "ENV=dev playwright test",
-    "test:headed": "ENV=dev playwright test --headed",
+    "test": "ENV=test playwright test",
+    "test:headed": "ENV=test playwright test --headed",
     "test:mpop": "ENV=dev playwright test src/tests/mpop",
     "test:mpop:headed": "ENV=dev playwright test src/tests/mpop --headed",
     "report": "playwright show-report",
@@ -39,7 +39,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "^1.207.0"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

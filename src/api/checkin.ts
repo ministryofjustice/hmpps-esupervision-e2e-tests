@@ -14,3 +14,37 @@ export const createEsupervisionCheckin = async (
     await assertOk(response, `Create checkin for ${crn}`);
     return (await response.json()).uuid;
   });
+
+export interface CheckinSummary {
+  uuid: string;
+  crn: string;
+  status: string;
+  dueDate: string;
+  createdBy: string;
+}
+
+export type CheckinUseCase =
+  | "AWAITING_CHECKIN"
+  | "NEEDS_ATTENTION"
+  | "REVIEWED";
+
+export const listOffenderCheckins = async (
+  practitioner: string,
+  offenderUuid: string,
+  token: string,
+  useCase?: CheckinUseCase,
+): Promise<CheckinSummary[]> =>
+  withApiContext<CheckinSummary[]>(async (ctx) => {
+    const response = await ctx.get(`/v2/offender_checkins`, {
+      headers: authHeader(token),
+      params: {
+        practitioner,
+        offenderId: offenderUuid,
+        direction: "DESC",
+        ...(useCase ? { useCase } : {}),
+      },
+    });
+    await assertOk(response, `List checkins for offender ${offenderUuid}`);
+    const body = (await response.json()) as { content?: CheckinSummary[] };
+    return body.content ?? [];
+  });

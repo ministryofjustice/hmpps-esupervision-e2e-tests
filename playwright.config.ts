@@ -7,6 +7,8 @@ dotenv.config({
   quiet: true,
 });
 
+const headed = process.argv.includes("--headed");
+
 export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -27,6 +29,7 @@ export default defineConfig({
     permissions: ["camera", "microphone"],
     launchOptions: {
       args: [
+        ...(headed ? ["--start-maximized"] : []),
         "--use-fake-device-for-media-stream",
         "--use-fake-ui-for-media-stream",
         "--use-file-for-fake-video-capture=./src/media/mock-camera-capture.y4m",
@@ -40,6 +43,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.PROBATION_CHECK_IN_URL,
+        ...(headed ? { viewport: null } : {}),
       },
     },
   ],

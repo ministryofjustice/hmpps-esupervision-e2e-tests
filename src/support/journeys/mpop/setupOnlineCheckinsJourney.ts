@@ -7,6 +7,7 @@ import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import { ContactDetails } from "../../pages/mpop/updateContactDetailsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import test from "@playwright/test";
+import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 
 interface SetupValues {
   date: string;
@@ -76,6 +77,11 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.summary.assertOnPage();
       return this.pages.summary;
     });
+  }
+
+  async submitSetup(summary: CheckInSummaryPage): Promise<void> {
+    await summary.submitSetUp();
+    await new CheckInConfirmationPage(this.page).assertOnPage();
   }
 
   async changePhotoSummary(
