@@ -7,19 +7,21 @@ export const waitForAwaitingCheckinUuid = async (
   crn: string,
   token: string,
 ): Promise<string> => {
-  const { uuid: offenderUuid } = await getOffenderByCrn(crn, token);
-
   let checkinUuid = "";
+
   await expect
     .poll(
       async () => {
-        const checkins = await listOffenderCheckins(
+        const offender = await getOffenderByCrn(crn, token);
+        if (!offender) return "";
+
+        const checkin = await listOffenderCheckins(
           env.practitionerName(),
-          offenderUuid,
+          offender.uuid,
           token,
           "AWAITING_CHECKIN",
         );
-        checkinUuid = checkins[0]?.uuid ?? "";
+        checkinUuid = checkin[0]?.uuid ?? "";
         return checkinUuid;
       },
       {

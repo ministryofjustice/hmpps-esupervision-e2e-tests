@@ -5,7 +5,7 @@ import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
-import DeliusOffenderJourney from "../ndelius/createOffender";
+import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
   randomAssistanceSelections,
   randomMentalHealthOption,
