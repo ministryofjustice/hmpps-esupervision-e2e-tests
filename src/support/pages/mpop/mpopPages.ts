@@ -14,6 +14,7 @@ import OutcomePage from "./outcomePage";
 import CheckInConfirmationPage from "./checkInConfirmationPage";
 import StopCheckInsPage from "./stopCheckInsPage";
 import ManageCheckInsPage from "./manageCheckInsPage";
+import RationalePage from "./rationalePage";
 
 const INELIGIBLE_HEADING = /[^\s]+ is not eligible to use online check ins/;
 const PARTIALLY_ELIGIBLE_HEADING =
@@ -23,6 +24,7 @@ export class MpopPages {
   readonly overview: OverviewPage;
   readonly eligibility: EligibilityPage;
   readonly eligible: EligiblePage;
+  readonly rationale: RationalePage;
   readonly ineligible: OutcomePage;
   readonly partiallyEligible: OutcomePage;
   readonly spoApproval: SpoApprovalPage;
@@ -45,6 +47,7 @@ export class MpopPages {
     this.overview = new OverviewPage(page);
     this.eligibility = new EligibilityPage(page);
     this.eligible = new EligiblePage(page);
+    this.rationale = new RationalePage(page);
     this.ineligible = new OutcomePage(page, INELIGIBLE_HEADING);
     this.partiallyEligible = new OutcomePage(page, PARTIALLY_ELIGIBLE_HEADING);
     this.spoApproval = new SpoApprovalPage(page);

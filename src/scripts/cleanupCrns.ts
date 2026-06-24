@@ -6,7 +6,6 @@ import {
   readCreatedCrns,
   writeCreatedCrns,
 } from "../support/utils/createdCrns";
-import console from "console";
 import dotenv from "dotenv";
 
 dotenv.config({

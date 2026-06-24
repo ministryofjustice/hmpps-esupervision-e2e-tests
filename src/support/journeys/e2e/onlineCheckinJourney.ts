@@ -32,6 +32,7 @@ export default class OnlineCheckinJourney {
       contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
       photo: PhotoOptions.UPLOAD,
       eligibilityIds: [9],
+      rationale: "E2E test rationale",
     });
     await setup.submitSetup(summary);
     return offender;

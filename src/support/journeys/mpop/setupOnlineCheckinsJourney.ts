@@ -16,6 +16,7 @@ interface SetupValues {
   contact?: ContactDetails;
   photo: PhotoOptions;
   eligibilityIds: number[];
+  rationale: string;
 }
 export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
@@ -63,6 +64,9 @@ export default class SetupOnlineCheckinsJourney {
 
       await this.pages.spoApproval.assertOnPage();
       await this.pages.spoApproval.completePage();
+
+      await this.pages.rationale.assertOnPage();
+      await this.pages.rationale.completePage(setup.rationale);
 
       await this.pages.dateFrequency.assertOnPage();
       await this.pages.dateFrequency.completePage(setup.date, setup.frequency);

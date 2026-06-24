@@ -87,6 +87,8 @@ export default class CheckinJourney {
   }
 
   async completeLivenessFlow(uuid: string): Promise<void> {
+    // visit /record first to establish liveness session state; navigating
+    // straight to /view otherwise triggers a session error
     await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
     await this.page.goto(`${baseUrl()}/${uuid}/liveness/view`);
     await expect(this.pages.livenessView.submitAnywayButton()).toBeVisible();

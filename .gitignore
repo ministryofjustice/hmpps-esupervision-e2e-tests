@@ -13,4 +13,5 @@ junit.xml
 .DS_Store
 .env.test
 created-crns.txt
+.env
 

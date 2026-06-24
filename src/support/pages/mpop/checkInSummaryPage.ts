@@ -7,7 +7,8 @@ export type SummaryField =
   | "contactPreference"
   | "mobile"
   | "email"
-  | "photo";
+  | "photo"
+  | "rationale";
 
 const CHANGE_LINK_QA: Record<SummaryField, string> = {
   date: "dateAction",
@@ -16,6 +17,7 @@ const CHANGE_LINK_QA: Record<SummaryField, string> = {
   mobile: "checkInMobileAction",
   email: "checkInEmailAction",
   photo: "photoUploadOptionAction",
+  rationale: "eligibilityRationaleAction",
 };
 
 const VALUE_ROW_QA: Record<SummaryField, string> = {
@@ -43,6 +45,14 @@ export default class CheckInSummaryPage extends MPopBasePage {
     return this.summaryRow(VALUE_ROW_QA[field]).locator(
       ".govuk-summary-list__value",
     );
+  }
+
+  rationaleValueLocator(): Locator {
+    return this.getClass("govuk-summary-list__row")
+      .filter({
+        hasText: "suitable to use online check ins",
+      })
+      .locator(".govuk-summary-list__value");
   }
 
   async summaryValue(field: SummaryField): Promise<string> {

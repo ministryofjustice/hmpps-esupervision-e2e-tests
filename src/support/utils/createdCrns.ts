@@ -1,5 +1,5 @@
 import path from "path";
-import fs, { appendFileSync, existsSync, rmSync, writeFileSync } from "fs";
+import fs, { appendFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 
 const CRN_FILE = path.join(process.cwd(), "created-crns.txt");
 console.log(CRN_FILE);
@@ -16,13 +16,11 @@ export const recordCreatedCrn = (crn: string): void => {
 
 export const readCreatedCrns = (): string[] => {
   if (!fs.existsSync(CRN_FILE)) {
-    console.log(!fs.existsSync(CRN_FILE));
     return [];
   }
 
   const crns = new Set(
-    fs
-      .readFileSync(CRN_FILE, "utf-8")
+    readFileSync(CRN_FILE, "utf-8")
       .split("\n")
       .map((crn) => crn.trim())
       .filter(Boolean),

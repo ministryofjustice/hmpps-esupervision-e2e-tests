@@ -20,6 +20,7 @@ test("practitioner changes answers from the summary", async ({ page }) => {
     contact: { mobile: TEST_CONTACT.mobile },
     photo: PhotoOptions.UPLOAD,
     eligibilityIds: [9],
+    rationale: "E2E test rationale",
   });
 
   await test.step("Change frequency: Every week -> Every 4 weeks", async () => {
