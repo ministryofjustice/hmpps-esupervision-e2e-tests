@@ -12,7 +12,7 @@ cp .env.example .env     # then fill in the values
 
 ## Configuration
 
-Credentials and URLs are configured using a `.env` file at the project root, via `src/config/env.ts`
+Credentials and URLs are configured using a `.env` file at the project root and loaded via `src/config/loadEnv.ts` and accessed through `src/config/env.ts`.
 
 If you have access to the eSupervision-E2E-tests 1Password Vault, you can skip the
 `.env` file and resolve secrets at runtime by prefixing commands with `op run`
@@ -37,13 +37,11 @@ npm run lint            # eslint
 
 Append `:headed` to most scripts (e.g `test:e2e:headed`) to watch them run
 
-Configuration is read from `.env.${ENV}` (so `.env.dev`) via `src/config/env.ts`.
-
 ## ENV: dev vs test
 
-`ENV` the app journeys (mpop, checkin,static) run under `ENV=dev` - they read service URLs directly, so `ENV` only selects the `.env.${ENV}`
-file there. The offender create/delete path goes through the `hmpps-probation-integration-e2e-tests` packages, which resolves Delius
-host only from `ENV` so `test:e2e` and `cleanup:crns` run under `ENV=test` .
+All suites read the same .env file.
+
+`ENV` the app journeys (mpop, checkin,static) run under `ENV=dev` - they read service URLs directly. The offender create/delete path goes through the `hmpps-probation-integration-e2e-tests` packages, which resolves Delius host only from `ENV` so `test:e2e` and `cleanup:crns` run under `ENV=test` .
 
 ## How the video / liveness step is handled
 
