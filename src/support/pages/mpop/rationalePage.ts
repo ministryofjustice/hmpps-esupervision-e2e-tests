@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export default class RationalePage extends MPopBasePage {
@@ -8,10 +8,6 @@ export default class RationalePage extends MPopBasePage {
 
   private rationaleTextbox(): Locator {
     return this.getQA("rationale-for-check-ins").getByRole("textbox");
-  }
-
-  async assertOnPage(): Promise<void> {
-    await expect(this.rationaleTextbox()).toBeVisible();
   }
 
   async completePage(rationale: string): Promise<void> {
