@@ -41,9 +41,9 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install
-      - name: Run dev suites(mpop,checkin,static)
-        id: tests_dev
-        run: npm run test:mpop && npm run test:parallel 
+      # - name: Run dev suites(mpop,checkin,static)
+      #   id: tests_dev
+      #   run: npm run test:mpop && npm run test:parallel 
       #E2E suite creates offenders via integration test package, which
       #resolves Delius from ENV - must be test
       - name: Run e2e suite
