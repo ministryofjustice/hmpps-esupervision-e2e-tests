@@ -9,12 +9,14 @@ import VideoRecordPage from "./videoRecordPage";
 import HomePage from "./homePage";
 import VideoInformPage from "./videoInformPage";
 import LivenessViewPage from "./livenessViewPage";
+import LivenessRecordPage from "./livenessRecordPage";
 
 export class Pages {
   readonly homepage: HomePage;
   readonly personalDetails: PersonalDetailsPage;
   readonly mentalHealth: MentalHealthPage;
   readonly assistance: AssistancePage;
+  readonly livenessRecord: LivenessRecordPage;
   readonly livenessView: LivenessViewPage;
   readonly videoInform: VideoInformPage;
   readonly videoRecord: VideoRecordPage;
@@ -27,6 +29,7 @@ export class Pages {
     this.personalDetails = new PersonalDetailsPage(page);
     this.mentalHealth = new MentalHealthPage(page);
     this.assistance = new AssistancePage(page);
+    this.livenessRecord = new LivenessRecordPage(page);
     this.livenessView = new LivenessViewPage(page);
     this.videoInform = new VideoInformPage(page);
     this.videoRecord = new VideoRecordPage(page);
