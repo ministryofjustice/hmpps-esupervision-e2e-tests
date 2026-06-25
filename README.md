@@ -7,7 +7,7 @@ Playwright E2E tests for online check ins and eSupervision user journeys
 ```bash
 npm install
 npx playwright install
-cp .env.examole .env     # then fill in the values
+cp .env.example .env     # then fill in the values
 ```
 
 ## Configuration
@@ -19,7 +19,7 @@ If you have access to the eSupervision-E2E-tests 1Password Vault, you can skip t
 
 ```bash
 eval $(op signin)
-op run --account ministryofjustice.1password.eu --env-file=./.env.1password --npm run test
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run test
 ```
 
 ## Run
@@ -71,7 +71,7 @@ In **CI** the workflow runs `cleanup:crns` after a fully green run.
 **Locally** After running the e2e suite, run `cleanup:crns` script to remove the offenders created
 
 ```bash
-op run --account ministryofjustice.1password.eu --env-file=./.env.1password --npm run cleanup:crns
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns
 ```
 
 Any crn that fail to delete stay in the file `created-crns.txt` for the next run. To target specific CRNs directly
@@ -82,7 +82,7 @@ CRNS=X123456,X654321 npm run cleanup:crns
 
 ## CI
 
-The playwright workflow runs on a schedule and via manual `workflow_dispach`.
+The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
 
 The dev and e2e test suite run as separate steps so each gets the right `ENV`.
 **Cleanup runs only on a green run** (`if:success()`), so failed run leaves the crn for debugging

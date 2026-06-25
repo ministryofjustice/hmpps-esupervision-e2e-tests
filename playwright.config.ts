@@ -1,14 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
-import dotenv from "dotenv";
-import { existsSync } from "fs";
 import process from "process";
+import { loadEnv } from "./src/config/loadEnv";
 
-const envFile = process.env.ENV ? `.env.${process.env.ENV}` : ".env";
-
-dotenv.config({
-  path: existsSync(envFile) ? envFile : ".env",
-  quiet: true,
-});
+loadEnv();
 
 const headed = process.argv.includes("--headed");
 

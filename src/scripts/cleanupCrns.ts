@@ -6,15 +6,9 @@ import {
   readCreatedCrns,
   writeCreatedCrns,
 } from "../support/utils/createdCrns";
-import dotenv from "dotenv";
-import { existsSync } from "fs";
+import { loadEnv } from "../config/loadEnv";
 
-const envFile = process.env.ENV ? `.env.${process.env.ENV}` : ".env";
-
-dotenv.config({
-  path: existsSync(envFile) ? envFile : ".env",
-  quiet: true,
-});
+loadEnv();
 
 const fromEnv = (process.env.CRNS ?? "")
   .split(",")

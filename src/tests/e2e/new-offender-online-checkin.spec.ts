@@ -33,7 +33,7 @@ const scenarios: CheckinScenario[] = [
 
 // These scenarios share a single Delius account and drive the MPOP setup journey,
 // so they must not run concurrently. The suite runs a single- worker which keep them independent
-// so a failure in one test does not skip the other test
+// a failure in one test does not skip the other test
 
 test.describe("Online check in for a new offender", () => {
   for (const scenario of scenarios) {
