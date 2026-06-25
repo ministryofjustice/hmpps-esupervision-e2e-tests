@@ -6,16 +6,16 @@ export default class RationalePage extends MPopBasePage {
     super(page, /suitable to use online check ins/i);
   }
 
-  private rationalTextbox(): Locator {
+  private rationaleTextbox(): Locator {
     return this.getQA("rationale-for-check-ins").getByRole("textbox");
   }
 
   async assertOnPage(): Promise<void> {
-    await expect(this.rationalTextbox()).toBeVisible();
+    await expect(this.rationaleTextbox()).toBeVisible();
   }
 
   async completePage(rationale: string): Promise<void> {
-    await this.rationalTextbox().fill(rationale);
+    await this.rationaleTextbox().fill(rationale);
     await this.clickContinue();
   }
 }

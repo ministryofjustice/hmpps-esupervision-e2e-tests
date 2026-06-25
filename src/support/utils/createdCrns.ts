@@ -1,5 +1,5 @@
 import path from "path";
-import fs, {
+import {
   appendFileSync,
   existsSync,
   readFileSync,
@@ -11,7 +11,7 @@ const CRN_FILE = path.join(process.cwd(), "created-crns.txt");
 
 export const recordCreatedCrn = (crn: string): void => {
   if (existsSync(CRN_FILE)) {
-    const content = fs.readFileSync(CRN_FILE, "utf-8");
+    const content = readFileSync(CRN_FILE, "utf-8");
     if (content.length > 0 && !content.endsWith("\n")) {
       appendFileSync(CRN_FILE, "\n");
     }

@@ -25,8 +25,8 @@ export default class DeliusOffenderJourney {
     }
     recordCreatedCrn(crn);
 
-    // Ndelius intermittently throws error duing allocation (eg dropdrown not populated), a retry clears it.
-    // toPass re-runs the who;e transfer until it succeeds or timout is hit
+    // Ndelius intermittently throws error during allocation (e.g. dropdrown not populated); a retry clears it.
+    // toPass re-runs the who;e transfer until it succeeds or timeout is hit
     await expect(async () => {
       await internalTransfer(this.page, {
         crn,

@@ -7,26 +7,19 @@ Playwright E2E tests for online check ins and eSupervision user journeys
 ```bash
 npm install
 npx playwright install
+cp .env.examole .env     # then fill in the values
 ```
 
 ## Configuration
 
-Credentials and URLs are configured using a `.env` file at the root of the project.
+Credentials and URLs are configured using a `.env` file at the project root, via `src/config/env.ts`
 
-If you have access to the eSupervision-E2E-tests 1Password Vault, you can use the `.env.1password` file by prefixing any npm commands with `op run --account ministryofjustice.1password.eu --env-file=./.env.1password`
+If you have access to the eSupervision-E2E-tests 1Password Vault, you can skip the
+`.env` file and resolve secrets at runtime by prefixing commands with `op run`
 
-For example,
-```shell
-op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run test
-```
-
-See https://developer.1password.com/docs/cli/secrets-environment-variables#use-environment-env-files
-
-cp -n .env.example .env 
-
-
-If you have access to the Probation Integration 1Password Vault, you can use the `.env.1password` file by prefixing any npm commands with `op run --account ministryofjustice.1password.eu --env-file=./.env.1password`
- # then fill in the values
+```bash
+eval $(op signin)
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password --npm run test
 ```
 
 ## Run
@@ -36,10 +29,10 @@ npm test                # run all suites(mpop + e2e + checkin/static)
 npm run test:parallel   # check in + static specs
 npm run test:mpop       # run only mpop setup specs (src/tests/mpop)
 npm run test:e2e        # offender lifecycle: create -> setup checkin -> complete checkin
-npm run cleanup:crns  # delete offenders created by e2e test suite
-npm run report      # open the last HTML report
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint
+npm run cleanup:crns    # delete offenders created by e2e test suite
+npm run report          # open the last HTML report
+npm run typecheck       # tsc --noEmit
+npm run lint            # eslint
 ```
 
 Append `:headed` to most scripts (e.g `test:e2e:headed`) to watch them run
@@ -78,7 +71,7 @@ In **CI** the workflow runs `cleanup:crns` after a fully green run.
 **Locally** After running the e2e suite, run `cleanup:crns` script to remove the offenders created
 
 ```bash
-npm run cleanup:crns
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password --npm run cleanup:crns
 ```
 
 Any crn that fail to delete stay in the file `created-crns.txt` for the next run. To target specific CRNs directly
@@ -96,5 +89,8 @@ The dev and e2e test suite run as separate steps so each gets the right `ENV`.
 
 ## Notes
 
-Test data: The e2e suite creates its own offender in Delius per run. The checkin suites create a check in via the API
-(`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
+Test data differs per suite:
+
+- **e2e** creates its own offender in Delius per run.
+- **checkin** creates a checkin via API (`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
+- **mpop** runs against pre-existing CRNs the tests don't create or delete them
