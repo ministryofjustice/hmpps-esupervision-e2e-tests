@@ -10,6 +10,7 @@ jobs:
     runs-on: [self-hosted, hmpps-github-actions-runner]
     env:
       TZ: Europe/London
+      ENV: dev
        # URLs
       ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
       PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
@@ -42,18 +43,20 @@ jobs:
         run: npx playwright install
       - name: Run dev suites(mpop,checkin,static)
         id: tests_dev
-        run: npx playwright test src/tests/mpop src/tests/checkin src/tests/static --workers=1 --retries=0
+        run: npm run test:mpop && npm run test:parallel 
       #E2E suite creates offenders via integration test package, which
       #resolves Delius from ENV must be test
       - name: Run e2e suite
         id: tests_e2e
-        run: npx playwright test src/tests/e2e --workers=1 --retries=0
+        run: npm run test:e2e
         env:
           ENV: test
       # only on full green run  
       - name: Cleanup created offenders
         if: success()
         run: npm run cleanup:crns
+        env:
+          ENV: test
       - name: Publish JUnit report
         if: always()
         uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386

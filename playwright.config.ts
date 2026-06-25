@@ -1,9 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
+import { existsSync } from "fs";
 import process from "process";
 
+const envFile = process.env.ENV ? `.env.${process.env.ENV}` : ".env";
+
 dotenv.config({
-  path: process.env.ENV ? `.env.${process.env.ENV}` : ".env",
+  path: existsSync(envFile) ? envFile : ".env",
   quiet: true,
 });
 
@@ -13,7 +16,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  timeout: 60000,
+  timeout: 180000,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ["github"],

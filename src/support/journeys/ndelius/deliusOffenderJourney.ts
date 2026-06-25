@@ -24,10 +24,15 @@ export default class DeliusOffenderJourney {
       throw new Error("Delius did not return a CRN for the new offender");
     }
     recordCreatedCrn(crn);
-    await internalTransfer(this.page, {
-      crn,
-      allocation: { team: TEST_TEAM, staff: TEST_STAFF },
-    });
+
+    // Ndelius intermittently throws error duing allocation (eg dropdrown not populated), a retry clears it.
+    // toPass re-runs the who;e transfer until it succeeds or timout is hit
+    await expect(async () => {
+      await internalTransfer(this.page, {
+        crn,
+        allocation: { team: TEST_TEAM, staff: TEST_STAFF },
+      });
+    }).toPass({ timeout: 20000, intervals: [2000, 5000, 10000] });
     await createCommunityEvent(this.page, { crn });
     return {
       crn,

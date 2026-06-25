@@ -73,12 +73,12 @@ assert a successful identity match.
 The e2e suite records every CRN it creates in `created-crns.txt` (gitIgnored). Deleting those offenders is a **separate step**
 the suite does not delete them automatically as a part of test run
 
-In **CI** the workflow runs `cleanedup:crns` after a fully green run.
+In **CI** the workflow runs `cleanup:crns` after a fully green run.
 
-**Locally** After running the e2e suite, run `cleanedup:crns` script to remove the offenders created
+**Locally** After running the e2e suite, run `cleanup:crns` script to remove the offenders created
 
 ```bash
-npm run cleanedup:crns
+npm run cleanup:crns
 ```
 
 Any crn that fail to delete stay in the file `created-crns.txt` for the next run. To target specific CRNs directly

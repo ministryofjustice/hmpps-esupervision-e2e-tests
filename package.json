@@ -7,7 +7,7 @@
     "test": "npm run test:mpop && npm run test:e2e && npm run test:parallel",
     "test:e2e": "ENV=test playwright test src/tests/e2e --workers=1 --retries=1",
     "test:mpop": "ENV=dev playwright test src/tests/mpop --workers=1",
-    "test:parallel": "ENV=dev playwright test src/tests/checkin  src/tests/static",
+    "test:parallel": "ENV=dev playwright test src/tests/checkin src/tests/static",
     "test:headed": "ENV=test playwright test --headed",
     "test:mpop:headed": "ENV=dev playwright test src/tests/mpop --workers=1 --headed",
     "test:e2e:headed": "ENV=test playwright test src/tests/e2e --workers=1 --headed",

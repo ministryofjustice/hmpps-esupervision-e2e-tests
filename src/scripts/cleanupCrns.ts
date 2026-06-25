@@ -7,9 +7,12 @@ import {
   writeCreatedCrns,
 } from "../support/utils/createdCrns";
 import dotenv from "dotenv";
+import { existsSync } from "fs";
+
+const envFile = process.env.ENV ? `.env.${process.env.ENV}` : ".env";
 
 dotenv.config({
-  path: process.env.ENV ? `.env.${process.env.ENV}` : ".env",
+  path: existsSync(envFile) ? envFile : ".env",
   quiet: true,
 });
 

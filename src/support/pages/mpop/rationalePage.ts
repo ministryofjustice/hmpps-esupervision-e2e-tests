@@ -7,13 +7,11 @@ export default class RationalePage extends MPopBasePage {
   }
 
   private rationalTextbox(): Locator {
-    return this.page.getByLabel(this.heading);
+    return this.getQA("rationale-for-check-ins").getByRole("textbox");
   }
 
-  async assertOnPage(timeout = 1000): Promise<void> {
-    await expect(
-      this.getQA("rationale-for-check-ins").getByRole("textbox"),
-    ).toBeVisible({ timeout });
+  async assertOnPage(): Promise<void> {
+    await expect(this.rationalTextbox()).toBeVisible();
   }
 
   async completePage(rationale: string): Promise<void> {

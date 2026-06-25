@@ -39,5 +39,4 @@ export const env = {
   }),
   mpopTestCrn: (): string => required("TEST_MPOP_CRN"),
   mpopStopRestartCrn: (): string => required("TEST_MPOP_STOP_RESTART_CRN"),
-  deliusUrl: (): string => required("DELIUS_URL"),
 };
