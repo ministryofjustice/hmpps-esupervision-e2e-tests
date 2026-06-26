@@ -7,6 +7,7 @@ import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import { ContactDetails } from "../../pages/mpop/updateContactDetailsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import test from "@playwright/test";
+import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 
 interface SetupValues {
   date: string;
@@ -15,6 +16,7 @@ interface SetupValues {
   contact?: ContactDetails;
   photo: PhotoOptions;
   eligibilityIds: number[];
+  rationale: string;
 }
 export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
@@ -63,6 +65,9 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.spoApproval.assertOnPage();
       await this.pages.spoApproval.completePage();
 
+      await this.pages.rationale.assertOnPage();
+      await this.pages.rationale.completePage(setup.rationale);
+
       await this.pages.dateFrequency.assertOnPage();
       await this.pages.dateFrequency.completePage(setup.date, setup.frequency);
 
@@ -76,6 +81,11 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.summary.assertOnPage();
       return this.pages.summary;
     });
+  }
+
+  async submitSetup(summary: CheckInSummaryPage): Promise<void> {
+    await summary.submitSetUp();
+    await new CheckInConfirmationPage(this.page).assertOnPage();
   }
 
   async changePhotoSummary(

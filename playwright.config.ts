@@ -1,17 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
-import dotenv from "dotenv";
 import process from "process";
+import { loadEnv } from "./src/config/loadEnv";
 
-dotenv.config({
-  path: process.env.ENV ? `.env.${process.env.ENV}` : ".env",
-  quiet: true,
-});
+loadEnv();
+
+const headed = process.argv.includes("--headed");
 
 export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  timeout: 60000,
+  timeout: 180000,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ["github"],
@@ -27,6 +26,7 @@ export default defineConfig({
     permissions: ["camera", "microphone"],
     launchOptions: {
       args: [
+        ...(headed ? ["--start-maximized"] : []),
         "--use-fake-device-for-media-stream",
         "--use-fake-ui-for-media-stream",
         "--use-file-for-fake-video-capture=./src/media/mock-camera-capture.y4m",
@@ -40,6 +40,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.PROBATION_CHECK_IN_URL,
+        ...(headed ? { viewport: null } : {}),
       },
     },
   ],

@@ -86,6 +86,16 @@ export default class CheckinJourney {
     });
   }
 
+  async completeLivenessFlow(uuid: string): Promise<void> {
+    await this.pages.livenessRecord.clickContinue();
+    await this.page.goto(`${baseUrl()}/${uuid}/liveness/view`);
+    await expect(this.pages.livenessView.submitAnywayButton()).toBeVisible();
+    await this.pages.livenessView.submitAnyway();
+    await expect(this.page, "Should reach check-your-answers").toHaveURL(
+      /check-your-answers/,
+    );
+  }
+
   async navigateToVideoInform(uuid: string): Promise<void> {
     await this.page.goto(`${baseUrl()}/${uuid}/video/inform`);
     await this.pages.videoInform.isOnPage();

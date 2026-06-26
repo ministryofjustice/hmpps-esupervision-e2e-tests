@@ -4,11 +4,34 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "30 7 * * 1-5"
-
 jobs:
   test:
     timeout-minutes: 60
     runs-on: [self-hosted, hmpps-github-actions-runner]
+    env:
+      TZ: Europe/London
+      ENV: dev
+       # URLs
+      ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
+      PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
+      AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
+      MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
+      DELIUS_URL: https://ndelius.test.probation.service.justice.gov.uk
+
+      # Credentials
+      AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
+      AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
+
+      # test data
+      TEST_CRN: ${{secrets.TEST_CRN }}
+      TEST_PERSON_FIRST_NAME: ${{secrets.TEST_PERSON_FIRST_NAME }}
+      TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
+      TEST_PERSON_DOB: ${{secrets.TEST_PERSON_DOB }}
+      DELIUS_USERNAME: ${{secrets.DELIUS_USERNAME }}
+      DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
+      TEST_MPOP_CRN: ${{secrets.TEST_MPOP_CRN }}
+      TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
+      PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,34 +41,18 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install
-      - name: Run Playwright tests
-        id: tests
-        run: npx playwright test --workers=1 --retries=0
-        env:
-          TZ: Europe/London
-          ENV: dev
-
-          # URLs
-          ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
-          PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
-          AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
-          MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
-
-          # Credentials
-          AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
-          AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
-
-          # test data
-          TEST_CRN: ${{secrets.TEST_CRN }}
-          TEST_PERSON_FIRST_NAME: ${{secrets.TEST_PERSON_FIRST_NAME }}
-          TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
-          TEST_PERSON_DOB: ${{secrets.TEST_PERSON_DOB }}
-          DELIUS_USERNAME: ${{secrets.DELIUS_USERNAME }}
-          DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
-          TEST_MPOP_CRN: ${{secrets.TEST_MPOP_CRN }}
-          TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
-          PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
-
+      - name: Run dev suites(mpop,checkin,static)
+        id: tests_dev
+        run: npm run test:mpop && npm run test:parallel 
+      #E2E suite creates offenders via integration test package, which
+      #resolves Delius from ENV - must be test
+      - name: Run e2e suite
+        id: tests_e2e
+        run: npm run test:e2e
+      # only on full green run  
+      - name: Cleanup created offenders
+        if: success()
+        run: npm run cleanup:crns
       - name: Publish JUnit report
         if: always()
         uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386

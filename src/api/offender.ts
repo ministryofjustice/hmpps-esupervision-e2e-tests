@@ -57,3 +57,23 @@ export const reactivateOffender = async (
     );
     await assertOk(response, `Reactivate offender ${offenderUuid}`);
   });
+
+export const deactivateOffender = async (
+  offenderUuid: string,
+  token: string,
+  reason = "E2E Cleanup",
+): Promise<void> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.post(
+      `/v2/offenders/${offenderUuid}/deactivate`,
+      {
+        headers: authHeader(token),
+        data: {
+          requestedBy: env.practitionerName(),
+          reason,
+          sensitive: false,
+        },
+      },
+    );
+    await assertOk(response, `Deactivate offender ${offenderUuid}`);
+  });

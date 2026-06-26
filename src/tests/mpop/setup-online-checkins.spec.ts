@@ -23,9 +23,13 @@ test("practitioner sets up online check ins for an offender", async ({
     contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
     photo: PhotoOptions.UPLOAD,
     eligibilityIds: [9],
+    rationale: "E2E test rationale",
   });
 
   await test.step("Summary reflects the answers entered", async () => {
+    await expect(summary.rationaleValueLocator()).toContainText(
+      "E2E test rationale",
+    );
     await expect(summary.summaryValueLocator("date")).toContainText(
       firstCheckin,
     );

@@ -45,6 +45,14 @@ export default class CheckInSummaryPage extends MPopBasePage {
     );
   }
 
+  rationaleValueLocator(): Locator {
+    return this.getClass("govuk-summary-list__row")
+      .filter({
+        hasText: "suitable to use online check ins",
+      })
+      .locator(".govuk-summary-list__value");
+  }
+
   async summaryValue(field: SummaryField): Promise<string> {
     return (await this.summaryValueLocator(field).innerText()).trim();
   }
