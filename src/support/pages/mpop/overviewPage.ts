@@ -17,6 +17,10 @@ export default class OverviewPage extends MPopBasePage {
     await link.click();
   }
 
+  async clickActivityLogTab(): Promise<void> {
+    await this.getQA("activityLogTab").getByRole("link").click();
+  }
+
   async clickViewAllOnlineCheckinDetails(): Promise<void> {
     const link = this.getQA("checkinCard").getByRole("link", {
       name: "View all online check in details",

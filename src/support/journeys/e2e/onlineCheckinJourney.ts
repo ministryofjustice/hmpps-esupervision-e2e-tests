@@ -7,11 +7,16 @@ import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
+  CompletedCheckinDetails,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
 import CheckinJourney from "../checkinJourney";
 import { label } from "../../../data/labels";
+import ReviewCheckinJourney, {
+  Annotation,
+  ReviewDecision,
+} from "../mpop/reviewCheckinJourney";
 
 export default class OnlineCheckinJourney {
   constructor(private readonly page: Page) {}
@@ -38,7 +43,10 @@ export default class OnlineCheckinJourney {
     return offender;
   }
 
-  async completeCheckin(uuid: string, offender: NewOffender): Promise<void> {
+  async completeCheckin(
+    uuid: string,
+    offender: NewOffender,
+  ): Promise<CompletedCheckinDetails> {
     const mentalHealth = randomMentalHealthOption();
     const assistance = randomAssistanceSelections(2);
     const journey = new CheckinJourney(this.page);
@@ -56,5 +64,25 @@ export default class OnlineCheckinJourney {
     await journey.verifyAssistanceCommentsInSummary(assistance);
     await journey.submitCheckin();
     await journey.verifyConfirmationPage();
+    return { mentalHealth, assistance };
+  }
+
+  async reviewCheckin(crn: string, decision?: ReviewDecision): Promise<void> {
+    await new ReviewCheckinJourney(this.page).reviewCompletedCheckin(
+      crn,
+      decision,
+    );
+  }
+
+  async annotateCheckin(
+    crn: string,
+    details?: CompletedCheckinDetails,
+    annotation?: Annotation,
+  ): Promise<void> {
+    await new ReviewCheckinJourney(this.page).annotateReviewedCheckin(
+      crn,
+      details,
+      annotation,
+    );
   }
 }

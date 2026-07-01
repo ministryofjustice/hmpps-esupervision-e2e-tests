@@ -15,6 +15,10 @@ import CheckInConfirmationPage from "./checkInConfirmationPage";
 import StopCheckInsPage from "./stopCheckInsPage";
 import ManageCheckInsPage from "./manageCheckInsPage";
 import RationalePage from "./rationalePage";
+import ReviewIdentityPage from "./reviewIdentityPage";
+import ReviewResponsesPage from "./reviewResponsesPage";
+import ActivityLogPage from "./activityLogPage";
+import ReviewedSubmittedPage from "./reviewedSubmittedPage";
 
 const INELIGIBLE_HEADING = /[^\s]+ is not eligible to use online check ins/;
 const PARTIALLY_ELIGIBLE_HEADING =
@@ -38,6 +42,11 @@ export class MpopPages {
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
 
+  readonly activityLog: ActivityLogPage;
+  readonly reviewIdentity: ReviewIdentityPage;
+  readonly reviewResponses: ReviewResponsesPage;
+  readonly reviewedSubmitted: ReviewedSubmittedPage;
+
   readonly restartDateFrequency: DateFrequencyPage;
   readonly restartContactPreference: ContactPreferencePage;
   readonly restartSummary: CheckInSummaryPage;
@@ -60,6 +69,11 @@ export class MpopPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+
+    this.activityLog = new ActivityLogPage(page);
+    this.reviewIdentity = new ReviewIdentityPage(page);
+    this.reviewResponses = new ReviewResponsesPage(page);
+    this.reviewedSubmitted = new ReviewedSubmittedPage(page);
 
     this.restartDateFrequency = new DateFrequencyPage(page, true);
     this.restartContactPreference = new ContactPreferencePage(page, true);

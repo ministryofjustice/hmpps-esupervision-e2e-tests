@@ -13,6 +13,19 @@ export default abstract class MPopBasePage {
     return locator.locator(`.${cssClass}`);
   }
 
+  summaryValueByKey(key: string): Locator {
+    return this.page
+      .locator(".govuk-summary-list__key", { hasText: key })
+      .locator("..")
+      .locator(".govuk-summary-list__value");
+  }
+
+  summaryValueContaining(text: string): Locator {
+    return this.getClass(".govuk-summary-list__value").filter({
+      hasText: text,
+    });
+  }
+
   async assertOnPage(timeout = 10000): Promise<void> {
     await expect(this.getQA("pageHeading")).toContainText(this.heading, {
       timeout,
@@ -26,6 +39,12 @@ export default abstract class MPopBasePage {
 
   async clickRadioByName(qa: string, label: string): Promise<void> {
     const radio = this.getQA(qa).getByRole("radio", { name: label });
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
+  async clickRadioByValue(qa: string, value: string): Promise<void> {
+    const radio = this.getQA(qa).locator(`input[value="${value}"]`);
     await expect(radio).toBeVisible();
     await radio.check();
   }
