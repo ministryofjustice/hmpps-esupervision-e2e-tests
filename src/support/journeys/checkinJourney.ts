@@ -96,44 +96,41 @@ export default class CheckinJourney {
     );
   }
 
-  async navigateToVideoInform(uuid: string): Promise<void> {
-    await this.page.goto(`${baseUrl()}/${uuid}/video/inform`);
-    await this.pages.videoInform.isOnPage();
-  }
-
-  async startVideoRecording(uuid: string): Promise<void> {
-    await this.navigateToVideoInform(uuid);
-    await this.pages.videoInform.clickContinue();
-    await expect(this.page, "Should reach /video/record").toHaveURL(
-      /\/video\/record/,
-    );
-    await expect(this.pages.videoRecord.startBtn()).toBeEnabled({
-      timeout: 10000,
-    });
-    await this.pages.videoRecord.clickStart();
-  }
-
-  async completeVideoRecordNoMatchFlow(uuid: string): Promise<void> {
+  async completeFallbackVideoNoMatchFlow(uuid: string): Promise<void> {
     await test.step("Record video (NO MATCH) and submit video anyway", async () => {
-      await this.navigateToVideoInform(uuid);
-      await this.pages.videoInform.clickContinue();
-      await expect(this.page, "Should reach /video/record").toHaveURL(
-        /\/video\/record/,
-      );
-      await expect(this.pages.videoRecord.startBtn()).toBeEnabled({
+      await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
+      await this.page.goto(`${baseUrl()}/${uuid}/liveness/outcome/cancelled`);
+      await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
+      await this.pages.fallbackInform.isOnPage();
+      await this.pages.fallbackInform.clickContinue();
+      await expect(
+        this.page,
+        "Should reach /liveness/fallback-record",
+      ).toHaveURL(/\/liveness\/fallback-record/);
+      await expect(this.pages.fallbackRecord.startBtn()).toBeEnabled({
         timeout: 10000,
       });
-      await this.pages.videoRecord.clickStart();
+      await this.pages.fallbackRecord.clickStart();
+
       await expect(
-        this.pages.videoView.noMatchScreen(),
+        this.pages.fallbackRecord.reviewVideo(),
+        "Review screen must appear after recording",
+      ).toBeVisible({ timeout: 60000 });
+
+      await this.pages.fallbackRecord.clickReviewVideoContinue();
+
+      await expect(
+        this.pages.fallbackRecord.noMatchScreen(),
         "'We cannot confirm this is you' screen must appear",
       ).toBeVisible({ timeout: 60000 });
-      await expect(this.pages.videoView.noMatchHeading()).toContainText(
+      await expect(this.pages.fallbackRecord.noMatchHeading()).toContainText(
         "We cannot confirm this is you",
       );
-      await expect(this.pages.videoView.submitVideoAnywayLink()).toBeVisible();
-      await expect(this.pages.videoView.recordAgainLink()).toBeVisible();
-      await this.pages.videoView.clickSubmitVideoAnyway();
+      await expect(
+        this.pages.fallbackRecord.submitVideoAnywayLink(),
+      ).toBeVisible();
+      await expect(this.pages.fallbackRecord.recordAgainLink()).toBeVisible();
+      await this.pages.fallbackRecord.clickSubmitVideoAnyway();
       await expect(this.page).toHaveURL(/check-your-answers/);
     });
   }

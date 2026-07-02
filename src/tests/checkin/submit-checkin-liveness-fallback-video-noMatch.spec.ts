@@ -47,7 +47,7 @@ test("video submission NO MATCH-> check-your-answers->confirmation", async ({
   await journey.completePersonalDetails(person);
   await journey.completeMentalHealthQuestion(mentalHealth);
   await journey.completeAssistanceQuestion(assistance);
-  await journey.completeVideoRecordNoMatchFlow(uuid);
+  await journey.completeFallbackVideoNoMatchFlow(uuid);
   await journey.verifyCheckAnswersPage();
   await journey.verifySummaryContains(
     "How have you been feeling since we last spoke?",
