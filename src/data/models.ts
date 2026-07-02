@@ -18,6 +18,10 @@ export const MENTAL_HEALTH_OPTIONS: MentalHealthOption[] = [
 export const randomMentalHealthOption = (): MentalHealthOption =>
   randomPicker(MENTAL_HEALTH_OPTIONS);
 
+export const FEELING_ROW_KEY = "has been feeling";
+
+export const ASSISTANCE_ROW_KEY = "need support with";
+
 export type AssistanceOption =
   | "MENTAL_HEALTH"
   | "ALCOHOL"
@@ -62,4 +66,9 @@ export interface CheckInPerson {
   firstName: string;
   lastName: string;
   dob: Date;
+}
+
+export interface CompletedCheckinDetails {
+  mentalHealth: MentalHealthOption;
+  assistance: AssistanceSelection[];
 }
