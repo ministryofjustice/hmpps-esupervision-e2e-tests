@@ -64,10 +64,7 @@ export default class ReviewCheckinJourney {
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewIdentityTag(identity);
-    await expect(
-      this.pages.reviewedCheckin.reviewSummary(),
-      `Reviewed page should show the review note "${note.trim()}`,
-    ).toContainText(note.trim());
+    await this.assertReviewSummaryShows(note);
     if (details) {
       await this.assertCheckinDetails(this.pages.reviewedCheckin, details);
     }

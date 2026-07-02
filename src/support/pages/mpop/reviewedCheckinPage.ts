@@ -27,7 +27,7 @@ export default class ReviewedCheckinPage extends MPopBasePage {
   async addNote(note: string, sensitive = false): Promise<void> {
     await this.fillText("notes", note);
     if ((await this.getQA("sensitiveContact").count()) > 0) {
-      await this.clickRadioByName("sensitiveContact", sensitive ? "Yes" : "No");
+      await this.clickRadioByName("sensitiveContact", this.yesNo(sensitive));
     }
     await this.clickContinue();
   }

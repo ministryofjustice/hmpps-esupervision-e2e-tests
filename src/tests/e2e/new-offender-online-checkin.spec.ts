@@ -38,7 +38,7 @@ const scenarios: CheckinScenario[] = [
       sensitive: false,
       note: "Identity confirmed, nothing concerning",
     },
-    annotation: { note: " Reviewed, no further action", sensitive: false },
+    annotation: { note: "Reviewed, no further action", sensitive: false },
   },
   {
     name: "checkin created via API - first check in date in the future, NO_MATCH review",
@@ -50,7 +50,7 @@ const scenarios: CheckinScenario[] = [
       sensitive: true,
       note: "Person in the checkin is not the offender",
     },
-    annotation: { note: " Logged ID mismatch", sensitive: true },
+    annotation: { note: "Logged ID mismatch", sensitive: true },
   },
 
   {
@@ -64,7 +64,7 @@ const scenarios: CheckinScenario[] = [
       note: "Identity matches but appearance is concerning",
     },
     annotation: {
-      note: " Follow-up after concerning check in",
+      note: "Follow-up after concerning check in",
       sensitive: false,
     },
   },
