@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from "@playwright/test";
+import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
 
 export default abstract class MPopBasePage {
   constructor(
@@ -11,6 +12,26 @@ export default abstract class MPopBasePage {
   }
   getClass(cssClass: string, locator: Locator | Page = this.page): Locator {
     return locator.locator(`.${cssClass}`);
+  }
+
+  summaryValueByKey(key: string): Locator {
+    return this.page
+      .locator(".govuk-summary-list__key", { hasText: key })
+      .locator("..")
+      .locator(".govuk-summary-list__value");
+  }
+
+  //Shared check in summary rows on both the review notes and reviewed checkin page
+  feelingValue(): Locator {
+    return this.summaryValueByKey(FEELING_ROW_KEY);
+  }
+
+  assistanceValue(): Locator {
+    return this.summaryValueByKey(ASSISTANCE_ROW_KEY);
+  }
+
+  protected yesNo(value: boolean): string {
+    return value ? "Yes" : "No";
   }
 
   async assertOnPage(timeout = 10000): Promise<void> {
@@ -26,6 +47,12 @@ export default abstract class MPopBasePage {
 
   async clickRadioByName(qa: string, label: string): Promise<void> {
     const radio = this.getQA(qa).getByRole("radio", { name: label });
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
+  async clickRadioByValue(qa: string, value: string): Promise<void> {
+    const radio = this.getQA(qa).locator(`input[value="${value}"]`);
     await expect(radio).toBeVisible();
     await radio.check();
   }
