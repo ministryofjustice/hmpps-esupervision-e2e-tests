@@ -1,6 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import { FEELING_ROW_KEY } from "../../../data/models";
+import { ASSISTANCE_ROW_KEY, FEELING_ROW_KEY } from "../../../data/models";
 
 export interface ReviewResponse {
   note: string;
@@ -20,9 +20,8 @@ export default class ReviewResponsesPage extends MPopBasePage {
   }
 
   assistanceValue(): Locator {
-    return this.summaryValueByKey("need support with");
+    return this.summaryValueByKey(ASSISTANCE_ROW_KEY);
   }
-
   async completePage({
     note,
     riskManagement = false,

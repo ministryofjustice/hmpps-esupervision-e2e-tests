@@ -20,6 +20,8 @@ export const randomMentalHealthOption = (): MentalHealthOption =>
 
 export const FEELING_ROW_KEY = "has been feeling";
 
+export const ASSISTANCE_ROW_KEY = "need support with";
+
 export type AssistanceOption =
   | "MENTAL_HEALTH"
   | "ALCOHOL"

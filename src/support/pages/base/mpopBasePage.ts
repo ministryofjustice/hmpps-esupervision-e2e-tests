@@ -21,7 +21,7 @@ export default abstract class MPopBasePage {
   }
 
   summaryValueContaining(text: string): Locator {
-    return this.getClass(".govuk-summary-list__value").filter({
+    return this.getClass("govuk-summary-list__value").filter({
       hasText: text,
     });
   }

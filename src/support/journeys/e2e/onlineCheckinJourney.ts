@@ -67,21 +67,21 @@ export default class OnlineCheckinJourney {
     return { mentalHealth, assistance };
   }
 
-  async reviewCheckin(crn: string, decision?: ReviewDecision): Promise<void> {
+  async reviewCheckin(
+    crn: string,
+    decision?: ReviewDecision,
+    details?: CompletedCheckinDetails,
+  ): Promise<void> {
     await new ReviewCheckinJourney(this.page).reviewCompletedCheckin(
       crn,
       decision,
+      details,
     );
   }
 
-  async annotateCheckin(
-    crn: string,
-    details?: CompletedCheckinDetails,
-    annotation?: Annotation,
-  ): Promise<void> {
+  async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {
     await new ReviewCheckinJourney(this.page).annotateReviewedCheckin(
       crn,
-      details,
       annotation,
     );
   }

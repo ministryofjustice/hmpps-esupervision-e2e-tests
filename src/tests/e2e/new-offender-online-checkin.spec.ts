@@ -88,9 +88,9 @@ test.describe("Online check in for a new offender", () => {
 
       const details = await journey.completeCheckin(checkinUuid, offender);
 
-      await journey.reviewCheckin(offender.crn, scenario.review);
+      await journey.reviewCheckin(offender.crn, scenario.review, details);
 
-      await journey.annotateCheckin(offender.crn, details, scenario.annotation);
+      await journey.annotateCheckin(offender.crn, scenario.annotation);
     });
   }
 });
