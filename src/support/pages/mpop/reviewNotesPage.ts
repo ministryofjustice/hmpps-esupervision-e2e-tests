@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export interface ReviewNotes {
@@ -10,6 +10,10 @@ export interface ReviewNotes {
 export default class ReviewNotesPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Online check in submitted");
+  }
+
+  notesField(): Locator {
+    return this.getQA("notes");
   }
 
   async completePage({

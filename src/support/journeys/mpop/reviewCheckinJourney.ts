@@ -45,12 +45,16 @@ export default class ReviewCheckinJourney {
       sensitive = false,
     } = decision;
 
-    // Review the check in: Identity apge, then the responses page
+    // Review the check in: Identity page, then the responses page
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
     await this.pages.reviewIdentity.completePage(identity);
 
     await this.pages.reviewNotes.assertOnPage();
+    await expect(
+      this.pages.reviewNotes.notesField(),
+      "Should be on the responses page, not still on identity",
+    ).toBeVisible();
     if (details) {
       await this.assertCheckinDetails(this.pages.reviewNotes, details);
     }
@@ -60,7 +64,7 @@ export default class ReviewCheckinJourney {
       sensitive,
     });
 
-    // Re-open the check in and verify the rewview was saved
+    // Re-open the check in and verify the review was saved
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewIdentityTag(identity);
@@ -90,7 +94,7 @@ export default class ReviewCheckinJourney {
     const text = note.trim();
     await expect(
       this.pages.reviewedCheckin.reviewSummary(),
-      `Reviewed page should show the annotation note "${note.trim()}`,
+      `Reviewed page should show the annotation note "${note.trim()}"`,
     ).toContainText(text);
   }
 
@@ -104,7 +108,7 @@ export default class ReviewCheckinJourney {
         : "Identity confirmed";
     await expect(
       this.pages.reviewedCheckin.identityResultTag(),
-      `Identity tag should read ${expected}`,
+      `Identity tag should read "${expected}"`,
     ).toContainText(expected);
   }
 
@@ -160,7 +164,7 @@ export default class ReviewCheckinJourney {
     }
   }
 
-  // assert an element is present exactly once, or noy present at all
+  // assert an element is present exactly once, or not present at all
   private async assertShown(
     name: string,
     locator: Locator,

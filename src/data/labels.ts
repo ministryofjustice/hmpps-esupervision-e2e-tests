@@ -26,7 +26,7 @@ const MPOP_ASSISTANCE_MAP: Record<string, string> = {
   OTHER: "Other",
 };
 
-//substring of the MPOP "What they want us t know about.." comment-row key
+//substring of the MPOP "What they want us to know about.." comment-row key
 // for each assistance option. SUPPORT_SYSTEM and OTHER are irregular: the
 // template uses "their relationships" and "(something else)"
 
