@@ -45,7 +45,7 @@ export default class ReviewCheckinJourney {
       sensitive = false,
     } = decision;
 
-    // Review the check in: Identity page, then the responses page
+    // Review the check in: Identity page, then the review notes page
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
     await this.pages.reviewIdentity.completePage(identity);
@@ -53,7 +53,7 @@ export default class ReviewCheckinJourney {
     await this.pages.reviewNotes.assertOnPage();
     await expect(
       this.pages.reviewNotes.notesField(),
-      "Should be on the responses page, not still on identity",
+      "Should be on the review notes page, not still on identity",
     ).toBeVisible();
     if (details) {
       await this.assertCheckinDetails(this.pages.reviewNotes, details);
@@ -94,7 +94,7 @@ export default class ReviewCheckinJourney {
     const text = note.trim();
     await expect(
       this.pages.reviewedCheckin.reviewSummary(),
-      `Reviewed page should show the annotation note "${note.trim()}"`,
+      `Reviewed page should show the note "${text}"`,
     ).toContainText(text);
   }
 
@@ -137,7 +137,7 @@ export default class ReviewCheckinJourney {
 
   // Identity images are decision driven: the reference photo shows only on
   // NO_MATCH, the check in image row on anything other than MATCH. Liveness is skipped
-  // so when the check in row shows it reads "No image available"
+  // so the check in row shows it reads "No image available"
   private async assertIdentityImages(
     identity: IdentityDecision,
   ): Promise<void> {

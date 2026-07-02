@@ -21,7 +21,7 @@ export default abstract class MPopBasePage {
       .locator(".govuk-summary-list__value");
   }
 
-  //Shared check in summary rows on both review responses and reviewed submitted page
+  //Shared check in summary rows on both the review notes and reviewed checkin page
   feelingValue(): Locator {
     return this.summaryValueByKey(FEELING_ROW_KEY);
   }
