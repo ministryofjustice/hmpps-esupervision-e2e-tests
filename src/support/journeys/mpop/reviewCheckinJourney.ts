@@ -1,7 +1,11 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import { CompletedCheckinDetails } from "../../../data/models";
-import { label, mpopAssistanceLabel } from "../../../data/labels";
+import {
+  label,
+  mpopAssistanceCommentKey,
+  mpopAssistanceLabel,
+} from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
 
 interface CheckinDetailsView {
@@ -40,73 +44,34 @@ export default class ReviewCheckinJourney {
       riskManagement = false,
       sensitive = false,
     } = decision;
+
+    // Review the check in: Identity apge, then the responses page
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
     await this.pages.reviewIdentity.completePage(identity);
-    await this.pages.reviewResponses.assertOnPage();
+
+    await this.pages.reviewNotes.assertOnPage();
     if (details) {
-      await this.assertShowsCheckinDetails(this.pages.reviewResponses, details);
+      await this.assertCheckinDetails(this.pages.reviewNotes, details);
     }
-    await this.pages.reviewResponses.completePage({
+    await this.pages.reviewNotes.completePage({
       note,
       riskManagement,
       sensitive,
     });
+
+    // Re-open the check in and verify the rewview was saved
     await this.openCheckinContact(crn);
-    await this.pages.reviewedSubmitted.assertOnPage();
+    await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewIdentityTag(identity);
     await expect(
-      this.pages.reviewedSubmitted.reviewSummary(),
+      this.pages.reviewedCheckin.reviewSummary(),
       `Reviewed page should show the review note "${note.trim()}`,
     ).toContainText(note.trim());
     if (details) {
-      await this.assertShowsCheckinDetails(
-        this.pages.reviewedSubmitted,
-        details,
-      );
+      await this.assertCheckinDetails(this.pages.reviewedCheckin, details);
     }
     await this.assertIdentityImages(identity);
-  }
-
-  private async assertReviewIdentityTag(
-    identity: IdentityDecision,
-  ): Promise<void> {
-    const expected =
-      identity === IdentityDecision.NO_MATCH
-        ? "Identity not confirmed"
-        : "Identity confirmed";
-    await expect(
-      this.pages.reviewedSubmitted.identityResultTag(),
-      `Reviewed page should show "${expected}" for a ${identity} review`,
-    ).toContainText(expected);
-  }
-
-  private async assertIdentityImages(
-    identity: IdentityDecision,
-  ): Promise<void> {
-    const referenceImageShown = identity === IdentityDecision.NO_MATCH;
-    const checkinImageRowShown = identity !== IdentityDecision.MATCH;
-
-    await expect(
-      this.pages.reviewedSubmitted.referenceImage(),
-      `Reference image should ${referenceImageShown ? "" : "not "}show 
-    for a ${identity} review`,
-    ).toHaveCount(referenceImageShown ? 1 : 0);
-
-    const checkinImageRow = this.pages.reviewedSubmitted.checkinImageRow();
-
-    await expect(
-      checkinImageRow,
-      `Check in  image row should ${checkinImageRowShown ? "" : "not "}show 
-    for a ${identity} review`,
-    ).toHaveCount(checkinImageRowShown ? 1 : 0);
-
-    if (checkinImageRowShown) {
-      await expect(
-        checkinImageRow,
-        "Liveness is skipped, so the check in image row should read 'No image available",
-      ).toContainText("No image available");
-    }
   }
 
   async annotateReviewedCheckin(
@@ -115,36 +80,99 @@ export default class ReviewCheckinJourney {
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
     await this.openCheckinContact(crn);
-    await this.pages.reviewedSubmitted.assertOnPage();
-    await this.pages.reviewedSubmitted.addNote(note, sensitive);
+    await this.pages.reviewedCheckin.assertOnPage();
+    await this.pages.reviewedCheckin.addNote(note, sensitive);
+
+    // Re-open and verify the note was saved
     await this.openCheckinContact(crn);
-    await this.pages.reviewedSubmitted.assertOnPage();
-    await expect(
-      this.pages.reviewedSubmitted.reviewSummary(),
-      `Reviewed page should show the annotation note "${note.trim()}`,
-    ).toContainText(note.trim());
+    await this.pages.reviewedCheckin.assertOnPage();
+    await this.assertReviewSummaryShows(note);
   }
 
-  private async assertShowsCheckinDetails(
+  private async assertReviewSummaryShows(note: string): Promise<void> {
+    const text = note.trim();
+    await expect(
+      this.pages.reviewedCheckin.reviewSummary(),
+      `Reviewed page should show the annotation note "${note.trim()}`,
+    ).toContainText(text);
+  }
+
+  // Identity tag reads "not confirmed" for NO_MATCH, "confirmed" otherwise
+  private async assertReviewIdentityTag(
+    identity: IdentityDecision,
+  ): Promise<void> {
+    const expected =
+      identity === IdentityDecision.NO_MATCH
+        ? "Identity not confirmed"
+        : "Identity confirmed";
+    await expect(
+      this.pages.reviewedCheckin.identityResultTag(),
+      `Identity tag should read ${expected}`,
+    ).toContainText(expected);
+  }
+
+  private async assertCheckinDetails(
     view: CheckinDetailsView,
     details: CompletedCheckinDetails,
   ): Promise<void> {
+    const feeling = label(details.mentalHealth);
     await expect(
       view.feelingValue(),
-      `Page must show the feeling answer" ${label(details.mentalHealth)}"`,
-    ).toContainText(label(details.mentalHealth));
-    const assistanceValue = view.assistanceValue();
+      `Feeling should show "${feeling}"`,
+    ).toContainText(feeling);
+    const assistanceRow = view.assistanceValue();
     for (const { option, comment } of details.assistance) {
       const optionLabel = mpopAssistanceLabel(option);
       await expect(
-        assistanceValue,
-        `Page must show assistance comment for ${optionLabel}`,
+        assistanceRow,
+        `Assistance should list "${optionLabel}"`,
       ).toContainText(optionLabel);
       await expect(
-        view.summaryValueByKey(mpopAssistanceLabel(option)),
-        `Page must show the ${optionLabel} comment "${comment}"`,
+        view.summaryValueByKey(mpopAssistanceCommentKey(option)),
+        `Comment for "${optionLabel}" should show comment "${comment}"`,
       ).toContainText(comment);
     }
+  }
+
+  // Identity images are decision driven: the reference photo shows only on
+  // NO_MATCH, the check in image row on anything other than MATCH. Liveness is skipped
+  // so when the check in row shows it reads "No image available"
+  private async assertIdentityImages(
+    identity: IdentityDecision,
+  ): Promise<void> {
+    const showsReferencePhoto = identity === IdentityDecision.NO_MATCH;
+    const showsCheckinImageRow = identity !== IdentityDecision.MATCH;
+
+    await this.assertShown(
+      "Reference image",
+      this.pages.reviewedCheckin.referenceImage(),
+      showsReferencePhoto,
+    );
+
+    await this.assertShown(
+      "Check in image row",
+      this.pages.reviewedCheckin.checkinImageRow(),
+      showsCheckinImageRow,
+    );
+
+    if (showsCheckinImageRow) {
+      await expect(
+        this.pages.reviewedCheckin.checkinImageRow(),
+        "Liveness is skipped, so the check in image row should read 'No image available",
+      ).toContainText("No image available");
+    }
+  }
+
+  // assert an element is present exactly once, or noy present at all
+  private async assertShown(
+    name: string,
+    locator: Locator,
+    shown: boolean,
+  ): Promise<void> {
+    await expect(
+      locator,
+      shown ? `${name} should be shown` : `${name} should not be shown`,
+    ).toHaveCount(shown ? 1 : 0);
   }
 
   private async openCheckinContact(crn: string): Promise<void> {

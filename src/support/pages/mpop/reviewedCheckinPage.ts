@@ -1,8 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
 
-export default class ReviewedSubmittedPage extends MPopBasePage {
+export default class ReviewedCheckinPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Online check in submitted and reviewed");
   }
@@ -13,14 +12,6 @@ export default class ReviewedSubmittedPage extends MPopBasePage {
 
   identityResultTag(): Locator {
     return this.getQA("reviewSummary").locator(".govuk-tag");
-  }
-
-  feelingValue(): Locator {
-    return this.summaryValueByKey(FEELING_ROW_KEY);
-  }
-
-  assistanceValue(): Locator {
-    return this.summaryValueByKey(ASSISTANCE_ROW_KEY);
   }
 
   referenceImage(): Locator {

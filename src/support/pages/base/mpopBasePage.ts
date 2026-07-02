@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from "@playwright/test";
+import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
 
 export default abstract class MPopBasePage {
   constructor(
@@ -20,10 +21,17 @@ export default abstract class MPopBasePage {
       .locator(".govuk-summary-list__value");
   }
 
-  summaryValueContaining(text: string): Locator {
-    return this.getClass("govuk-summary-list__value").filter({
-      hasText: text,
-    });
+  //Shared check in summary rows on both review responses and reviewed submitted page
+  feelingValue(): Locator {
+    return this.summaryValueByKey(FEELING_ROW_KEY);
+  }
+
+  assistanceValue(): Locator {
+    return this.summaryValueByKey(ASSISTANCE_ROW_KEY);
+  }
+
+  protected yesNo(value: boolean): string {
+    return value ? "Yes" : "No";
   }
 
   async assertOnPage(timeout = 10000): Promise<void> {

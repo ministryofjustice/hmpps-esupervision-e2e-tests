@@ -15,11 +15,6 @@ const MAP: Record<string, string> = {
   NO_HELP: "No, I do not need help",
 };
 
-export const label = (key: string): string => {
-  if (!key) return "";
-  return MAP[key.trim().toUpperCase()] ?? key;
-};
-
 const MPOP_ASSISTANCE_MAP: Record<string, string> = {
   MENTAL_HEALTH: "Mental health",
   ALCOHOL: "Alcohol",
@@ -31,8 +26,9 @@ const MPOP_ASSISTANCE_MAP: Record<string, string> = {
   OTHER: "Other",
 };
 
-export const mpopAssistanceLabel = (key: string): string =>
-  MPOP_ASSISTANCE_MAP[key.trim().toUpperCase()] ?? key;
+//substring of the MPOP "What they want us t know about.." comment-row key
+// for each assistance option. SUPPORT_SYSTEM and OTHER are irregular: the
+// template uses "their relationships" and "(something else)"
 
 const MPOP_ASSISTANCE_COMMENT_KEY: Record<string, string> = {
   MENTAL_HEALTH: "about mental health",
@@ -45,5 +41,13 @@ const MPOP_ASSISTANCE_COMMENT_KEY: Record<string, string> = {
   OTHER: "about (something else)",
 };
 
-export const mpopAssistanceCommentKey = (key: string): string =>
-  MPOP_ASSISTANCE_COMMENT_KEY[key.trim().toUpperCase()] ?? key;
+const lookup =
+  (map: Record<string, string>) =>
+  (key: string): string =>
+    key ? (map[key.trim().toUpperCase()] ?? key) : "";
+
+export const label = lookup(MAP);
+
+export const mpopAssistanceLabel = lookup(MPOP_ASSISTANCE_MAP);
+
+export const mpopAssistanceCommentKey = lookup(MPOP_ASSISTANCE_COMMENT_KEY);
