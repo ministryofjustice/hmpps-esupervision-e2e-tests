@@ -10,7 +10,6 @@ import LivenessViewPage from "./livenessViewPage";
 import LivenessRecordPage from "./livenessRecordPage";
 import FallbackRecordPage from "./fallbackRecordPage";
 
-
 export class Pages {
   readonly homepage: HomePage;
   readonly personalDetails: PersonalDetailsPage;

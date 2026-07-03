@@ -99,7 +99,7 @@ test.afterAll(async () => {
   writeCreatedCrns(failed);
   console.log(
     failed.length > 0
-      ? `Cleanup: ${failed.length} offender(S) could not be deleted: ${failed.join(",")}`
+      ? `Cleanup: ${failed.length} offender(s) could not be deleted: ${failed.join(",")}`
       : "Cleanup: all created offenders removed",
   );
 });

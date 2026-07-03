@@ -99,9 +99,9 @@ export default class CheckinJourney {
   async completeFallbackVideoNoMatchFlow(uuid: string): Promise<void> {
     await test.step("Record video (NO MATCH) and submit video anyway", async () => {
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
-      // The liveness widget can't run in headless CI, so it
-      // self navigates to an outcome page. I cannot click through UI and
-      // navigate to fall back directly
+      // The liveness widget can't run in headless CI, so
+      // navigated to an outcome page. I cannot click through UI and
+      // navigate to fallback directly
       await this.page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
       await this.pages.fallbackInform.isOnPage();

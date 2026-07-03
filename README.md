@@ -80,7 +80,7 @@ CRNS=X123456,X654321 npm run cleanup:crns
 
 The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
 
-The suite runs in a single `playwright test` and produces ibe report ( a Junit and HTML report as an artifact)
+The suite runs in a single `playwright test` and produces one report ( a Junit and HTML report as an artifact)
 
 There is no cleanup step - the e2e test suite cleans up its own offenders in its teardown( only on a green e2e run),so a failed run leaves the CRN for debugging.
 
