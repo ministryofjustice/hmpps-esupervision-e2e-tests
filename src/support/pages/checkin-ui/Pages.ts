@@ -4,12 +4,12 @@ import ConfirmationPage from "./confirmationPage";
 import MentalHealthPage from "./mentalHealthPage";
 import PersonalDetailsPage from "./personalDetailsPage";
 import CheckAnswersPage from "./checkAnswersPage";
-import VideoViewPage from "./videoViewPage";
-import VideoRecordPage from "./fallbackrecordPage";
 import HomePage from "./homePage";
 import FallbackInformPage from "./fallbackInformPage";
 import LivenessViewPage from "./livenessViewPage";
 import LivenessRecordPage from "./livenessRecordPage";
+import FallbackRecordPage from "./fallbackRecordPage";
+
 
 export class Pages {
   readonly homepage: HomePage;
@@ -19,8 +19,7 @@ export class Pages {
   readonly livenessRecord: LivenessRecordPage;
   readonly livenessView: LivenessViewPage;
   readonly fallbackInform: FallbackInformPage;
-  readonly fallbackRecord: VideoRecordPage;
-  readonly videoView: VideoViewPage;
+  readonly fallbackRecord: FallbackRecordPage;
   readonly checkAnswers: CheckAnswersPage;
   readonly confirmation: ConfirmationPage;
 
@@ -32,8 +31,7 @@ export class Pages {
     this.livenessRecord = new LivenessRecordPage(page);
     this.livenessView = new LivenessViewPage(page);
     this.fallbackInform = new FallbackInformPage(page);
-    this.fallbackRecord = new VideoRecordPage(page);
-    this.videoView = new VideoViewPage(page);
+    this.fallbackRecord = new FallbackRecordPage(page);
     this.checkAnswers = new CheckAnswersPage(page);
     this.confirmation = new ConfirmationPage(page);
   }
