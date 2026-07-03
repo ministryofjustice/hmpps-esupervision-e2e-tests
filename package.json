@@ -4,7 +4,7 @@
   "description": "Playwright E2E tests for online check ins and eSupervision user journeys",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:mpop && npm run test:e2e && npm run test:parallel",
+    "test": "ENV=test playwright test src/tests --workers=1",
     "test:e2e": "ENV=test playwright test src/tests/e2e --workers=1",
     "test:mpop": "ENV=dev playwright test src/tests/mpop --workers=1",
     "test:parallel": "ENV=dev playwright test src/tests/checkin src/tests/static",
