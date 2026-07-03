@@ -8,8 +8,6 @@ import {
 } from "../support/utils/createdCrns";
 import { loadEnv } from "../config/loadEnv";
 
-loadEnv();
-
 const fromEnv = (process.env.CRNS ?? "")
   .split(",")
   .map((crn) => crn.trim())
@@ -61,6 +59,7 @@ export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
 
 // Run as a script - not when imported by a test
 if (process.argv[1]?.includes("cleanupCrns")) {
+  loadEnv();
   const main = async (): Promise<void> => {
     const crns = fromEnv.length > 0 ? fromEnv : readCreatedCrns();
     if (crns.length === 0) {
