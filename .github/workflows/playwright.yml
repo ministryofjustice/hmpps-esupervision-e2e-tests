@@ -43,10 +43,6 @@ jobs:
       - name: Run Playwright tests
         id: tests
         run: npm run test
-      # only on full green run  
-      - name: Cleanup created offenders
-        if: success()
-        run: npm run cleanup:crns
       - name: Publish JUnit report
         if: always()
         uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386

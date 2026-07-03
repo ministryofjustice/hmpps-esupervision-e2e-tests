@@ -52,28 +52,38 @@ const deleteAll = async (crns: string[]): Promise<string[]> => {
   }
 };
 
-const main = async (): Promise<void> => {
-  const crns = fromEnv.length > 0 ? fromEnv : readCreatedCrns();
-  if (crns.length === 0) {
-    console.log("No CRNs to clean up");
-    return;
-  }
-
+// Imported by e2e teardown
+export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
+  if (crns.length === 0) return [];
   await deactivateAll(crns);
-  const failed = await deleteAll(crns);
-  if (fromEnv.length === 0) {
-    writeCreatedCrns(failed);
-  }
-
-  if (failed.length > 0) {
-    console.log(
-      `could not delete ${failed.length} offender(s): ${failed.join(",")}`,
-    );
-    process.exitCode = 1;
-  }
+  return deleteAll(crns);
 };
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+// Run as a script - not when imported by a test
+if (process.argv[1]?.includes("cleanupCrns")) {
+  const main = async (): Promise<void> => {
+    const crns = fromEnv.length > 0 ? fromEnv : readCreatedCrns();
+    if (crns.length === 0) {
+      console.log("No CRNs to clean up");
+      return;
+    }
+
+    await deactivateAll(crns);
+    const failed = await deleteAll(crns);
+    if (fromEnv.length === 0) {
+      writeCreatedCrns(failed);
+    }
+
+    if (failed.length > 0) {
+      console.log(
+        `could not delete ${failed.length} offender(s): ${failed.join(",")}`,
+      );
+      process.exitCode = 1;
+    }
+  };
+
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
