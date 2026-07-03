@@ -29,14 +29,17 @@ export default class FallbackRecordPage extends CheckinBasePage {
   noMatchScreen(): Locator {
     return this.getByID("fallbackNoMatchScreen");
   }
+
   noMatchHeading(): Locator {
     return this.noMatchScreen().locator("h1");
   }
+
   recordAgainLink(): Locator {
     return this.noMatchScreen().locator("[data-fallback-video]");
   }
+
   submitVideoAnywayLink(): Locator {
-    return this.page.locator("a.govuk-button--secondary", {
+    return this.noMatchScreen().locator("a.govuk-button--secondary", {
       hasText: "Submit video anyway",
     });
   }
