@@ -99,9 +99,7 @@ export default class CheckinJourney {
   async completeFallbackVideoNoMatchFlow(uuid: string): Promise<void> {
     await test.step("Record video (NO MATCH) and submit video anyway", async () => {
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
-      await this.page.goto(`${baseUrl()}/${uuid}/liveness/outcome/cancelled`, {
-        waitUntil: "commit",
-      });
+      await this.page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
       await this.pages.fallbackInform.isOnPage();
       await this.pages.fallbackInform.clickContinue();
