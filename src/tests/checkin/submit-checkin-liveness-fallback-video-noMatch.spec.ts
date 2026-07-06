@@ -36,9 +36,9 @@ test.beforeAll(async () => {
 /** We do not run the real AWS face liveness check. The recording step is driven with a fake camera 
   (see playwright.config.ts launch args). The recorded video does not match and return NO_MATCH. 
  The journey takes 'submit video anyway'
- path so teh check in can still complete**/
+ path so the check in can still complete**/
 
-test("video submission NO MATCH-> check-your-answers->confirmation", async ({
+test("video fallback: no match, submit anyway, checkin completes", async ({
   page,
 }) => {
   const journey = new CheckinJourney(page);
@@ -47,7 +47,7 @@ test("video submission NO MATCH-> check-your-answers->confirmation", async ({
   await journey.completePersonalDetails(person);
   await journey.completeMentalHealthQuestion(mentalHealth);
   await journey.completeAssistanceQuestion(assistance);
-  await journey.completeVideoRecordNoMatchFlow(uuid);
+  await journey.completeFallbackVideoNoMatchFlow(uuid);
   await journey.verifyCheckAnswersPage();
   await journey.verifySummaryContains(
     "How have you been feeling since we last spoke?",

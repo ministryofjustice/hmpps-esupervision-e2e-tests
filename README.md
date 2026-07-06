@@ -41,7 +41,9 @@ Append `:headed` to most scripts (e.g `test:e2e:headed`) to watch them run
 
 All suites read the same .env file.
 
-`ENV` the app journeys (mpop, checkin,static) run under `ENV=dev` - they read service URLs directly. The offender create/delete path goes through the `hmpps-probation-integration-e2e-tests` packages, which resolves Delius host only from `ENV` so `test:e2e` and `cleanup:crns` run under `ENV=test` .
+`ENV` selects Delius the offender create/delete path goes through `hmpps-probation-integration-e2e-tests` package, which resolves the Delius host from ENV, so the e2e tests run under ENV= test. The app journeys (mpop,checkin,status) read URLs directly and unaffected by ENV.
+
+The per suite scrips set ENV accordingly (see package.json scripts)
 
 ## How the video / liveness step is handled
 
@@ -53,20 +55,16 @@ launched with a **fake camera** (a recorded file, see `playwright.config.ts`):
 --use-fake-ui-for-media-stream
 --use-file-for-fake-video-capture=<absolute path to src/media/mock-camera-capture.y4m>
 ```
+Two suites cover the liveness step in two different ways:
 
-Because the fake video is not the offender's face, identity verification returns
-**NO MATCH**, and the test takes the **"Submit video anyway"** path to complete
-the check in. So this suite verifies the no-match route end to end; it does not
-assert a successful identity match.
+checkin (submit-checkin-liveness-fallback-video-noMatch) test the video fallback: the widget can't run headlessly so it self-navigates to an outcome page(which unlocks the fallback); the test records with the fake camera, gets NO match and takes "Submit video anyway" to complete check in.
+
+e2e (new-offender-online-checkin) skip liveness: it goes straight to /liveness/view and takes "Submit anyway" so no video is recorded
 
 ## Cleanup
 
-The e2e suite records every CRN it creates in `created-crns.txt` (gitIgnored). Deleting those offenders is a **separate step**
-the suite does not delete them automatically as a part of test run
-
-In **CI** the workflow runs `cleanup:crns` after a fully green run.
-
-**Locally** After running the e2e suite, run `cleanup:crns` script to remove the offenders created
+The e2e suite records every CRN it creates in `created-crns.txt` (gitIgnored) and cleans them up in its 'afterAll' teardown - only when e2e tests pass.
+If e2e test fails, the created offenders are kept for debugging
 
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns
@@ -82,8 +80,9 @@ CRNS=X123456,X654321 npm run cleanup:crns
 
 The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
 
-The dev and e2e test suite run as separate steps so each gets the right `ENV`.
-**Cleanup runs only on a green run** (`if:success()`), so failed run leaves the crn for debugging
+The suite runs in a single `playwright test` and produces one report ( a Junit and HTML report as an artifact)
+
+There is no cleanup step - the e2e test suite cleans up its own offenders in its teardown( only on a green e2e run),so a failed run leaves the CRN for debugging.
 
 ## Notes
 

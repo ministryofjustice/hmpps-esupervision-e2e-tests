@@ -14,6 +14,11 @@ import {
   ReviewDecision,
 } from "../../support/journeys/mpop/reviewCheckinJourney";
 import { IdentityDecision } from "../../support/pages/mpop/reviewIdentityPage";
+import {
+  readCreatedCrns,
+  writeCreatedCrns,
+} from "../../support/utils/createdCrns";
+import { cleanupCrns } from "../../scripts/cleanupCrns";
 
 interface CheckinScenario {
   name: string;
@@ -69,6 +74,35 @@ const scenarios: CheckinScenario[] = [
     },
   },
 ];
+
+let e2ePassed = true;
+
+test.afterEach(() => {
+  const testInfo = test.info();
+  if (testInfo.status !== testInfo.expectedStatus) {
+    e2ePassed = false;
+  }
+});
+
+test.afterAll(async () => {
+  const crns = readCreatedCrns();
+  if (crns.length === 0) return;
+
+  if (!e2ePassed) {
+    console.log(
+      `e2e failed - keeping ${crns.length} offender(s) for investigation: ${crns.join(",")}`,
+    );
+    return;
+  }
+
+  const failed = await cleanupCrns(crns);
+  writeCreatedCrns(failed);
+  console.log(
+    failed.length > 0
+      ? `Cleanup: ${failed.length} offender(s) could not be deleted: ${failed.join(",")}`
+      : "Cleanup: all created offenders removed",
+  );
+});
 
 // These scenarios share a single Delius account and drive the MPOP setup journey,
 // so they must not run concurrently. The suite runs a single-worker which keeps them independent
