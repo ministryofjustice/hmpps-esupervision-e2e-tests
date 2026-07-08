@@ -23,4 +23,12 @@ export default class ManageCheckInsPage extends MPopBasePage {
   questionsAddedBanner(): Locator {
     return this.page.getByText(/added additional questions/);
   }
+
+  nextCheckinDate(): Locator {
+    return this.getQA("nextCheckInValue").first();
+  }
+
+  questionCard(): Locator {
+    return this.getQA("checkinQuestionsCard");
+  }
 }

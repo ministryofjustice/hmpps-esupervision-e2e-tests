@@ -4,9 +4,11 @@ import {
   MentalHealthOption,
   AssistanceSelection,
   CheckInPerson,
+  AdditionalAnswer,
 } from "../../data/models";
 import { env } from "../../config/env";
 import { Pages } from "../pages/checkin-ui/Pages";
+import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionPage";
 
 const baseUrl = (): string => env.checkInUrl();
 
@@ -84,6 +86,34 @@ export default class CheckinJourney {
       await this.pages.assistance.isOnPage();
       await this.pages.assistance.selectOptionsAndContinue(selections);
     });
+  }
+
+  async completeAdditionalQuestions(
+    questions: string[],
+    answer = "E2E additional answer",
+  ): Promise<AdditionalAnswer[]> {
+    const answered: AdditionalAnswer[] = [];
+    await test.step(`Answer ${questions.length} additional question(s)`, async () => {
+      for (let i = 0; i < questions.length; i++) {
+        await expect(this.page).toHaveURL(ADDITIONAL_QUESTION_URL);
+        await expect(this.pages.additionalQuestion.answerField()).toBeVisible();
+        const shown = await this.pages.additionalQuestion.questionText();
+        const response = answer[i] ?? `Additional answer ${i + 1}`;
+        await this.pages.additionalQuestion.answerAndContinue(response);
+        answered.push({
+          question: questions.find((q) => shown.includes(q)) ?? shown,
+          answer: response,
+        });
+      }
+
+      for (const question of questions) {
+        expect(
+          answered.map((a) => a.question),
+          `Offender check in should show the added question "${question}"`,
+        ).toContain(question);
+      }
+    });
+    return answered;
   }
 
   async completeLivenessFlow(uuid: string): Promise<void> {

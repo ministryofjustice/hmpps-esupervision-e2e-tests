@@ -24,6 +24,8 @@ interface CheckinScenario {
   name: string;
   firstCheckinDaysAhead: number;
   getCheckinUuid: (offender: NewOffender, token: string) => Promise<string>;
+  customQuestions?: string[];
+  expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
 }
@@ -31,12 +33,17 @@ interface CheckinScenario {
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
   createEsupervisionCheckin(offender.crn, dueDateString(today), token);
 
+const EDITED_QUESTION_FILL = "sentence plan";
+
 const scenarios: CheckinScenario[] = [
   {
     name: "checkin created by the scheduler - first checkin today, MATCH review",
     firstCheckinDaysAhead: 0,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
+
+    // Check in today so questions can no longer be changed
+    expectNoChangeQuestions: true,
     review: {
       identity: IdentityDecision.MATCH,
       riskManagement: false,
@@ -49,6 +56,7 @@ const scenarios: CheckinScenario[] = [
     name: "checkin created via API - first check in date in the future, NO_MATCH review",
     firstCheckinDaysAhead: 4,
     getCheckinUuid: apiCheckin,
+    customQuestions: ["unpaid work", "home", "physical or mental health"],
     review: {
       identity: IdentityDecision.NO_MATCH,
       riskManagement: true,
@@ -117,6 +125,24 @@ test.describe("Online check in for a new offender", () => {
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
       );
+      if (scenario.expectNoChangeQuestions) {
+        await journey.assertChangeQuestionsUnavailable(offender.crn);
+      }
+      if (scenario.customQuestions) {
+        await journey.addCustomQuestions(
+          offender.crn,
+          scenario.customQuestions,
+        );
+
+        await journey.editAndDeleteCustomQuestions(
+          offender.crn,
+          {
+            from: scenario.customQuestions[0],
+            to: EDITED_QUESTION_FILL,
+          },
+          scenario.customQuestions[1],
+        );
+      }
       const token = await getToken();
       const checkinUuid = await scenario.getCheckinUuid(offender, token);
 

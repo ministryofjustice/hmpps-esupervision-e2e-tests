@@ -7,7 +7,6 @@ import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
-import addQuestionsPage from "../../pages/mpop/addQuestionsPage";
 
 export interface RestartValues {
   date: string;
@@ -20,19 +19,20 @@ const FEELING_PREVIEW_OPTIONS = [
   "Very well",
   "Well",
   "OK",
-  "Not Great",
+  "Not great",
   "Struggling",
 ];
 
 const SUPPORT_PREVIEW_CHECKBOXES = [
-  "mentalHealthSupport",
-  "alcoholSupport",
-  "drugsSupport",
-  "moneySupport",
-  "employmentAndEducationSupport",
-  "relationshipsSupport",
-  "otherSupport",
-  "no-help",
+  "Mental health",
+  "Alcohol",
+  "Drugs",
+  "Money",
+  "Housing",
+  "Employment and education",
+  "Relationships (family, friends, partner",
+  "Something else",
+  "No, I do not need any support",
 ];
 
 export default class ManageCheckInsJourney {
@@ -87,33 +87,20 @@ export default class ManageCheckInsJourney {
   }
 
   async addQuestions(crn: string, questions: string[]): Promise<void> {
-    const manage = await this.openManage(crn);
-    await expect(
-      manage.changeQuestionsLink(),
-      "Change questions link should be present for a future check in",
-    ).toBeVisible();
-    await manage.clickChangeQuestions();
-
-    await this.pages.howToWriteQuestions.assertOnPage();
-    await this.pages.howToWriteQuestions.clickAddQuestions();
-
-    await this.pages.addQuestions.assertOnPage();
+    const manage = await this.goToAddQuestionsPage(crn);
     await this.previewDefaultQuestions();
-
-    for (const question of questions) {
-      await this.pages.addQuestions.clickAddQuestion();
-      await this.pages.chooseQuestion.assertOnPage();
-      await this.pages.chooseQuestion.selectQuestion();
-      await this.pages.editQuestion.assertOnPage();
-      await this.pages.editQuestion.enterQuestion(question);
-      await this.pages.addQuestions.assertOnPage();
-    }
-
+    await this.enterQuestions(questions);
     await this.pages.addQuestions.clickSaveQuestions();
     await expect(
       manage.questionsAddedBanner(),
       "should show the questions added confirmation",
     ).toBeVisible();
+    for (const question of questions) {
+      await expect(
+        manage.questionCard(),
+        `Upcoming check in should list the saved question "${question}"`,
+      ).toContainText(question);
+    }
   }
 
   async editAndDeleteQuestions(
@@ -122,7 +109,7 @@ export default class ManageCheckInsJourney {
     remove: string,
   ): Promise<void> {
     const addPage = this.pages.addQuestions;
-    await this.openAddQuestions(crn);
+    await this.goToAddQuestionsPage(crn);
     await addPage.clickEditQuestion(edit.from);
     await this.pages.editQuestion.assertOnPage();
     await this.pages.editQuestion.enterQuestion(edit.to);
@@ -135,18 +122,42 @@ export default class ManageCheckInsJourney {
     await expect(addPage.customQuestionRow(remove)).toHaveCount(0);
   }
 
-  async openAddQuestions(crn: string): Promise<ManageCheckInsPage> {
+  async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
     const manage = await this.openManage(crn);
     await expect(
       manage.changeQuestionsLink(),
       "Change questions link should be present for a future check in",
     ).toBeVisible();
+
+    const nextCheckinDate =
+      (await manage.nextCheckinDate().textContent())?.trim() ?? "";
     await manage.clickChangeQuestions();
 
     await this.pages.howToWriteQuestions.assertOnPage();
     await this.pages.howToWriteQuestions.clickAddQuestions();
     await this.pages.addQuestions.assertOnPage();
+    await expect(
+      this.pages.addQuestions.nextCheckinDate(),
+      "Add questions page should show the same next check in date as manage check in page",
+    ).toHaveText(nextCheckinDate);
     return manage;
+  }
+
+  private async enterQuestions(questions: string[]): Promise<void> {
+    for (let i = 0; i < questions.length; i++) {
+      await this.pages.addQuestions.clickAddQuestion();
+      await this.pages.chooseQuestion.assertOnPage();
+      await this.pages.chooseQuestion.selectQuestion();
+      await this.pages.editQuestion.assertOnPage();
+      await this.pages.editQuestion.enterQuestion(questions[i]);
+      await this.pages.addQuestions.assertOnPage();
+    }
+    if (questions.length >= 3) {
+      await expect(
+        this.pages.addQuestions.addQuestionButton(),
+        " Add question button should be gone once 3 questions exist",
+      ).toHaveCount(0);
+    }
   }
 
   private async previewDefaultQuestions(): Promise<void> {
@@ -168,16 +179,16 @@ export default class ManageCheckInsJourney {
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
       await expect(
         this.pages.questionPreview.supportCheckbox(checkbox),
-        `Support preview should show te "${checkbox}" checkbox`,
+        `Support preview should show the "${checkbox}" checkbox`,
       ).toBeVisible();
-
-      await this.pages.questionPreview.clickBackToQuestions();
-      await this.pages.addQuestions.assertOnPage();
     }
+    await this.pages.questionPreview.clickBackToQuestions();
+    await this.pages.addQuestions.assertOnPage();
   }
 
   async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
     const manage = await this.openManage(crn);
+    console.log(await expect(manage.changeQuestionsLink()).toHaveCount(0));
     await expect(manage.changeQuestionsLink()).toHaveCount(0);
   }
 }

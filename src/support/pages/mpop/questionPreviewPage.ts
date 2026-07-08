@@ -11,7 +11,9 @@ export default class QuestionPreviewPage extends MPopBasePage {
   }
 
   supportCheckbox(name: string): Locator {
-    return this.page.locator(`[id='${name}-checkbox']`);
+    return this.page.locator("label.govuk-checkboxes__label", {
+      hasText: name,
+    });
   }
 
   async clickBackToQuestions(): Promise<void> {

@@ -1,6 +1,9 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import { CompletedCheckinDetails } from "../../../data/models";
+import {
+  AdditionalAnswer,
+  CompletedCheckinDetails,
+} from "../../../data/models";
 import {
   label,
   mpopAssistanceCommentKey,
@@ -78,6 +81,7 @@ export default class ReviewCheckinJourney {
   async annotateReviewedCheckin(
     crn: string,
     annotation: Annotation = {},
+    additional: AdditionalAnswer[] = [],
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
     await this.openCheckinContact(crn);
@@ -88,6 +92,7 @@ export default class ReviewCheckinJourney {
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewSummaryShows(note);
+    await this.assertAdditionalAnswers(this.pages.reviewedCheckin, additional);
   }
 
   private async assertReviewSummaryShows(note: string): Promise<void> {
@@ -132,6 +137,19 @@ export default class ReviewCheckinJourney {
         view.summaryValueByKey(mpopAssistanceCommentKey(option)),
         `Comment for "${optionLabel}" should show comment "${comment}"`,
       ).toContainText(comment);
+    }
+    await this.assertAdditionalAnswers(view, details.additional);
+  }
+
+  private async assertAdditionalAnswers(
+    view: CheckinDetailsView,
+    additional: AdditionalAnswer[],
+  ): Promise<void> {
+    for (const { question, answer } of additional) {
+      await expect(
+        view.summaryValueByKey(question),
+        `Custom question "${question}" should show "${answer}"`,
+      ).toContainText(answer);
     }
   }
 

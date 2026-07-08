@@ -7,6 +7,7 @@ import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
+  AdditionalAnswer,
   CompletedCheckinDetails,
   randomAssistanceSelections,
   randomMentalHealthOption,
@@ -17,6 +18,7 @@ import ReviewCheckinJourney, {
   Annotation,
   ReviewDecision,
 } from "../mpop/reviewCheckinJourney";
+import ManageCheckInsJourney from "../mpop/manageCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   constructor(private readonly page: Page) {}
@@ -46,6 +48,7 @@ export default class OnlineCheckinJourney {
   async completeCheckin(
     uuid: string,
     offender: NewOffender,
+    additionalQuestions: string[] = [],
   ): Promise<CompletedCheckinDetails> {
     const mentalHealth = randomMentalHealthOption();
     const assistance = randomAssistanceSelections(2);
@@ -55,6 +58,11 @@ export default class OnlineCheckinJourney {
     await journey.completePersonalDetails(offender.person);
     await journey.completeMentalHealthQuestion(mentalHealth);
     await journey.completeAssistanceQuestion(assistance);
+    let additional: AdditionalAnswer[] = [];
+    if (additionalQuestions.length > 0) {
+      additional =
+        await journey.completeAdditionalQuestions(additionalQuestions);
+    }
     await journey.completeLivenessFlow(uuid);
     await journey.verifyCheckAnswersPage();
     await journey.verifySummaryContains(
@@ -64,7 +72,29 @@ export default class OnlineCheckinJourney {
     await journey.verifyAssistanceCommentsInSummary(assistance);
     await journey.submitCheckin();
     await journey.verifyConfirmationPage();
-    return { mentalHealth, assistance };
+    return { mentalHealth, assistance, additional };
+  }
+
+  async addCustomQuestions(crn: string, questions: string[]): Promise<void> {
+    await new ManageCheckInsJourney(this.page).addQuestions(crn, questions);
+  }
+
+  async editAndDeleteCustomQuestions(
+    crn: string,
+    edit: { from: string; to: string },
+    remove: string,
+  ): Promise<void> {
+    await new ManageCheckInsJourney(this.page).editAndDeleteQuestions(
+      crn,
+      edit,
+      remove,
+    );
+  }
+
+  async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
+    await new ManageCheckInsJourney(this.page).assertChangeQuestionsUnavailable(
+      crn,
+    );
   }
 
   async reviewCheckin(
