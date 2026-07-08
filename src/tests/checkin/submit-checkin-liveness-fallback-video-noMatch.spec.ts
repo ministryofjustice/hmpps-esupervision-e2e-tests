@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, Page } from "@playwright/test";
 import {
   randomMentalHealthOption,
   randomAssistanceSelections,
@@ -12,6 +12,12 @@ import { env } from "../../config/env";
 
 const crn = env.testCrn();
 const personDetails = env.testPerson();
+
+interface personType {
+  firstName: string
+  lastName: string
+  dob: Date
+}
 
 const person = {
   firstName: personDetails.firstName,
@@ -41,6 +47,10 @@ test.beforeAll(async () => {
 test("video fallback: no match, submit anyway, checkin completes", async ({
   page,
 }) => {
+  await completeCheckIn(page, uuid, person)
+});
+
+export async function completeCheckIn(page: Page,uuid: string, person: personType) {
   const journey = new CheckinJourney(page);
   await journey.navigateToCheckin(uuid);
   await journey.clickStart();
@@ -62,4 +72,4 @@ test("video fallback: no match, submit anyway, checkin completes", async ({
   );
   await journey.submitCheckin();
   await journey.verifyConfirmationPage();
-});
+}
