@@ -15,6 +15,8 @@ export interface RestartValues {
   contact?: ContactDetails;
 }
 
+const MAX_CUSTOM_QUESTIONS = 3;
+
 const FEELING_PREVIEW_OPTIONS = [
   "Very well",
   "Well",
@@ -35,6 +37,10 @@ const SUPPORT_PREVIEW_CHECKBOXES = [
   "No, I do not need any support",
 ];
 
+export interface CustomQuestion {
+  template: string;
+  text: string;
+}
 export default class ManageCheckInsJourney {
   private readonly pages: MpopPages;
 
@@ -86,40 +92,116 @@ export default class ManageCheckInsJourney {
     });
   }
 
-  async addQuestions(crn: string, questions: string[]): Promise<void> {
+  async addQuestions(crn: string, questions: CustomQuestion[]): Promise<void> {
     const manage = await this.goToAddQuestionsPage(crn);
-    await this.previewDefaultQuestions();
-    await this.enterQuestions(questions);
-    await this.pages.addQuestions.clickSaveQuestions();
-    await expect(
-      manage.questionsAddedBanner(),
-      "should show the questions added confirmation",
-    ).toBeVisible();
-    for (const question of questions) {
-      await expect(
-        manage.questionCard(),
-        `Upcoming check in should list the saved question "${question}"`,
-      ).toContainText(question);
-    }
+    await test.step("Preview the default feeeling and support questions", () =>
+      this.previewDefaultQuestions());
+    await test.step(" Add custom questions", async () => {
+      await this.enterCustomQuestions(questions);
+      if (questions.length >= MAX_CUSTOM_QUESTIONS) {
+        await expect(
+          this.pages.addQuestions.addQuestionButton(),
+          `Add question button should be gone once ${MAX_CUSTOM_QUESTIONS} questions exist`,
+        ).toHaveCount(0);
+      }
+    });
+
+    await this.saveAndVerifyQuestions(
+      manage,
+      questions.map((q) => q.text),
+    );
+  }
+
+  async assignQuestions(crn: string, questions: string[]): Promise<void> {
+    await test.step("Assign ${questions.length} custom question(s)", async () => {
+      const manage = await this.goToAddQuestionsPage(crn);
+      await this.enterQuestions(questions);
+      await this.pages.addQuestions.clickSaveQuestions();
+      await this.assertQuestionsSaved(manage);
+    });
   }
 
   async editAndDeleteQuestions(
     crn: string,
+    original: string[],
     edit: { from: string; to: string },
     remove: string,
-  ): Promise<void> {
-    const addPage = this.pages.addQuestions;
-    await this.goToAddQuestionsPage(crn);
-    await addPage.clickEditQuestion(edit.from);
-    await this.pages.editQuestion.assertOnPage();
-    await this.pages.editQuestion.enterQuestion(edit.to);
-    await addPage.assertOnPage();
-    await expect(addPage.customQuestionRow(edit.to)).toBeVisible();
-    await expect(addPage.customQuestionRow(edit.from)).toHaveCount(0);
+  ): Promise<string[]> {
+    const remainingQuestions = original
+      .map((q) => (q === edit.from ? edit.to : q))
+      .filter((q) => q !== remove);
 
-    await addPage.clickDeleteQuestion(remove);
-    await addPage.assertOnPage();
-    await expect(addPage.customQuestionRow(remove)).toHaveCount(0);
+    await test.step("Edit and delete configured questions, then save", async () => {
+      const addPage = this.pages.addQuestions;
+      const manage = await this.goToAddQuestionsPage(crn);
+
+      await addPage.clickEditQuestion(edit.from);
+      await this.pages.editQuestion.assertOnPage();
+      await this.pages.editQuestion.enterQuestion(edit.to);
+      await addPage.assertOnPage();
+      await expect(
+        addPage.customQuestionRow(edit.to),
+        `Edited question "${edit.to}" should appear`,
+      ).toBeVisible();
+
+      await expect(
+        addPage.customQuestionRow(edit.from),
+        `Pre-edit text "${edit.from}" should no longer appear after editing`,
+      ).toHaveCount(0);
+
+      await addPage.clickDeleteQuestion(remove);
+      await addPage.assertOnPage();
+      await expect(
+        addPage.customQuestionRow(remove),
+        `Deleted question "${remove}" should no longer appear`,
+      ).toHaveCount(0);
+
+      await addPage.clickSaveQuestions();
+      await this.assertQuestionsSaved(manage);
+      await this.assertQuestionCardsContain(manage, remainingQuestions);
+
+      await expect(
+        manage.questionCard(),
+        `Deleted question "${remove}" should not be saved`,
+      ).not.toContainText(remove);
+      await expect(
+        manage.questionCard(),
+        `Pre-edit text "${edit.from}" should be replaced, not retained`,
+      ).not.toContainText(edit.from);
+    });
+
+    return remainingQuestions;
+  }
+
+  async clearCustomQuestions(crn: string, questions: string[]): Promise<void> {
+    await test.step("Remove the added questions and save", async () => {
+      await this.goToAddQuestionsPage(crn);
+      await this.deleteQuestions(questions);
+      await this.pages.addQuestions.clickSaveQuestions();
+      await this.goToAddQuestionsPage(crn);
+      await this.assertQuestionsNotShown(questions);
+    });
+  }
+
+  private async deleteQuestions(questions: string[]): Promise<void> {
+    const addPage = this.pages.addQuestions;
+    for (const question of questions) {
+      await addPage.clickDeleteQuestion(question);
+      await addPage.assertOnPage();
+      await expect(
+        addPage.customQuestionRow(question),
+        `"${question}" should not be shown`,
+      ).toHaveCount(0);
+    }
+  }
+
+  private async assertQuestionsNotShown(questions: string[]): Promise<void> {
+    for (const question of questions) {
+      await expect(
+        this.pages.addQuestions.customQuestionRow(question),
+        `"${question}" should not be shown`,
+      ).toHaveCount(0);
+    }
   }
 
   async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
@@ -160,29 +242,43 @@ export default class ManageCheckInsJourney {
     }
   }
 
+  private async enterCustomQuestions(
+    questions: CustomQuestion[],
+  ): Promise<void> {
+    for (const { template, text } of questions) {
+      await this.pages.addQuestions.clickAddQuestion();
+      await this.pages.chooseQuestion.assertOnPage();
+      await this.pages.chooseQuestion.selectQuestionByTemplate(template);
+      await this.pages.editQuestion.assertOnPage();
+      await this.pages.editQuestion.enterQuestion(text);
+      await this.pages.addQuestions.assertOnPage();
+    }
+  }
+
   private async previewDefaultQuestions(): Promise<void> {
+    const preview = this.pages.questionPreview;
     await this.pages.addQuestions.clickPreviewFeeling();
-    await this.pages.questionPreview.assertOnPage();
+    await preview.assertOnPage();
 
     for (const option of FEELING_PREVIEW_OPTIONS) {
       await expect(
-        this.pages.questionPreview.feelingRadio(option),
+        preview.feelingRadio(option),
         `Feeling preview should show the "${option}" option`,
       ).toBeVisible();
     }
 
-    await this.pages.questionPreview.clickBackToQuestions();
+    await preview.clickBackToQuestions();
 
     await this.pages.addQuestions.assertOnPage();
     await this.pages.addQuestions.clickPreviewSupport();
-    await this.pages.questionPreview.assertOnPage();
+    await preview.assertOnPage();
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
       await expect(
         this.pages.questionPreview.supportCheckbox(checkbox),
         `Support preview should show the "${checkbox}" checkbox`,
       ).toBeVisible();
     }
-    await this.pages.questionPreview.clickBackToQuestions();
+    await preview.clickBackToQuestions();
     await this.pages.addQuestions.assertOnPage();
   }
 
@@ -190,5 +286,37 @@ export default class ManageCheckInsJourney {
     const manage = await this.openManage(crn);
     console.log(await expect(manage.changeQuestionsLink()).toHaveCount(0));
     await expect(manage.changeQuestionsLink()).toHaveCount(0);
+  }
+
+  private async assertQuestionsSaved(
+    manage: ManageCheckInsPage,
+  ): Promise<void> {
+    await expect(
+      manage.questionsAddedBanner(),
+      "should show the questions added confirmation after saving",
+    ).toBeVisible();
+  }
+
+  private async saveAndVerifyQuestions(
+    manage: ManageCheckInsPage,
+    questions: string[],
+  ): Promise<void> {
+    await test.step("Save and verify the saved questions", async () => {
+      await this.pages.addQuestions.clickSaveQuestions();
+      await this.assertQuestionsSaved(manage);
+      await this.assertQuestionCardsContain(manage, questions);
+    });
+  }
+
+  private async assertQuestionCardsContain(
+    manage: ManageCheckInsPage,
+    questions: string[],
+  ): Promise<void> {
+    for (const question of questions) {
+      await expect(
+        manage.questionCard(),
+        `Upcoming check in should list the saved question "${question}"`,
+      ).toContainText(question);
+    }
   }
 }

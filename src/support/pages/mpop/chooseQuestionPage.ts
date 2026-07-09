@@ -6,11 +6,20 @@ export default class ChooseQuestionPage extends MPopBasePage {
     super(page, "Choose a question to add");
   }
 
-  addQuestionLink(index = 0): Locator {
+  addQuestionLink(): Locator {
     return this.getQA("add-question-link").first();
   }
 
-  async selectQuestion(index = 0): Promise<void> {
-    await this.addQuestionLink(index).click();
+  async selectQuestion(): Promise<void> {
+    await this.addQuestionLink().click();
+  }
+
+  templateRow(templateText: string): Locator {
+    return this.page.getByRole("row", { name: templateText });
+  }
+
+  async selectQuestionByTemplate(templateText: string): Promise<void> {
+    const row = this.templateRow(templateText);
+    await this.getQA("add-question-link", row).click();
   }
 }

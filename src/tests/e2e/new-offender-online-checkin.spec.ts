@@ -33,8 +33,6 @@ interface CheckinScenario {
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
   createEsupervisionCheckin(offender.crn, dueDateString(today), token);
 
-const EDITED_QUESTION_FILL = "sentence plan";
-
 const scenarios: CheckinScenario[] = [
   {
     name: "checkin created by the scheduler - first checkin today, MATCH review",
@@ -129,18 +127,9 @@ test.describe("Online check in for a new offender", () => {
         await journey.assertChangeQuestionsUnavailable(offender.crn);
       }
       if (scenario.customQuestions) {
-        await journey.addCustomQuestions(
+        await journey.assignCustomQuestions(
           offender.crn,
           scenario.customQuestions,
-        );
-
-        await journey.editAndDeleteCustomQuestions(
-          offender.crn,
-          {
-            from: scenario.customQuestions[0],
-            to: EDITED_QUESTION_FILL,
-          },
-          scenario.customQuestions[1],
         );
       }
       const token = await getToken();

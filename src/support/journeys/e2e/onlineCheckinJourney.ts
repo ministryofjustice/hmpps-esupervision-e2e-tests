@@ -18,7 +18,9 @@ import ReviewCheckinJourney, {
   Annotation,
   ReviewDecision,
 } from "../mpop/reviewCheckinJourney";
-import ManageCheckInsJourney from "../mpop/manageCheckinsJourney";
+import ManageCheckInsJourney, {
+  CustomQuestion,
+} from "../mpop/manageCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   constructor(private readonly page: Page) {}
@@ -75,19 +77,35 @@ export default class OnlineCheckinJourney {
     return { mentalHealth, assistance, additional };
   }
 
-  async addCustomQuestions(crn: string, questions: string[]): Promise<void> {
+  async addCustomQuestions(
+    crn: string,
+    questions: CustomQuestion[],
+  ): Promise<void> {
     await new ManageCheckInsJourney(this.page).addQuestions(crn, questions);
+  }
+
+  async assignCustomQuestions(crn: string, questions: string[]): Promise<void> {
+    await new ManageCheckInsJourney(this.page).assignQuestions(crn, questions);
   }
 
   async editAndDeleteCustomQuestions(
     crn: string,
+    original: string[],
     edit: { from: string; to: string },
     remove: string,
-  ): Promise<void> {
-    await new ManageCheckInsJourney(this.page).editAndDeleteQuestions(
+  ): Promise<string[]> {
+    return await new ManageCheckInsJourney(this.page).editAndDeleteQuestions(
       crn,
+      original,
       edit,
       remove,
+    );
+  }
+
+  async clearCustomQuestions(crn: string, questions: string[]): Promise<void> {
+    await new ManageCheckInsJourney(this.page).clearCustomQuestions(
+      crn,
+      questions,
     );
   }
 
