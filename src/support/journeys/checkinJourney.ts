@@ -12,6 +12,12 @@ import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionP
 
 const baseUrl = (): string => env.checkInUrl();
 
+const DEFAULT_ADDITIONAL_ANSWERS = [
+  "It's been going well",
+  "Yes, all good at home",
+  "There's something I would like to discuss",
+];
+
 export default class CheckinJourney {
   private readonly pages: Pages;
 
@@ -90,7 +96,7 @@ export default class CheckinJourney {
 
   async completeAdditionalQuestions(
     questions: string[],
-    answer = "E2E additional answer",
+    answer: string[] = DEFAULT_ADDITIONAL_ANSWERS,
   ): Promise<AdditionalAnswer[]> {
     const answered: AdditionalAnswer[] = [];
     await test.step(`Answer ${questions.length} additional question(s)`, async () => {

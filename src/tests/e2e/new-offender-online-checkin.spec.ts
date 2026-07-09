@@ -53,7 +53,7 @@ const scenarios: CheckinScenario[] = [
     annotation: { note: "Reviewed, no further action", sensitive: false },
   },
   {
-    name: "checkin created via API - first check in date in the future, NO_MATCH review",
+    name: "checkin created via API - first check in date in the future, adds custom questions and complete the check in, NO_MATCH review",
     firstCheckinDaysAhead: 4,
     getCheckinUuid: apiCheckin,
     customQuestions: ["unpaid work", "home", "physical or mental health"],
@@ -146,7 +146,11 @@ test.describe("Online check in for a new offender", () => {
       const token = await getToken();
       const checkinUuid = await scenario.getCheckinUuid(offender, token);
 
-      const details = await journey.completeCheckin(checkinUuid, offender);
+      const details = await journey.completeCheckin(
+        checkinUuid,
+        offender,
+        scenario.customQuestions ?? [],
+      );
 
       await journey.reviewCheckin(offender.crn, scenario.review, details);
 
