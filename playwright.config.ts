@@ -17,6 +17,7 @@ export default defineConfig({
     ["line"],
     ["html", { open: "never" }],
     ["junit", { outputFile: "junit.xml" }],
+    ["./src/support/utils/crnCleanupReporter.ts"],
   ],
   use: {
     timezoneId: "Europe/London",
