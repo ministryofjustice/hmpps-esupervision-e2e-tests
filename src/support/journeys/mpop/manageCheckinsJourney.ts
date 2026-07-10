@@ -92,7 +92,10 @@ export default class ManageCheckInsJourney {
     });
   }
 
-  async addQuestions(crn: string, questions: CustomQuestion[]): Promise<void> {
+  async addCustomQuestions(
+    crn: string,
+    questions: CustomQuestion[],
+  ): Promise<void> {
     const manage = await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions());
@@ -112,7 +115,7 @@ export default class ManageCheckInsJourney {
     );
   }
 
-  async assignQuestions(crn: string, questions: string[]): Promise<void> {
+  async assignCustomQuestions(crn: string, questions: string[]): Promise<void> {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
       const manage = await this.goToAddQuestionsPage(crn);
       await this.enterQuestions(questions);
@@ -121,7 +124,7 @@ export default class ManageCheckInsJourney {
     });
   }
 
-  async editAndDeleteQuestions(
+  async editAndDeleteCustomQuestions(
     crn: string,
     original: string[],
     edit: { from: string; to: string },
@@ -149,8 +152,8 @@ export default class ManageCheckInsJourney {
         `Pre-edit text "${edit.from}" should no longer appear after editing`,
       ).toHaveCount(0);
 
-      await this.deleteQuestions([remove])
-      await this.saveAndVerifyQuestions(manage, remainingQuestions)
+      await this.deleteQuestions([remove]);
+      await this.saveAndVerifyQuestions(manage, remainingQuestions);
       await expect(
         manage.questionCard(),
         `Deleted question "${remove}" should not be saved`,
@@ -212,6 +215,17 @@ export default class ManageCheckInsJourney {
     return manage;
   }
 
+  private async assertAddQuestionButtonUnavailableAtLimit(
+    questionCount: number,
+  ): Promise<void> {
+    if (questionCount >= MAX_CUSTOM_QUESTIONS) {
+      await expect(
+        this.pages.addQuestions.addQuestionButton(),
+        "Add question button should be gone once 3 questions exist",
+      ).toHaveCount(0);
+    }
+  }
+
   // selects first row question templates
   private async enterQuestions(questions: string[]): Promise<void> {
     for (let i = 0; i < questions.length; i++) {
@@ -222,12 +236,7 @@ export default class ManageCheckInsJourney {
       await this.pages.editQuestion.enterQuestion(questions[i]);
       await this.pages.addQuestions.assertOnPage();
     }
-    if (questions.length >= 3) {
-      await expect(
-        this.pages.addQuestions.addQuestionButton(),
-        " Add question button should be gone once 3 questions exist",
-      ).toHaveCount(0);
-    }
+    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
   }
 
   // similar to enterQuestions, but selects a specific template per question
@@ -273,8 +282,10 @@ export default class ManageCheckInsJourney {
 
   async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
     const manage = await this.openManage(crn);
-    console.log(await expect(manage.changeQuestionsLink()).toHaveCount(0));
-    await expect(manage.changeQuestionsLink()).toHaveCount(0);
+    await expect(
+      manage.changeQuestionsLink(),
+      " Change questions link should not be available",
+    ).toHaveCount(0);
   }
 
   private async assertQuestionsSaved(
@@ -282,7 +293,7 @@ export default class ManageCheckInsJourney {
   ): Promise<void> {
     await expect(
       manage.questionsAddedBanner(),
-      "should show the questions added confirmation after saving",
+      "Should show the questions added confirmation after saving",
     ).toBeVisible();
   }
 

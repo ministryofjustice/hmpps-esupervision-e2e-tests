@@ -81,11 +81,17 @@ export default class OnlineCheckinJourney {
     crn: string,
     questions: CustomQuestion[],
   ): Promise<void> {
-    await new ManageCheckInsJourney(this.page).addQuestions(crn, questions);
+    await new ManageCheckInsJourney(this.page).addCustomQuestions(
+      crn,
+      questions,
+    );
   }
 
   async assignCustomQuestions(crn: string, questions: string[]): Promise<void> {
-    await new ManageCheckInsJourney(this.page).assignQuestions(crn, questions);
+    await new ManageCheckInsJourney(this.page).assignCustomQuestions(
+      crn,
+      questions,
+    );
   }
 
   async editAndDeleteCustomQuestions(
@@ -94,12 +100,9 @@ export default class OnlineCheckinJourney {
     edit: { from: string; to: string },
     remove: string,
   ): Promise<string[]> {
-    return await new ManageCheckInsJourney(this.page).editAndDeleteQuestions(
-      crn,
-      original,
-      edit,
-      remove,
-    );
+    return await new ManageCheckInsJourney(
+      this.page,
+    ).editAndDeleteCustomQuestions(crn, original, edit, remove);
   }
 
   async clearCustomQuestions(crn: string, questions: string[]): Promise<void> {

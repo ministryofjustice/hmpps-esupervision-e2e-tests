@@ -51,7 +51,7 @@ const scenarios: CheckinScenario[] = [
     annotation: { note: "Reviewed, no further action", sensitive: false },
   },
   {
-    name: "checkin created via API - first check in date in the future, adds custom questions and complete the check in, NO_MATCH review",
+    name: "checkin created via API - first check in date in the future, add custom questions and complete the check in, NO_MATCH review",
     firstCheckinDaysAhead: 4,
     getCheckinUuid: apiCheckin,
     customQuestions: ["unpaid work", "home", "physical or mental health"],

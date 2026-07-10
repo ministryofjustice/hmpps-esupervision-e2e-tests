@@ -138,7 +138,7 @@ export default class ReviewCheckinJourney {
         `Comment for "${optionLabel}" should show comment "${comment}"`,
       ).toContainText(comment);
     }
-    await this.assertAdditionalAnswers(view, details.additional);
+    await this.assertAdditionalAnswers(view, details.additional ?? []);
   }
 
   private async assertAdditionalAnswers(

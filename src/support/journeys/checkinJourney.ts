@@ -12,12 +12,6 @@ import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionP
 
 const baseUrl = (): string => env.checkInUrl();
 
-const DEFAULT_ADDITIONAL_ANSWERS = [
-  "It's been going well",
-  "Yes, all good at home",
-  "There's something I would like to discuss",
-];
-
 export default class CheckinJourney {
   private readonly pages: Pages;
 
@@ -96,28 +90,32 @@ export default class CheckinJourney {
 
   async completeAdditionalQuestions(
     questions: string[],
-    answers: string[] = DEFAULT_ADDITIONAL_ANSWERS,
+    answers: string[] = [],
   ): Promise<AdditionalAnswer[]> {
     const answered: AdditionalAnswer[] = [];
     await test.step(`Answer ${questions.length} additional question(s)`, async () => {
       for (let i = 0; i < questions.length; i++) {
         await expect(this.page).toHaveURL(ADDITIONAL_QUESTION_URL);
         await expect(this.pages.additionalQuestion.answerField()).toBeVisible();
-        const shown = await this.pages.additionalQuestion.questionText();
+
+        const shownQuestion =
+          await this.pages.additionalQuestion.questionText();
+        const expectedQuestion = questions[i];
         const response = answers[i] ?? `Additional answer ${i + 1}`;
+        expect(
+          shownQuestion,
+          `Additional question ${i + 1} should be displayed in the added order`,
+        ).toContain(expectedQuestion);
         await this.pages.additionalQuestion.answerAndContinue(response);
         answered.push({
-          question: questions.find((q) => shown.includes(q)) ?? shown,
+          question: expectedQuestion,
           answer: response,
         });
       }
-
-      for (const question of questions) {
-        expect(
-          answered.map((a) => a.question),
-          `Offender check in should show the added question "${question}"`,
-        ).toContain(question);
-      }
+      expect(
+        answered.map(({ question }) => question),
+        "Additional questions should be shown in the the added order",
+      ).toEqual(questions);
     });
     return answered;
   }
