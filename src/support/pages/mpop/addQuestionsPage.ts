@@ -12,7 +12,7 @@ export default class AddQuestionsPage extends MPopBasePage {
       .locator("b");
   }
 
-  previewFeelingLInk(): Locator {
+  previewFeelingLink(): Locator {
     return this.getQA("preview-feeling-link");
   }
 
@@ -25,7 +25,7 @@ export default class AddQuestionsPage extends MPopBasePage {
   }
 
   async clickPreviewFeeling(): Promise<void> {
-    await this.previewFeelingLInk().click();
+    await this.previewFeelingLink().click();
   }
 
   async clickPreviewSupport(): Promise<void> {

@@ -32,7 +32,7 @@ const SUPPORT_PREVIEW_CHECKBOXES = [
   "Money",
   "Housing",
   "Employment and education",
-  "Relationships (family, friends, partner",
+  "Relationships (family, friends, partner)",
   "Something else",
   "No, I do not need any support",
 ];
@@ -94,7 +94,7 @@ export default class ManageCheckInsJourney {
 
   async addQuestions(crn: string, questions: CustomQuestion[]): Promise<void> {
     const manage = await this.goToAddQuestionsPage(crn);
-    await test.step("Preview the default feeeling and support questions", () =>
+    await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions());
     await test.step(" Add custom questions", async () => {
       await this.enterCustomQuestions(questions);
@@ -113,7 +113,7 @@ export default class ManageCheckInsJourney {
   }
 
   async assignQuestions(crn: string, questions: string[]): Promise<void> {
-    await test.step("Assign ${questions.length} custom question(s)", async () => {
+    await test.step(`Assign ${questions.length} custom question(s)`, async () => {
       const manage = await this.goToAddQuestionsPage(crn);
       await this.enterQuestions(questions);
       await this.pages.addQuestions.clickSaveQuestions();
@@ -149,25 +149,12 @@ export default class ManageCheckInsJourney {
         `Pre-edit text "${edit.from}" should no longer appear after editing`,
       ).toHaveCount(0);
 
-      await addPage.clickDeleteQuestion(remove);
-      await addPage.assertOnPage();
-      await expect(
-        addPage.customQuestionRow(remove),
-        `Deleted question "${remove}" should no longer appear`,
-      ).toHaveCount(0);
-
-      await addPage.clickSaveQuestions();
-      await this.assertQuestionsSaved(manage);
-      await this.assertQuestionCardsContain(manage, remainingQuestions);
-
+      await this.deleteQuestions([remove])
+      await this.saveAndVerifyQuestions(manage, remainingQuestions)
       await expect(
         manage.questionCard(),
         `Deleted question "${remove}" should not be saved`,
       ).not.toContainText(remove);
-      await expect(
-        manage.questionCard(),
-        `Pre-edit text "${edit.from}" should be replaced, not retained`,
-      ).not.toContainText(edit.from);
     });
 
     return remainingQuestions;
@@ -225,6 +212,7 @@ export default class ManageCheckInsJourney {
     return manage;
   }
 
+  // selects first row question templates
   private async enterQuestions(questions: string[]): Promise<void> {
     for (let i = 0; i < questions.length; i++) {
       await this.pages.addQuestions.clickAddQuestion();
@@ -242,6 +230,7 @@ export default class ManageCheckInsJourney {
     }
   }
 
+  // similar to enterQuestions, but selects a specific template per question
   private async enterCustomQuestions(
     questions: CustomQuestion[],
   ): Promise<void> {

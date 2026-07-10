@@ -96,7 +96,7 @@ export default class CheckinJourney {
 
   async completeAdditionalQuestions(
     questions: string[],
-    answer: string[] = DEFAULT_ADDITIONAL_ANSWERS,
+    answers: string[] = DEFAULT_ADDITIONAL_ANSWERS,
   ): Promise<AdditionalAnswer[]> {
     const answered: AdditionalAnswer[] = [];
     await test.step(`Answer ${questions.length} additional question(s)`, async () => {
@@ -104,7 +104,7 @@ export default class CheckinJourney {
         await expect(this.page).toHaveURL(ADDITIONAL_QUESTION_URL);
         await expect(this.pages.additionalQuestion.answerField()).toBeVisible();
         const shown = await this.pages.additionalQuestion.questionText();
-        const response = answer[i] ?? `Additional answer ${i + 1}`;
+        const response = answers[i] ?? `Additional answer ${i + 1}`;
         await this.pages.additionalQuestion.answerAndContinue(response);
         answered.push({
           question: questions.find((q) => shown.includes(q)) ?? shown,

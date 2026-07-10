@@ -10,7 +10,7 @@ import ManageCheckInsJourney, {
   CustomQuestion,
 } from "../../support/journeys/mpop/manageCheckinsJourney";
 
-test.describe("Manage custom check in questions (fresh offender) ", async () => {
+test.describe("Manage custom check in questions (fresh offender)", async () => {
   const CUSTOM_QUESTIONS: CustomQuestion[] = [
     { template: "been going recently", text: "apprenticeship" },
     { template: "been feeling", text: "relationships with family" },
@@ -21,7 +21,7 @@ test.describe("Manage custom check in questions (fresh offender) ", async () => 
   let crn: string;
   let mpopPassed = true;
 
-  test("practitioner adds custom questions and saved on the upcoming check in", async ({
+  test("practitioner adds three custom questions and saves them on the upcoming check in", async ({
     page,
   }) => {
     const offender = await new OnlineCheckinJourney(
@@ -31,7 +31,7 @@ test.describe("Manage custom check in questions (fresh offender) ", async () => 
     await new ManageCheckInsJourney(page).addQuestions(crn, CUSTOM_QUESTIONS);
   });
 
-  test("practitioner edits, deletes and clears custom question-> none remain", async ({
+  test("practitioner edits, deletes and clears custom question so none remain saved", async ({
     page,
   }) => {
     const journey = new ManageCheckInsJourney(page);
