@@ -19,12 +19,13 @@ import {
   writeCreatedCrns,
 } from "../../support/utils/createdCrns";
 import { cleanupCrns } from "../../scripts/cleanupCrns";
+import { CustomQuestion } from "../../support/journeys/mpop/manageCheckinsJourney";
 
 interface CheckinScenario {
   name: string;
   firstCheckinDaysAhead: number;
   getCheckinUuid: (offender: NewOffender, token: string) => Promise<string>;
-  customQuestions?: string[];
+  customQuestions?: CustomQuestion[];
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
@@ -54,7 +55,11 @@ const scenarios: CheckinScenario[] = [
     name: "checkin created via API - first check in date in the future, add custom questions and complete the check in, NO_MATCH review",
     firstCheckinDaysAhead: 4,
     getCheckinUuid: apiCheckin,
-    customQuestions: ["unpaid work", "home", "physical or mental health"],
+    customQuestions: [
+      { template: "Were you able to", text: "unpaid work" },
+      { template: "Whay have you been doing", text: "home" },
+      { template: "Has anything changed", text: "physical or mental health" },
+    ],
     review: {
       identity: IdentityDecision.NO_MATCH,
       riskManagement: true,
@@ -138,7 +143,7 @@ test.describe("Online check in for a new offender", () => {
       const details = await journey.completeCheckin(
         checkinUuid,
         offender,
-        scenario.customQuestions ?? [],
+        scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
       await journey.reviewCheckin(offender.crn, scenario.review, details);

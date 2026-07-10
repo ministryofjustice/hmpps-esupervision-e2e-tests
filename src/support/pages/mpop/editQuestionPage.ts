@@ -7,7 +7,7 @@ export default class EditQuestionPage extends MPopBasePage {
   }
 
   questionInput(): Locator {
-    return this.page.locator(`input[name*="draftQuestionInput"]`);
+    return this.page.locator('input[name*="draftQuestionInput"]');
   }
 
   async enterQuestion(text: string): Promise<void> {

@@ -77,36 +77,11 @@ export default class OnlineCheckinJourney {
     return { mentalHealth, assistance, additional };
   }
 
-  async addCustomQuestions(
+  async assignCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
   ): Promise<void> {
-    await new ManageCheckInsJourney(this.page).addCustomQuestions(
-      crn,
-      questions,
-    );
-  }
-
-  async assignCustomQuestions(crn: string, questions: string[]): Promise<void> {
     await new ManageCheckInsJourney(this.page).assignCustomQuestions(
-      crn,
-      questions,
-    );
-  }
-
-  async editAndDeleteCustomQuestions(
-    crn: string,
-    original: string[],
-    edit: { from: string; to: string },
-    remove: string,
-  ): Promise<string[]> {
-    return await new ManageCheckInsJourney(
-      this.page,
-    ).editAndDeleteCustomQuestions(crn, original, edit, remove);
-  }
-
-  async clearCustomQuestions(crn: string, questions: string[]): Promise<void> {
-    await new ManageCheckInsJourney(this.page).clearCustomQuestions(
       crn,
       questions,
     );

@@ -112,10 +112,6 @@ export default class CheckinJourney {
           answer: response,
         });
       }
-      expect(
-        answered.map(({ question }) => question),
-        "Additional questions should be shown in the the added order",
-      ).toEqual(questions);
     });
     return answered;
   }

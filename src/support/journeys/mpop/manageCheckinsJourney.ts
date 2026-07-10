@@ -99,7 +99,7 @@ export default class ManageCheckInsJourney {
     const manage = await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions());
-    await test.step(" Add custom questions", async () => {
+    await test.step("Add custom questions", async () => {
       await this.enterCustomQuestions(questions);
       if (questions.length >= MAX_CUSTOM_QUESTIONS) {
         await expect(
@@ -115,10 +115,13 @@ export default class ManageCheckInsJourney {
     );
   }
 
-  async assignCustomQuestions(crn: string, questions: string[]): Promise<void> {
+  async assignCustomQuestions(
+    crn: string,
+    questions: CustomQuestion[],
+  ): Promise<void> {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
       const manage = await this.goToAddQuestionsPage(crn);
-      await this.enterQuestions(questions);
+      await this.enterCustomQuestions(questions);
       await this.pages.addQuestions.clickSaveQuestions();
       await this.assertQuestionsSaved(manage);
     });
@@ -194,7 +197,7 @@ export default class ManageCheckInsJourney {
     }
   }
 
-  async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
+  private async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
     const manage = await this.openManage(crn);
     await expect(
       manage.changeQuestionsLink(),
@@ -221,25 +224,11 @@ export default class ManageCheckInsJourney {
     if (questionCount >= MAX_CUSTOM_QUESTIONS) {
       await expect(
         this.pages.addQuestions.addQuestionButton(),
-        "Add question button should be gone once 3 questions exist",
+        `Add question button should be gone once ${MAX_CUSTOM_QUESTIONS} questions exist`,
       ).toHaveCount(0);
     }
   }
 
-  // selects first row question templates
-  private async enterQuestions(questions: string[]): Promise<void> {
-    for (let i = 0; i < questions.length; i++) {
-      await this.pages.addQuestions.clickAddQuestion();
-      await this.pages.chooseQuestion.assertOnPage();
-      await this.pages.chooseQuestion.selectQuestion();
-      await this.pages.editQuestion.assertOnPage();
-      await this.pages.editQuestion.enterQuestion(questions[i]);
-      await this.pages.addQuestions.assertOnPage();
-    }
-    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
-  }
-
-  // similar to enterQuestions, but selects a specific template per question
   private async enterCustomQuestions(
     questions: CustomQuestion[],
   ): Promise<void> {
@@ -251,6 +240,7 @@ export default class ManageCheckInsJourney {
       await this.pages.editQuestion.enterQuestion(text);
       await this.pages.addQuestions.assertOnPage();
     }
+    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
   }
 
   private async previewDefaultQuestions(): Promise<void> {
@@ -270,6 +260,7 @@ export default class ManageCheckInsJourney {
     await this.pages.addQuestions.assertOnPage();
     await this.pages.addQuestions.clickPreviewSupport();
     await preview.assertOnPage();
+
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
       await expect(
         this.pages.questionPreview.supportCheckbox(checkbox),
@@ -284,7 +275,7 @@ export default class ManageCheckInsJourney {
     const manage = await this.openManage(crn);
     await expect(
       manage.changeQuestionsLink(),
-      " Change questions link should not be available",
+      "Change questions link should not be available",
     ).toHaveCount(0);
   }
 

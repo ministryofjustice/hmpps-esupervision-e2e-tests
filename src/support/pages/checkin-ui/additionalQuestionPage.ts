@@ -5,6 +5,8 @@ export const ADDITIONAL_QUESTION_URL = /\/questions\/additional\/\d+/;
 
 export default class AdditionalQuestionPage extends CheckinBasePage {
   constructor(page: Page) {
+    // The h1 is the dynamic custom-question text, so there is no stable title
+    // to assert on. So used Verified ADDITIONAL_QUESTION_URL by callers
     super(page, "");
   }
 
