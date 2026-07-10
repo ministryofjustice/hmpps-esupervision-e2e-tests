@@ -13,6 +13,11 @@ export default class CrnCleanupReporter implements Reporter {
   private readonly testStates = new Map<string, TestCleanupState>();
 
   onTestEnd(test: TestCase, result: TestResult): void {
+    const existing = this.testStates.get(test.id);
+    const crns = existing?.crns ?? new Set<string>();
+    for (const crn of this.crnsRecordedBy(result)) {
+      crns.add(crn);
+    }
     this.testStates.set(test.id, {
       crns: this.crnsRecordedBy(result),
       succeeded: result.status === test.expectedStatus,
