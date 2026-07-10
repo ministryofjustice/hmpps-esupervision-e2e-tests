@@ -56,8 +56,8 @@ const scenarios: CheckinScenario[] = [
     firstCheckinDaysAhead: 4,
     getCheckinUuid: apiCheckin,
     customQuestions: [
-      { template: "Were you able to", text: "unpaid work" },
-      { template: "Whay have you been doing", text: "home" },
+      { template: "Do you", text: "have an update about something" },
+      { template: "What have you been doing at", text: "home" },
       { template: "Has anything changed", text: "physical or mental health" },
     ],
     review: {

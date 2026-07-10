@@ -104,7 +104,7 @@ export default class CheckinJourney {
         const response = answers[i] ?? `Additional answer ${i + 1}`;
         expect(
           shownQuestion,
-          `Additional question ${i + 1} should be displayed in the added order`,
+          `Additional question ${i + 1} should be displayed in the expected order`,
         ).toContain(expectedQuestion);
         await this.pages.additionalQuestion.answerAndContinue(response);
         answered.push({

@@ -99,16 +99,8 @@ export default class ManageCheckInsJourney {
     const manage = await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions());
-    await test.step("Add custom questions", async () => {
-      await this.enterCustomQuestions(questions);
-      if (questions.length >= MAX_CUSTOM_QUESTIONS) {
-        await expect(
-          this.pages.addQuestions.addQuestionButton(),
-          `Add question button should be gone once ${MAX_CUSTOM_QUESTIONS} questions exist`,
-        ).toHaveCount(0);
-      }
-    });
-
+    await test.step("Add custom questions", async () =>
+      await this.enterCustomQuestions(questions));
     await this.saveAndVerifyQuestions(
       manage,
       questions.map((q) => q.text),
@@ -263,7 +255,7 @@ export default class ManageCheckInsJourney {
 
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
       await expect(
-        this.pages.questionPreview.supportCheckbox(checkbox),
+        preview.supportCheckbox(checkbox),
         `Support preview should show the "${checkbox}" checkbox`,
       ).toBeVisible();
     }

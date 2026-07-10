@@ -10,8 +10,7 @@ import ManageCheckInsJourney, {
   CustomQuestion,
 } from "../../support/journeys/mpop/manageCheckinsJourney";
 
-test.describe
-  .serial("Manage custom check in questions (fresh offender)", () => {
+test.describe.serial("Manage custom check in questions", () => {
   const CUSTOM_QUESTIONS: CustomQuestion[] = [
     { template: "been going recently", text: "apprenticeship" },
     { template: "been feeling", text: "relationships with family" },
