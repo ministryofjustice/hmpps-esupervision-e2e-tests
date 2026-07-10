@@ -92,6 +92,57 @@ export default class ManageCheckInsJourney {
     });
   }
 
+  private async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
+    const manage = await this.openManage(crn);
+    await expect(
+      manage.changeQuestionsLink(),
+      "Change questions link should be present for a future check in",
+    ).toBeVisible();
+
+    const nextCheckinDate =
+      (await manage.nextCheckinDate().textContent())?.trim() ?? "";
+    await manage.clickChangeQuestions();
+
+    await this.pages.howToWriteQuestions.assertOnPage();
+    await this.pages.howToWriteQuestions.clickAddQuestions();
+    await this.pages.addQuestions.assertOnPage();
+    await expect(
+      this.pages.addQuestions.nextCheckinDate(),
+      "Add questions page should show the same next check in date as manage check in page",
+    ).toHaveText(nextCheckinDate);
+    return manage;
+  }
+
+  private async previewDefaultQuestions(): Promise<void> {
+    const preview = this.pages.questionPreview;
+    await this.pages.addQuestions.clickPreviewFeeling();
+    await preview.assertOnPage();
+
+    for (const option of FEELING_PREVIEW_OPTIONS) {
+      await expect(
+        preview.feelingRadio(option),
+        `Feeling preview should show the "${option}" option`,
+      ).toBeVisible();
+    }
+
+    await preview.clickBackToQuestions();
+
+    await this.pages.addQuestions.assertOnPage();
+    await this.pages.addQuestions.clickPreviewSupport();
+    await preview.assertOnPage();
+
+    for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
+      await expect(
+        preview.supportCheckbox(checkbox),
+        `Support preview should show the "${checkbox}" checkbox`,
+      ).toBeVisible();
+    }
+    await preview.clickBackToQuestions();
+    await this.pages.addQuestions.assertOnPage();
+  }
+
+  // Full practitioner journey mpop custom questions spec: previews the default, add custom then saves and verifies they appear
+  // on the upcoming check in
   async addCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
@@ -107,6 +158,21 @@ export default class ManageCheckInsJourney {
     );
   }
 
+  private async enterCustomQuestions(
+    questions: CustomQuestion[],
+  ): Promise<void> {
+    for (const { template, text } of questions) {
+      await this.pages.addQuestions.clickAddQuestion();
+      await this.pages.chooseQuestion.assertOnPage();
+      await this.pages.chooseQuestion.selectQuestionByTemplate(template);
+      await this.pages.editQuestion.assertOnPage();
+      await this.pages.editQuestion.enterQuestion(text);
+      await this.pages.addQuestions.assertOnPage();
+    }
+    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
+  }
+
+  // for e2e setup: adds and saves custom questions without preview/verify steps that addCustomQuestions covers
   async assignCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
@@ -180,6 +246,14 @@ export default class ManageCheckInsJourney {
     }
   }
 
+  async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
+    const manage = await this.openManage(crn);
+    await expect(
+      manage.changeQuestionsLink(),
+      "Change questions link should not be available",
+    ).toHaveCount(0);
+  }
+
   private async assertQuestionsNotShown(questions: string[]): Promise<void> {
     for (const question of questions) {
       await expect(
@@ -187,27 +261,6 @@ export default class ManageCheckInsJourney {
         `"${question}" should not be shown`,
       ).toHaveCount(0);
     }
-  }
-
-  private async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
-    const manage = await this.openManage(crn);
-    await expect(
-      manage.changeQuestionsLink(),
-      "Change questions link should be present for a future check in",
-    ).toBeVisible();
-
-    const nextCheckinDate =
-      (await manage.nextCheckinDate().textContent())?.trim() ?? "";
-    await manage.clickChangeQuestions();
-
-    await this.pages.howToWriteQuestions.assertOnPage();
-    await this.pages.howToWriteQuestions.clickAddQuestions();
-    await this.pages.addQuestions.assertOnPage();
-    await expect(
-      this.pages.addQuestions.nextCheckinDate(),
-      "Add questions page should show the same next check in date as manage check in page",
-    ).toHaveText(nextCheckinDate);
-    return manage;
   }
 
   private async assertAddQuestionButtonUnavailableAtLimit(
@@ -221,65 +274,6 @@ export default class ManageCheckInsJourney {
     }
   }
 
-  private async enterCustomQuestions(
-    questions: CustomQuestion[],
-  ): Promise<void> {
-    for (const { template, text } of questions) {
-      await this.pages.addQuestions.clickAddQuestion();
-      await this.pages.chooseQuestion.assertOnPage();
-      await this.pages.chooseQuestion.selectQuestionByTemplate(template);
-      await this.pages.editQuestion.assertOnPage();
-      await this.pages.editQuestion.enterQuestion(text);
-      await this.pages.addQuestions.assertOnPage();
-    }
-    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
-  }
-
-  private async previewDefaultQuestions(): Promise<void> {
-    const preview = this.pages.questionPreview;
-    await this.pages.addQuestions.clickPreviewFeeling();
-    await preview.assertOnPage();
-
-    for (const option of FEELING_PREVIEW_OPTIONS) {
-      await expect(
-        preview.feelingRadio(option),
-        `Feeling preview should show the "${option}" option`,
-      ).toBeVisible();
-    }
-
-    await preview.clickBackToQuestions();
-
-    await this.pages.addQuestions.assertOnPage();
-    await this.pages.addQuestions.clickPreviewSupport();
-    await preview.assertOnPage();
-
-    for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
-      await expect(
-        preview.supportCheckbox(checkbox),
-        `Support preview should show the "${checkbox}" checkbox`,
-      ).toBeVisible();
-    }
-    await preview.clickBackToQuestions();
-    await this.pages.addQuestions.assertOnPage();
-  }
-
-  async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
-    const manage = await this.openManage(crn);
-    await expect(
-      manage.changeQuestionsLink(),
-      "Change questions link should not be available",
-    ).toHaveCount(0);
-  }
-
-  private async assertQuestionsSaved(
-    manage: ManageCheckInsPage,
-  ): Promise<void> {
-    await expect(
-      manage.questionsAddedBanner(),
-      "Should show the questions added confirmation after saving",
-    ).toBeVisible();
-  }
-
   private async saveAndVerifyQuestions(
     manage: ManageCheckInsPage,
     questions: string[],
@@ -289,6 +283,15 @@ export default class ManageCheckInsJourney {
       await this.assertQuestionsSaved(manage);
       await this.assertQuestionCardsContain(manage, questions);
     });
+  }
+
+  private async assertQuestionsSaved(
+    manage: ManageCheckInsPage,
+  ): Promise<void> {
+    await expect(
+      manage.questionsAddedBanner(),
+      "Should show the questions added confirmation after saving",
+    ).toBeVisible();
   }
 
   private async assertQuestionCardsContain(

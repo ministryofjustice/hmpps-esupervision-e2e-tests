@@ -81,7 +81,7 @@ The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
 
 The suite runs in a single `playwright test` and produces one report ( a Junit and HTML report as an artifact)
 
-There is no cleanup step - the e2e test suite cleans up its own offenders in its teardown( only on a green e2e run),so a failed run leaves the CRN for debugging.
+There is no separate teardown step in the specs. Cleanup runs in the reporter at the end of the run, deleting the offenders whose test passed.
 
 ## Notes
 
