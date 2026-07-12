@@ -6,8 +6,20 @@ import {
   rmSync,
   writeFileSync,
 } from "fs";
+import test, { TestInfo } from "@playwright/test";
 
 const CRN_FILE = path.join(process.cwd(), "created-crns.txt");
+
+export const CRN_ATTACHMENT_NAME = "created-crn";
+
+export const attachCreatedCrn = (
+  testInfo: TestInfo,
+  crn: string,
+): Promise<void> =>
+  testInfo.attach(CRN_ATTACHMENT_NAME, {
+    body: crn,
+    contentType: "text/plain",
+  });
 
 export const recordCreatedCrn = (crn: string): void => {
   if (existsSync(CRN_FILE)) {

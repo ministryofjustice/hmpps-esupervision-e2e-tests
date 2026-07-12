@@ -14,7 +14,8 @@ import {
   ReviewDecision,
 } from "../../support/journeys/mpop/reviewCheckinJourney";
 import { IdentityDecision } from "../../support/pages/mpop/reviewIdentityPage";
-import { CustomQuestion } from "../../support/journeys/mpop/manageCheckinsJourney";
+import { attachCreatedCrn } from "../../support/utils/createdCrns";
+import { CustomQuestion } from "../../data/models";
 
 interface CheckinScenario {
   name: string;
@@ -94,10 +95,7 @@ test.describe("Online check in for a new offender", () => {
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
       );
-      await testInfo.attach("created-crn", {
-        body: offender.crn,
-        contentType: "text/plain",
-      });
+      await attachCreatedCrn(testInfo, offender.crn);
       if (scenario.expectNoChangeQuestions) {
         await journey.assertChangeQuestionsUnavailable(offender.crn);
       }

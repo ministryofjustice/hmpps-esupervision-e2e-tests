@@ -6,10 +6,6 @@ export default class ChooseQuestionPage extends MPopBasePage {
     super(page, "Choose a question to add");
   }
 
-  addQuestionLink(): Locator {
-    return this.getQA("add-question-link").first();
-  }
-
   templateRow(templateText: string): Locator {
     return this.page.getByRole("row", { name: templateText });
   }

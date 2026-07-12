@@ -9,6 +9,7 @@ import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
+  CustomQuestion,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
@@ -18,12 +19,16 @@ import ReviewCheckinJourney, {
   Annotation,
   ReviewDecision,
 } from "../mpop/reviewCheckinJourney";
-import ManageCheckInsJourney, {
-  CustomQuestion,
-} from "../mpop/manageCheckinsJourney";
+import CustomQuestionsJourney from "../mpop/customQuestionsJourney";
 
 export default class OnlineCheckinJourney {
-  constructor(private readonly page: Page) {}
+  private readonly customQuestions: CustomQuestionsJourney;
+  private readonly review: ReviewCheckinJourney;
+
+  constructor(private readonly page: Page) {
+    this.customQuestions = new CustomQuestionsJourney(page);
+    this.review = new ReviewCheckinJourney(page);
+  }
 
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
@@ -72,6 +77,7 @@ export default class OnlineCheckinJourney {
       label(mentalHealth),
     );
     await journey.verifyAssistanceCommentsInSummary(assistance);
+    await journey.verifyAdditionalAnswersInSummary(additional);
     await journey.submitCheckin();
     await journey.verifyConfirmationPage();
     return { mentalHealth, assistance, additional };
@@ -81,16 +87,11 @@ export default class OnlineCheckinJourney {
     crn: string,
     questions: CustomQuestion[],
   ): Promise<void> {
-    await new ManageCheckInsJourney(this.page).assignCustomQuestions(
-      crn,
-      questions,
-    );
+    await this.customQuestions.assignCustomQuestions(crn, questions);
   }
 
   async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
-    await new ManageCheckInsJourney(this.page).assertChangeQuestionsUnavailable(
-      crn,
-    );
+    await this.assertChangeQuestionsUnavailable(crn);
   }
 
   async reviewCheckin(
@@ -98,17 +99,10 @@ export default class OnlineCheckinJourney {
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
   ): Promise<void> {
-    await new ReviewCheckinJourney(this.page).reviewCompletedCheckin(
-      crn,
-      decision,
-      details,
-    );
+    await this.review.reviewCompletedCheckin(crn, decision, details);
   }
 
   async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {
-    await new ReviewCheckinJourney(this.page).annotateReviewedCheckin(
-      crn,
-      annotation,
-    );
+    await this.review.annotateReviewedCheckin(crn, annotation);
   }
 }

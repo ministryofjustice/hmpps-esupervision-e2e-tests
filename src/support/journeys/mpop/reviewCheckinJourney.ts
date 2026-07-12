@@ -81,7 +81,6 @@ export default class ReviewCheckinJourney {
   async annotateReviewedCheckin(
     crn: string,
     annotation: Annotation = {},
-    additional: AdditionalAnswer[] = [],
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
     await this.openCheckinContact(crn);
@@ -92,7 +91,6 @@ export default class ReviewCheckinJourney {
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewSummaryShows(note);
-    await this.assertAdditionalAnswers(this.pages.reviewedCheckin, additional);
   }
 
   private async assertReviewSummaryShows(note: string): Promise<void> {
@@ -138,7 +136,7 @@ export default class ReviewCheckinJourney {
         `Comment for "${optionLabel}" should show comment "${comment}"`,
       ).toContainText(comment);
     }
-    await this.assertAdditionalAnswers(view, details.additional ?? []);
+    await this.assertAdditionalAnswers(view, details.additional);
   }
 
   private async assertAdditionalAnswers(

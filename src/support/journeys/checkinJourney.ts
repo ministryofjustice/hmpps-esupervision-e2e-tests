@@ -113,6 +113,17 @@ export default class CheckinJourney {
     return answered;
   }
 
+  async verifyAdditionalAnswersInSummary(
+    additional: AdditionalAnswer[],
+  ): Promise<void> {
+    if (additional.length === 0) return;
+    await test.step("Verify additional answers on check your answers", async () => {
+      for (const { question, answer } of additional) {
+        await this.verifySummaryContains(question, answer);
+      }
+    });
+  }
+
   async completeLivenessFlow(uuid: string): Promise<void> {
     await this.pages.livenessRecord.clickContinue();
     await this.page.goto(`${baseUrl()}/${uuid}/liveness/view`);

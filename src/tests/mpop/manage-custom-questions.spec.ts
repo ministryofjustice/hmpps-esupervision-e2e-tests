@@ -1,9 +1,9 @@
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
 import { firstCheckinDateString } from "../../support/utils/date";
 import test from "@playwright/test";
-import ManageCheckInsJourney, {
-  CustomQuestion,
-} from "../../support/journeys/mpop/manageCheckinsJourney";
+import { attachCreatedCrn } from "../../support/utils/createdCrns";
+import CustomQuestionsJourney from "../../support/journeys/mpop/customQuestionsJourney";
+import { CustomQuestion } from "../../data/models";
 
 test.describe.serial("Manage custom check in questions", () => {
   const CUSTOM_QUESTIONS: CustomQuestion[] = [
@@ -22,11 +22,8 @@ test.describe.serial("Manage custom check in questions", () => {
       page,
     ).createOffenderAndSetupCheckins(firstCheckinDateString(7));
     crn = offender.crn;
-    await testInfo.attach("created-crn", {
-      body: crn,
-      contentType: "text/plain",
-    });
-    await new ManageCheckInsJourney(page).addCustomQuestions(
+    await attachCreatedCrn(testInfo, offender.crn);
+    await new CustomQuestionsJourney(page).addCustomQuestions(
       crn,
       CUSTOM_QUESTIONS,
     );
@@ -35,12 +32,9 @@ test.describe.serial("Manage custom check in questions", () => {
   test("practitioner edits, deletes and clears custom question so none remain saved", async ({
     page,
   }, testInfo) => {
-    const journey = new ManageCheckInsJourney(page);
+    const journey = new CustomQuestionsJourney(page);
     await journey.login();
-    await testInfo.attach("created-crn", {
-      body: crn,
-      contentType: "text/plain",
-    });
+    await attachCreatedCrn(testInfo, crn);
     const remaining = await journey.editAndDeleteCustomQuestions(
       crn,
       QUESTION_TEXTS,
