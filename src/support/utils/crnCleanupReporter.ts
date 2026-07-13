@@ -39,7 +39,7 @@ export default class CrnCleanupReporter implements Reporter {
     }
     const toDelete = [...created].filter((crn) => !retained.has(crn));
     if (!toDelete.length) {
-      console.log(`CRN cleanup: nothing to delete ${retained.size} retained)`);
+      console.log(`CRN cleanup: nothing to delete ${retained.size} retained`);
       return;
     }
 

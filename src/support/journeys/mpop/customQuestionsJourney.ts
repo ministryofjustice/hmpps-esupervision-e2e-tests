@@ -3,7 +3,11 @@ import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsJourney from "./manageCheckinsJourney";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { CustomQuestion } from "../../../data/models";
-import { FEELING_PREVIEW_OPTIONS, SUPPORT_PREVIEW_CHECKBOXES, MAX_CUSTOM_QUESTIONS } from "../../../data/mpop/questionPreviewOptions";
+import {
+  FEELING_PREVIEW_OPTIONS,
+  SUPPORT_PREVIEW_CHECKBOXES,
+  MAX_CUSTOM_QUESTIONS,
+} from "../../../data/mpop/questionPreviewOptions";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -15,7 +19,7 @@ export default class CustomQuestionsJourney {
   }
 
   async login(): Promise<void> {
-    return await this.manage.login();
+    return this.manage.login();
   }
 
   private async openManageForFutureCheckin(

@@ -6,7 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from "fs";
-import { TestInfo } from "@playwright/test";
+import type { TestInfo } from "@playwright/test";
 
 const CRN_FILE = path.join(process.cwd(), "created-crns.txt");
 
