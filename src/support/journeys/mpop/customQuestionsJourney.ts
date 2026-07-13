@@ -7,7 +7,7 @@ import {
   FEELING_PREVIEW_OPTIONS,
   SUPPORT_PREVIEW_CHECKBOXES,
   MAX_CUSTOM_QUESTIONS,
-} from "../../../data/mpop/questionPreviewOptions";
+} from "../../../data/mpop/customQuestionConstants";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -207,7 +207,7 @@ export default class CustomQuestionsJourney {
 
   private async save(manage: ManageCheckInsPage): Promise<void> {
     await this.pages.addQuestions.clickSaveQuestions();
-    await this.assertQuestionsSaved(manage);
+    await this.assertQuestionsAddedBanner(manage);
   }
 
   private async saveAndVerifyQuestions(
@@ -240,7 +240,7 @@ export default class CustomQuestionsJourney {
     }
   }
 
-  private async assertQuestionsSaved(
+  private async assertQuestionsAddedBanner(
     manage: ManageCheckInsPage,
   ): Promise<void> {
     await expect(

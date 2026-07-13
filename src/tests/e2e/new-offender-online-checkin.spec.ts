@@ -37,7 +37,7 @@ const scenarios: CheckinScenario[] = [
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
-    // Check in today so questions can no longer be changed
+    // First check is in today, so the "change questions" link should not be available
     expectNoChangeQuestions: true,
     review: {
       identity: IdentityDecision.MATCH,

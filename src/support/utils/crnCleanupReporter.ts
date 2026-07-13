@@ -15,13 +15,15 @@ export default class CrnCleanupReporter implements Reporter {
   private readonly testStates = new Map<string, TestCleanupState>();
 
   onTestEnd(test: TestCase, result: TestResult): void {
+    const previous = this.testStates.get(test.id);
     const crns = this.testStates.get(test.id)?.crns ?? new Set<string>();
     for (const crn of this.crnsRecordedBy(result)) {
       crns.add(crn);
     }
     this.testStates.set(test.id, {
       crns,
-      succeeded: result.status === test.expectedStatus,
+      succeeded:
+        (previous?.succeeded ?? false) || result.status === test.expectedStatus,
     });
   }
   async onEnd(): Promise<void> {
@@ -39,7 +41,7 @@ export default class CrnCleanupReporter implements Reporter {
     }
     const toDelete = [...created].filter((crn) => !retained.has(crn));
     if (!toDelete.length) {
-      console.log(`CRN cleanup: nothing to delete ${retained.size} retained`);
+      console.log(`CRN cleanup: nothing to delete, ${retained.size} retained`);
       return;
     }
 
