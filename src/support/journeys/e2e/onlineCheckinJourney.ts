@@ -91,7 +91,7 @@ export default class OnlineCheckinJourney {
   }
 
   async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
-    await this.assertChangeQuestionsUnavailable(crn);
+    await this.customQuestions.assertChangeQuestionsUnavailable(crn);
   }
 
   async reviewCheckin(

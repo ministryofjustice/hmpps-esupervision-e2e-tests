@@ -1,8 +1,10 @@
-import { readCreatedCrns, writeCreatedCrns } from "./createdCrns";
+import {
+  CRN_ATTACHMENT_NAME,
+  readCreatedCrns,
+  writeCreatedCrns,
+} from "./createdCrns";
 import { cleanupCrns } from "../../scripts/cleanupCrns";
 import type { Reporter, TestCase, TestResult } from "@playwright/test/reporter";
-
-const CRN_ATTACHMENT_NAME = "created-crn";
 
 interface TestCleanupState {
   crns: Set<string>;
@@ -18,7 +20,7 @@ export default class CrnCleanupReporter implements Reporter {
       crns.add(crn);
     }
     this.testStates.set(test.id, {
-      crns: this.crnsRecordedBy(result),
+      crns,
       succeeded: result.status === test.expectedStatus,
     });
   }
@@ -37,7 +39,7 @@ export default class CrnCleanupReporter implements Reporter {
     }
     const toDelete = [...created].filter((crn) => !retained.has(crn));
     if (!toDelete.length) {
-      console.log(`CRN cleanup:  nothing to delete ${retained.size} retained)`);
+      console.log(`CRN cleanup: nothing to delete ${retained.size} retained)`);
       return;
     }
 

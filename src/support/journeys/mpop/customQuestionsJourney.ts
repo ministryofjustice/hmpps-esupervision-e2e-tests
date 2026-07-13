@@ -3,11 +3,7 @@ import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsJourney from "./manageCheckinsJourney";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { CustomQuestion } from "../../../data/models";
-import {
-  FEELING_PREVIEW_OPTIONS,
-  SUPPORT_PREVIEW_CHECKBOXES,
-  MAX_CUSTOM_QUESTIONS,
-} from "../../../data/mpop/testData";
+import { FEELING_PREVIEW_OPTIONS, SUPPORT_PREVIEW_CHECKBOXES, MAX_CUSTOM_QUESTIONS } from "../../../data/mpop/questionPreviewOptions";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -119,8 +115,7 @@ export default class CustomQuestionsJourney {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
       const manage = await this.goToAddQuestionsPage(crn);
       await this.enterCustomQuestions(questions);
-      await this.pages.addQuestions.clickSaveQuestions();
-      await this.assertQuestionsSaved(manage);
+      await this.save(manage);
     });
   }
 

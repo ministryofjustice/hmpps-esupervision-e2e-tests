@@ -98,14 +98,15 @@ export default class CheckinJourney {
         await expect(this.page).toHaveURL(ADDITIONAL_QUESTION_URL);
         await expect(this.pages.additionalQuestion.answerField()).toBeVisible();
         const expectedQuestion = questions[i];
+        const heading = await this.pages.additionalQuestion.questionText();
         expect(
-          await this.pages.additionalQuestion.questionText(),
+          heading,
           `Additional question ${i + 1} should be displayed in the expected order`,
         ).toContain(expectedQuestion);
         const response = answers[i] ?? `Additional answer ${i + 1}`;
         await this.pages.additionalQuestion.answerAndContinue(response);
         answered.push({
-          question: expectedQuestion,
+          question: heading,
           answer: response,
         });
       }
