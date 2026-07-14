@@ -90,3 +90,4 @@ Test data differs per suite:
 - **e2e** spec creates its own offender in Delius per run.
 - **checkin** creates a checkin via API (`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
 - **mpop** the custom question spec creates a fresh offender per run; other mpop specs run against pre-existing CRNs the tests don't create or delete them
+- **manage-checkins-ui** no test data. It signs in and assert the header and footer components

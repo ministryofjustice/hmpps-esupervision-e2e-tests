@@ -28,6 +28,7 @@ export const env = {
   authClientSecret: (): string => required("AUTH_CLIENT_SECRET"),
   esupervisionApiUrl: (): string => required("ESUPERVISION_API_URL"),
   mpopUrl: (): string => required("MPOP_URL"),
+  manageCheckinsUiUrl: (): string => required("MANAGE_CHECKINS_UI_URL"),
   deliusUsername: (): string => required("DELIUS_USERNAME"),
   deliusPassword: (): string => required("DELIUS_PASSWORD"),
   practitionerName: (): string => required("PRACTITIONER_NAME"),
