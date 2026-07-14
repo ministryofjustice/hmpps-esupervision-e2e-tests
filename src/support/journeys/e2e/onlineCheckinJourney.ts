@@ -7,7 +7,9 @@ import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
+  AdditionalAnswer,
   CompletedCheckinDetails,
+  CustomQuestion,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
@@ -17,9 +19,16 @@ import ReviewCheckinJourney, {
   Annotation,
   ReviewDecision,
 } from "../mpop/reviewCheckinJourney";
+import CustomQuestionsJourney from "../mpop/customQuestionsJourney";
 
 export default class OnlineCheckinJourney {
-  constructor(private readonly page: Page) {}
+  private readonly customQuestions: CustomQuestionsJourney;
+  private readonly review: ReviewCheckinJourney;
+
+  constructor(private readonly page: Page) {
+    this.customQuestions = new CustomQuestionsJourney(page);
+    this.review = new ReviewCheckinJourney(page);
+  }
 
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
@@ -46,6 +55,7 @@ export default class OnlineCheckinJourney {
   async completeCheckin(
     uuid: string,
     offender: NewOffender,
+    additionalQuestions: string[] = [],
   ): Promise<CompletedCheckinDetails> {
     const mentalHealth = randomMentalHealthOption();
     const assistance = randomAssistanceSelections(2);
@@ -55,6 +65,11 @@ export default class OnlineCheckinJourney {
     await journey.completePersonalDetails(offender.person);
     await journey.completeMentalHealthQuestion(mentalHealth);
     await journey.completeAssistanceQuestion(assistance);
+    let additional: AdditionalAnswer[] = [];
+    if (additionalQuestions.length > 0) {
+      additional =
+        await journey.completeAdditionalQuestions(additionalQuestions);
+    }
     await journey.completeLivenessFlow(uuid);
     await journey.verifyCheckAnswersPage();
     await journey.verifySummaryContains(
@@ -62,9 +77,21 @@ export default class OnlineCheckinJourney {
       label(mentalHealth),
     );
     await journey.verifyAssistanceCommentsInSummary(assistance);
+    await journey.verifyAdditionalAnswersInSummary(additional);
     await journey.submitCheckin();
     await journey.verifyConfirmationPage();
-    return { mentalHealth, assistance };
+    return { mentalHealth, assistance, additional };
+  }
+
+  async assignCustomQuestions(
+    crn: string,
+    questions: CustomQuestion[],
+  ): Promise<void> {
+    await this.customQuestions.assignCustomQuestions(crn, questions);
+  }
+
+  async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
+    await this.customQuestions.assertChangeQuestionsUnavailable(crn);
   }
 
   async reviewCheckin(
@@ -72,17 +99,10 @@ export default class OnlineCheckinJourney {
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
   ): Promise<void> {
-    await new ReviewCheckinJourney(this.page).reviewCompletedCheckin(
-      crn,
-      decision,
-      details,
-    );
+    await this.review.reviewCompletedCheckin(crn, decision, details);
   }
 
   async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {
-    await new ReviewCheckinJourney(this.page).annotateReviewedCheckin(
-      crn,
-      annotation,
-    );
+    await this.review.annotateReviewedCheckin(crn, annotation);
   }
 }

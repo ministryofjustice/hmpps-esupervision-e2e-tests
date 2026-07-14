@@ -4,9 +4,11 @@ import {
   MentalHealthOption,
   AssistanceSelection,
   CheckInPerson,
+  AdditionalAnswer,
 } from "../../data/models";
 import { env } from "../../config/env";
 import { Pages } from "../pages/checkin-ui/Pages";
+import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionPage";
 
 const baseUrl = (): string => env.checkInUrl();
 
@@ -83,6 +85,43 @@ export default class CheckinJourney {
     await test.step(`Answer assistance: ${selections.map((s) => s.option).join(", ")}`, async () => {
       await this.pages.assistance.isOnPage();
       await this.pages.assistance.selectOptionsAndContinue(selections);
+    });
+  }
+
+  async completeAdditionalQuestions(
+    questions: string[],
+    answers: string[] = [],
+  ): Promise<AdditionalAnswer[]> {
+    const answered: AdditionalAnswer[] = [];
+    await test.step(`Answer ${questions.length} additional question(s)`, async () => {
+      for (let i = 0; i < questions.length; i++) {
+        await expect(this.page).toHaveURL(ADDITIONAL_QUESTION_URL);
+        await expect(this.pages.additionalQuestion.answerField()).toBeVisible();
+        const expectedQuestion = questions[i];
+        const heading = await this.pages.additionalQuestion.questionText();
+        expect(
+          heading,
+          `Additional question ${i + 1} should be displayed in the expected order`,
+        ).toContain(expectedQuestion);
+        const response = answers[i] ?? `Additional answer ${i + 1}`;
+        await this.pages.additionalQuestion.answerAndContinue(response);
+        answered.push({
+          question: heading,
+          answer: response,
+        });
+      }
+    });
+    return answered;
+  }
+
+  async verifyAdditionalAnswersInSummary(
+    additional: AdditionalAnswer[],
+  ): Promise<void> {
+    if (additional.length === 0) return;
+    await test.step("Verify additional answers on check your answers", async () => {
+      for (const { question, answer } of additional) {
+        await this.verifySummaryContains(question, answer);
+      }
     });
   }
 

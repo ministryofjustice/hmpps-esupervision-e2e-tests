@@ -1,6 +1,9 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import { CompletedCheckinDetails } from "../../../data/models";
+import {
+  AdditionalAnswer,
+  CompletedCheckinDetails,
+} from "../../../data/models";
 import {
   label,
   mpopAssistanceCommentKey,
@@ -132,6 +135,19 @@ export default class ReviewCheckinJourney {
         view.summaryValueByKey(mpopAssistanceCommentKey(option)),
         `Comment for "${optionLabel}" should show comment "${comment}"`,
       ).toContainText(comment);
+    }
+    await this.assertAdditionalAnswers(view, details.additional);
+  }
+
+  private async assertAdditionalAnswers(
+    view: CheckinDetailsView,
+    additional: AdditionalAnswer[],
+  ): Promise<void> {
+    for (const { question, answer } of additional) {
+      await expect(
+        view.summaryValueByKey(question),
+        `Custom question "${question}" should show "${answer}"`,
+      ).toContainText(answer);
     }
   }
 

@@ -68,7 +68,18 @@ export interface CheckInPerson {
   dob: Date;
 }
 
+export interface CustomQuestion {
+  template: string;
+  text: string;
+}
+
+export interface AdditionalAnswer {
+  question: string;
+  answer: string;
+}
+
 export interface CompletedCheckinDetails {
   mentalHealth: MentalHealthOption;
   assistance: AssistanceSelection[];
+  additional: AdditionalAnswer[];
 }

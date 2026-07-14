@@ -9,6 +9,7 @@ import FallbackInformPage from "./fallbackInformPage";
 import LivenessViewPage from "./livenessViewPage";
 import LivenessRecordPage from "./livenessRecordPage";
 import FallbackRecordPage from "./fallbackRecordPage";
+import AdditionalQuestionPage from "./additionalQuestionPage";
 
 export class Pages {
   readonly homepage: HomePage;
@@ -21,6 +22,7 @@ export class Pages {
   readonly fallbackRecord: FallbackRecordPage;
   readonly checkAnswers: CheckAnswersPage;
   readonly confirmation: ConfirmationPage;
+  readonly additionalQuestion: AdditionalQuestionPage;
 
   constructor(page: Page) {
     this.homepage = new HomePage(page);
@@ -33,5 +35,6 @@ export class Pages {
     this.fallbackRecord = new FallbackRecordPage(page);
     this.checkAnswers = new CheckAnswersPage(page);
     this.confirmation = new ConfirmationPage(page);
+    this.additionalQuestion = new AdditionalQuestionPage(page);
   }
 }

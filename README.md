@@ -63,9 +63,8 @@ e2e (new-offender-online-checkin) skip liveness: it goes straight to /liveness/v
 
 ## Cleanup
 
-The e2e suite records every CRN it creates in `created-crns.txt` (gitIgnored) and cleans them up in its 'afterAll' teardown - only when e2e tests pass.
-If e2e test fails, the created offenders are kept for debugging
-
+The e2e suite and the mpop custom questions spec create offenders and record every CRN they create in `created-crns.txt` (gitIgnored). Cleanup runs automatically at the end of a run via Playwright reporter `src/support/utils/crnCleanupReporter.ts` which deletes the offenders.
+Deletion is per offender, a CRN is deleted only when every test that used it passed. Each test tags the CRN it creates with `testInfo.attach("created-crn",..)` and the reporter reads those to decide. So a failure in an unrelated spec does not block cleanup if CRN whose own tests passed.
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns
 ```
@@ -82,12 +81,12 @@ The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
 
 The suite runs in a single `playwright test` and produces one report ( a Junit and HTML report as an artifact)
 
-There is no cleanup step - the e2e test suite cleans up its own offenders in its teardown( only on a green e2e run),so a failed run leaves the CRN for debugging.
+There is no separate teardown step in the specs. Cleanup runs in the reporter at the end of the run, deleting the offenders whose test passed.
 
 ## Notes
 
 Test data differs per suite:
 
-- **e2e** creates its own offender in Delius per run.
+- **e2e** spec creates its own offender in Delius per run.
 - **checkin** creates a checkin via API (`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
-- **mpop** runs against pre-existing CRNs the tests don't create or delete them
+- **mpop** the custom question spec creates a fresh offender per run; other mpop specs run against pre-existing CRNs the tests don't create or delete them

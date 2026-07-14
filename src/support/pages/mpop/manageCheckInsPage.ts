@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export default class ManageCheckInsPage extends MPopBasePage {
@@ -11,5 +11,24 @@ export default class ManageCheckInsPage extends MPopBasePage {
   }
   async clickRestartCheckIns(): Promise<void> {
     await this.getQA("restart-checkin-btn").click();
+  }
+
+  changeQuestionsLink(): Locator {
+    return this.page.getByRole("link", { name: /Change questions/ });
+  }
+  async clickChangeQuestions(): Promise<void> {
+    await this.changeQuestionsLink().click();
+  }
+
+  questionsAddedBanner(): Locator {
+    return this.page.getByText(/added additional questions/);
+  }
+
+  nextCheckinDate(): Locator {
+    return this.getQA("nextCheckInValue").first();
+  }
+
+  questionCard(): Locator {
+    return this.getQA("checkinQuestionsCard");
   }
 }

@@ -19,6 +19,11 @@ import ReviewIdentityPage from "./reviewIdentityPage";
 import ReviewNotesPage from "./reviewNotesPage";
 import ActivityLogPage from "./activityLogPage";
 import ReviewedCheckinPage from "./reviewedCheckinPage";
+import HowToWriteQuestionsPage from "./howToWriteQuestionsPage";
+import AddQuestionsPage from "./addQuestionsPage";
+import ChooseQuestionPage from "./chooseQuestionPage";
+import QuestionPreviewPage from "./questionPreviewPage";
+import EditQuestionPage from "./editQuestionPage";
 
 const INELIGIBLE_HEADING = /[^\s]+ is not eligible to use online check ins/;
 const PARTIALLY_ELIGIBLE_HEADING =
@@ -41,6 +46,12 @@ export class MpopPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
+
+  readonly howToWriteQuestions: HowToWriteQuestionsPage;
+  readonly addQuestions: AddQuestionsPage;
+  readonly chooseQuestion: ChooseQuestionPage;
+  readonly editQuestion: EditQuestionPage;
+  readonly questionPreview: QuestionPreviewPage;
 
   readonly activityLog: ActivityLogPage;
   readonly reviewIdentity: ReviewIdentityPage;
@@ -69,6 +80,12 @@ export class MpopPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+
+    this.howToWriteQuestions = new HowToWriteQuestionsPage(page);
+    this.addQuestions = new AddQuestionsPage(page);
+    this.chooseQuestion = new ChooseQuestionPage(page);
+    this.editQuestion = new EditQuestionPage(page);
+    this.questionPreview = new QuestionPreviewPage(page);
 
     this.activityLog = new ActivityLogPage(page);
     this.reviewIdentity = new ReviewIdentityPage(page);
