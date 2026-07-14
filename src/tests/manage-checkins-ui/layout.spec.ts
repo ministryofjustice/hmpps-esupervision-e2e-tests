@@ -7,7 +7,7 @@ import {
   FOOTER_LINKS,
 } from "../../data/manage-checkins-ui/layoutConstants";
 
-test.describe.serial("manage online check ins UI layout", () => {
+test.describe("manage online check ins UI layout", () => {
   let page: Page;
   let pages: ManageCheckinsUiPages;
 
@@ -40,10 +40,10 @@ test.describe.serial("manage online check ins UI layout", () => {
 
   test("footer shows the support links", async () => {
     await expect(pages.footer.footer()).toBeVisible();
-    for (const { name } of FOOTER_LINKS)
+    for (const { name, href } of FOOTER_LINKS)
       await expect(
-        pages.footer.footerlink(name),
-        `${name} footer link not found`,
-      ).toBeVisible();
+        pages.footer.footerLink(name),
+        `${name} footer link has wrong URL`,
+      ).toHaveAttribute("href", href);
   });
 });

@@ -7,7 +7,7 @@ export default class Footer {
     return this.page.getByRole("contentinfo");
   }
 
-  footerlink(name: string): Locator {
+  footerLink(name: string): Locator {
     return this.footer().getByRole("link", { name: new RegExp(name, "i") });
   }
 }
