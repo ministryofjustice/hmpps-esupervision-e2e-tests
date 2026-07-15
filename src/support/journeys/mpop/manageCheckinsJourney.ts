@@ -1,4 +1,4 @@
-import { Page, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import {
   ContactDetails,
   Preference,
@@ -7,6 +7,7 @@ import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
+import { env } from "../../../config/env";
 
 export interface RestartValues {
   date: string;
@@ -41,6 +42,10 @@ export default class ManageCheckInsJourney {
     await test.step(`Stop online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickStopCheckIns();
+      // enableESUPCheckinNewStop redirects to manage online checkins UI
+      await expect(this.page).toHaveURL(
+        new RegExp(`^${env.manageCheckinsUiUrl()}`),
+      );
       await this.pages.stop.assertOnPage();
       await this.pages.stop.completePage(reason);
     });
