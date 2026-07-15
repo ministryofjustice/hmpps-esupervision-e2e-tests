@@ -7,6 +7,7 @@ import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
+import { env } from "../../../config/env";
 
 export interface RestartValues {
   date: string;
@@ -42,7 +43,9 @@ export default class ManageCheckInsJourney {
       const manage = await this.openManage(crn);
       await manage.clickStopCheckIns();
       // enableESUPCheckinNewStop redirects to manage online checkins UI
-      await expect(this.page).toHaveURL(/manage-online-check-ins/);
+      await expect(this.page).toHaveURL(
+        new RegExp(`^${env.manageCheckinsUiUrl()}`),
+      );
       await this.pages.stop.assertOnPage();
       await this.pages.stop.completePage(reason);
     });
