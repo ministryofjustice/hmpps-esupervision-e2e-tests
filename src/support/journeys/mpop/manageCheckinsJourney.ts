@@ -1,4 +1,4 @@
-import { Page, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import {
   ContactDetails,
   Preference,
@@ -41,6 +41,8 @@ export default class ManageCheckInsJourney {
     await test.step(`Stop online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickStopCheckIns();
+      // enableESUPCheckinNewStop redirects to manage online checkins UI
+      await expect(this.page).toHaveURL(/manage-online-check-ins/);
       await this.pages.stop.assertOnPage();
       await this.pages.stop.completePage(reason);
     });
