@@ -18,7 +18,9 @@
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "create:offenders": "ENV=test tsx src/scripts/createOffenders.ts",
+     "create:offenders:headed": "ENV=test HEADED=true tsx src/scripts/createOffenders.ts"
   },
   "repository": {
     "type": "git",
