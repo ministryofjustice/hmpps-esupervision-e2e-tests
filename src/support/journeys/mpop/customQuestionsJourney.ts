@@ -7,10 +7,16 @@ import {
   FEELING_PREVIEW_OPTIONS,
   SUPPORT_PREVIEW_CHECKBOXES,
   MAX_CUSTOM_QUESTIONS,
+  DEFAULT_FEELING_QUESTION_TEXT,
+  DEFAULT_SUPPORT_QUESTION_TEXT,
 } from "../../../data/mpop/customQuestionConstants";
 import { env } from "../../../config/env";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
-import { ADD_QUESTIONS_TITLE } from "../../../data/manage-checkins-ui/layoutConstants";
+import {
+  ADD_QUESTIONS_TITLE,
+  HOW_TO_WRITE_QUESTIONS_TITLE,
+  questionPreviewTitle,
+} from "../../../data/manage-checkins-ui/pageTitles";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -45,9 +51,9 @@ export default class CustomQuestionsJourney {
   ): Promise<void> {
     await manage.clickChangeQuestions();
 
-    // Questions journey is enabled in manage online check in ui
+    // ESUP-1938 (interim) Questions journey is enabled in manage online check in ui
     // behind enableESUPCheckinNewQuestions - assert the redirect happened
-    // remove this redirect assertion once the manage check in ui all pages implemented
+    // remove this redirect assertion once  all pages are implemented in new ui
 
     await expect(
       this.page,
@@ -57,7 +63,7 @@ export default class CustomQuestionsJourney {
     await this.pages.howToWriteQuestions.assertOnPage();
     await assertManageOnlineCheckinsUiTitle(
       this.page,
-      "How to write questions for an online service",
+      HOW_TO_WRITE_QUESTIONS_TITLE,
     );
     await this.pages.howToWriteQuestions.clickAddQuestions();
     await this.pages.addQuestions.assertOnPage();
@@ -81,7 +87,7 @@ export default class CustomQuestionsJourney {
     await preview.assertOnPage();
     await assertManageOnlineCheckinsUiTitle(
       this.page,
-      "Question preview of How have you been feeling since we last spoke?",
+      questionPreviewTitle(DEFAULT_FEELING_QUESTION_TEXT),
     );
 
     for (const option of FEELING_PREVIEW_OPTIONS) {
@@ -103,7 +109,7 @@ export default class CustomQuestionsJourney {
     await preview.assertOnPage();
     await assertManageOnlineCheckinsUiTitle(
       this.page,
-      "Question preview of Is there anything else you need support with or want to let us know about?",
+      questionPreviewTitle(DEFAULT_SUPPORT_QUESTION_TEXT),
     );
 
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
@@ -134,8 +140,8 @@ export default class CustomQuestionsJourney {
       crn,
       questions.map((q) => q.text),
     );
-    //ORIGINAL (restore once save lands back on the manage page - pass the
-    // manage instance from goToAddQuestionsPage through again)
+    // restore once save lands back on the manage page - pass the
+    // manage instance from goToAddQuestionsPage through again
 
     // const manage = await this.goToAddQuestionsPage(crn);
     // await this.saveAndVerifyQuestions(
@@ -150,7 +156,7 @@ export default class CustomQuestionsJourney {
     questions: CustomQuestion[],
   ): Promise<void> {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
-      // ORIGINAL (restore once save lands back on manage page)
+      // restore once save lands back on manage page)
       // const manage = await this.goToAddQuestionsPage(crn);
       await this.goToAddQuestionsPage(crn);
       await this.enterCustomQuestions(questions);
@@ -171,7 +177,7 @@ export default class CustomQuestionsJourney {
 
     await test.step("Edit and delete configured questions, then save", async () => {
       const addPage = this.pages.addQuestions;
-      // ORIGINAL ( restore once save lands on manage page - use the manage
+      // restore once save lands on manage page - use the manage
       // instance from goToAddQuestionsPage)
       // const manage = await this.goToAddQuestionsPage(crn);
       await this.goToAddQuestionsPage(crn);
@@ -195,8 +201,8 @@ export default class CustomQuestionsJourney {
       // saveAndVerify questions leaves the browser on the manage check in page, so rewrap
       // the current page to run to the deleted question check
       const manage = new ManageCheckInsPage(this.page);
-      // ORIGINAL ( restore once save lands on manage page - use the manage
-      // instance from goToAddQuestionsPage)
+      // restore once save lands on manage page - use the manage
+      // instance from goToAddQuestionsPage
       //  await this.saveAndVerifyQuestions(manage, remainingQuestions);
       await expect(
         manage.questionCard(),
@@ -212,8 +218,8 @@ export default class CustomQuestionsJourney {
       await this.goToAddQuestionsPage(crn);
       await this.deleteQuestions(questions);
       await this.save(crn);
-      // ORIGINAL ( restore once save lands on manage page - use the manage
-      // instance from goToAddQuestionsPage)
+      // restore once save lands on manage page - use the manage
+      // instance from goToAddQuestionsPage
       // await this.pages.addQuestions.clickSaveQuestions();
       await this.goToAddQuestionsPage(crn);
       await this.assertQuestionsNotShown(questions);
@@ -285,7 +291,7 @@ export default class CustomQuestionsJourney {
     });
   }
 
-  // ORIGINAL restore once save lands back on manage page
+  // restore once save lands back on manage page
 
   //   private async saveAndVerifyQuestions(
   //     manage: ManageCheckInsPage,

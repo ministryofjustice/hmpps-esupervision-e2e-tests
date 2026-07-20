@@ -12,6 +12,11 @@ import {
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
 import { env } from "../../../config/env";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
+import {
+  REVIEW_IDENTITY_TITLE,
+  REVIEW_QUESTIONS_TITLE,
+  REVIEWED_CHECKED_IN_TITLE,
+} from "../../../data/manage-checkins-ui/pageTitles";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -53,14 +58,11 @@ export default class ReviewCheckinJourney {
     // Review the check in: Identity page, then the review notes page
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(
-      this.page,
-      "Review and confirm identity",
-    );
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_IDENTITY_TITLE);
     await this.pages.reviewIdentity.completePage(identity);
 
     await this.pages.reviewNotes.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(this.page, "Review questions");
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_QUESTIONS_TITLE);
     await expect(
       this.pages.reviewNotes.notesField(),
       "Should be on the review notes page, not still on identity",
@@ -79,7 +81,7 @@ export default class ReviewCheckinJourney {
     await this.pages.reviewedCheckin.assertOnPage();
     await assertManageOnlineCheckinsUiTitle(
       this.page,
-      "Online check in submitted and reviewed",
+      REVIEWED_CHECKED_IN_TITLE,
     );
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
