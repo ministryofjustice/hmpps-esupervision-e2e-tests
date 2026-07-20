@@ -15,7 +15,7 @@ import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
-  REVIEWED_CHECKED_IN_TITLE,
+  REVIEWED_CHECK_IN_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
 
 interface CheckinDetailsView {
@@ -79,10 +79,7 @@ export default class ReviewCheckinJourney {
     // Re-open the check in and verify the review was saved
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(
-      this.page,
-      REVIEWED_CHECKED_IN_TITLE,
-    );
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEWED_CHECK_IN_TITLE);
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
     if (details) {

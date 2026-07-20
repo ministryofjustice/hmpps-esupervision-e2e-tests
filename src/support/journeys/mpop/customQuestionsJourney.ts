@@ -14,6 +14,7 @@ import { env } from "../../../config/env";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   ADD_QUESTIONS_TITLE,
+  CHOOSE_QUESTION_TITLE,
   HOW_TO_WRITE_QUESTIONS_TITLE,
   questionPreviewTitle,
 } from "../../../data/manage-checkins-ui/pageTitles";
@@ -52,8 +53,7 @@ export default class CustomQuestionsJourney {
     await manage.clickChangeQuestions();
 
     // ESUP-1938 (interim) Questions journey is enabled in manage online check in ui
-    // behind enableESUPCheckinNewQuestions - assert the redirect happened
-    // remove this redirect assertion once  all pages are implemented in new ui
+    // behind enableESUPCheckinNewQuestions - assert the redirect happened to new UI
 
     await expect(
       this.page,
@@ -131,6 +131,8 @@ export default class CustomQuestionsJourney {
     crn: string,
     questions: CustomQuestion[],
   ): Promise<void> {
+    // restore once save lands back on the manage page- pass the manage instance from goToAddQuestionsPage
+    // through again
     await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions());
@@ -140,14 +142,6 @@ export default class CustomQuestionsJourney {
       crn,
       questions.map((q) => q.text),
     );
-    // restore once save lands back on the manage page - pass the
-    // manage instance from goToAddQuestionsPage through again
-
-    // const manage = await this.goToAddQuestionsPage(crn);
-    // await this.saveAndVerifyQuestions(
-    //       manage,
-    //       questions.map((q) => q.text),
-    //     );
   }
 
   // for e2e setup: adds and saves custom questions without preview/verify steps that addCustomQuestions covers
@@ -156,7 +150,7 @@ export default class CustomQuestionsJourney {
     questions: CustomQuestion[],
   ): Promise<void> {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
-      // restore once save lands back on manage page)
+      // ESUP-1938 restore once save lands back on manage page
       // const manage = await this.goToAddQuestionsPage(crn);
       await this.goToAddQuestionsPage(crn);
       await this.enterCustomQuestions(questions);
@@ -178,7 +172,7 @@ export default class CustomQuestionsJourney {
     await test.step("Edit and delete configured questions, then save", async () => {
       const addPage = this.pages.addQuestions;
       // restore once save lands on manage page - use the manage
-      // instance from goToAddQuestionsPage)
+      // instance from goToAddQuestionsPage
       // const manage = await this.goToAddQuestionsPage(crn);
       await this.goToAddQuestionsPage(crn);
 
@@ -197,6 +191,8 @@ export default class CustomQuestionsJourney {
       ).toHaveCount(0);
 
       await this.deleteQuestions([remove]);
+      // saveAndVerifyQuestions leaves the browser on the manage check in page
+      // and returns that page object, so reuse it for the deleted question check
       await this.saveAndVerifyQuestions(crn, remainingQuestions);
       // saveAndVerify questions leaves the browser on the manage check in page, so rewrap
       // the current page to run to the deleted question check
@@ -239,7 +235,7 @@ export default class CustomQuestionsJourney {
     for (const { template, text } of questions) {
       await this.pages.addQuestions.clickAddQuestion();
       await this.pages.chooseQuestion.assertOnPage();
-      await assertManageOnlineCheckinsUiTitle(this.page, ADD_QUESTIONS_TITLE);
+      await assertManageOnlineCheckinsUiTitle(this.page, CHOOSE_QUESTION_TITLE);
       await this.pages.chooseQuestion.selectQuestionByTemplate(template);
       await this.pages.editQuestion.assertOnPage();
       await this.pages.editQuestion.enterQuestion(text);
@@ -262,21 +258,18 @@ export default class CustomQuestionsJourney {
 
   private async save(crn: string): Promise<void> {
     await this.pages.addQuestions.clickSaveQuestions();
-    // Saving on manage online check in ui currently back to mpop overview once remaining pages
-    // migrated to UI, remove the URL assertion below and re-enable the commented banner assertion
+    // ESUP-1938 Saving on manage online check in ui currently back to mpop overview.Once remaining pages
+    // migrated to the new ui, remove the URL assertion below and re-enable the commented banner assertion
     // await this.assertQuestionsAddedBanner(manage);
     await expect(
       this.page,
-      "Saving questions should reurn the PP to MPOP",
+      "Saving questions should return the PP to MPOP",
     ).toHaveURL(new RegExp(`^${env.mpopUrl()}/case/${crn}`));
   }
 
   //   private async save(manage: ManageCheckInsPage): Promise<void> {
   //     await this.pages.addQuestions.clickSaveQuestions();
-  //     await expect(
-  //       this.page,
-  //       "Saving questions should reurn the PP to MPOP",
-  //     ).toHaveURL(new RegExp(`^${env.manageCheckinsUiUrl()}`));
+  //     await this.assertQuestionsAddedBanner(manage)
   //   }
 
   private async saveAndVerifyQuestions(
@@ -285,7 +278,7 @@ export default class CustomQuestionsJourney {
   ): Promise<void> {
     await test.step("Save and verify the saved questions", async () => {
       await this.save(crn);
-      // save currently lands on MPOP overview, so reopen te manage check in page to verify saved questions
+      // save currently lands on MPOP overview, so reopen the manage check in page to verify saved questions
       const manage = await this.manage.openManage(crn);
       await this.assertQuestionCardsContain(manage, questions);
     });

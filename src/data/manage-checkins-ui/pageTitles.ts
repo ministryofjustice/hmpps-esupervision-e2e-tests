@@ -16,5 +16,4 @@ export const questionPreviewTitle = (questionText: string): string =>
 
 export const REVIEW_IDENTITY_TITLE = "Review and confirm identity";
 export const REVIEW_QUESTIONS_TITLE = "Review questions";
-export const REVIEWED_CHECKED_IN_TITLE =
-  "Online check in submitted and reviewed";
+export const REVIEWED_CHECK_IN_TITLE = "Online check in submitted and reviewed";
