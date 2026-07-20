@@ -131,7 +131,7 @@ export default class CustomQuestionsJourney {
     crn: string,
     questions: CustomQuestion[],
   ): Promise<void> {
-    // restore once save lands back on the manage page- pass the manage instance from goToAddQuestionsPage
+    // restore once save lands back on the manage page - pass the manage instance from goToAddQuestionsPage
     // through again
     await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
@@ -191,11 +191,9 @@ export default class CustomQuestionsJourney {
       ).toHaveCount(0);
 
       await this.deleteQuestions([remove]);
-      // saveAndVerifyQuestions leaves the browser on the manage check in page
-      // and returns that page object, so reuse it for the deleted question check
-      await this.saveAndVerifyQuestions(crn, remainingQuestions);
       // saveAndVerify questions leaves the browser on the manage check in page, so rewrap
       // the current page to run to the deleted question check
+      await this.saveAndVerifyQuestions(crn, remainingQuestions);
       const manage = new ManageCheckInsPage(this.page);
       // restore once save lands on manage page - use the manage
       // instance from goToAddQuestionsPage
@@ -269,7 +267,7 @@ export default class CustomQuestionsJourney {
 
   //   private async save(manage: ManageCheckInsPage): Promise<void> {
   //     await this.pages.addQuestions.clickSaveQuestions();
-  //     await this.assertQuestionsAddedBanner(manage)
+  //     await this.assertQuestionsAddedBanner(manage);
   //   }
 
   private async saveAndVerifyQuestions(
