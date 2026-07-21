@@ -10,6 +10,13 @@ import {
   mpopAssistanceLabel,
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
+import { env } from "../../../config/env";
+import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
+import {
+  REVIEW_IDENTITY_TITLE,
+  REVIEW_QUESTIONS_TITLE,
+  REVIEWED_CHECK_IN_TITLE,
+} from "../../../data/manage-checkins-ui/pageTitles";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -51,9 +58,11 @@ export default class ReviewCheckinJourney {
     // Review the check in: Identity page, then the review notes page
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_IDENTITY_TITLE);
     await this.pages.reviewIdentity.completePage(identity);
 
     await this.pages.reviewNotes.assertOnPage();
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_QUESTIONS_TITLE);
     await expect(
       this.pages.reviewNotes.notesField(),
       "Should be on the review notes page, not still on identity",
@@ -70,6 +79,7 @@ export default class ReviewCheckinJourney {
     // Re-open the check in and verify the review was saved
     await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
+    await assertManageOnlineCheckinsUiTitle(this.page, REVIEWED_CHECK_IN_TITLE);
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
     if (details) {
@@ -202,5 +212,9 @@ export default class ReviewCheckinJourney {
       });
     }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
     await this.pages.activityLog.openCheckinReview();
+    //enableESUPCheckinNewReview redirects to the manage online check ins service
+    await expect(this.page).toHaveURL(
+      new RegExp(`^${env.manageCheckinsUiUrl()}`),
+    );
   }
 }
