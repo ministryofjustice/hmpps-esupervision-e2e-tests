@@ -33,10 +33,10 @@
   },
   "homepage": "https://github.com/ministryofjustice/hmpps-esupervision-e2e-tests#readme",
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "^1.207.0",
-    "@playwright/test": "^1.60.0",
+    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "1.249.0",
+    "@playwright/test": "1.61.1",
     "@types/luxon": "^3.4.2",
     "@types/node": "^25.9.2",
     "@typescript-eslint/eslint-plugin": "^8.0.1",
