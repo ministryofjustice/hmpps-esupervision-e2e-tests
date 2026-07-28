@@ -24,9 +24,7 @@ export interface CheckinSummary {
 }
 
 export type CheckinUseCase =
-  | "AWAITING_CHECKIN"
-  | "NEEDS_ATTENTION"
-  | "REVIEWED";
+  "AWAITING_CHECKIN" | "NEEDS_ATTENTION" | "REVIEWED";
 
 export const listOffenderCheckins = async (
   practitioner: string,
