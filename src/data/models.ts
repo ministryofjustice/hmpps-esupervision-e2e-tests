@@ -1,11 +1,7 @@
 import { randomPicker, randomItems } from "../support/utils/random";
 
 export type MentalHealthOption =
-  | "VERY_WELL"
-  | "WELL"
-  | "OK"
-  | "NOT_GREAT"
-  | "STRUGGLING";
+  "VERY_WELL" | "WELL" | "OK" | "NOT_GREAT" | "STRUGGLING";
 
 export const MENTAL_HEALTH_OPTIONS: MentalHealthOption[] = [
   "VERY_WELL",

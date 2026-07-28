@@ -2,12 +2,7 @@ import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 
 export type SummaryField =
-  | "date"
-  | "frequency"
-  | "contactPreference"
-  | "mobile"
-  | "email"
-  | "photo";
+  "date" | "frequency" | "contactPreference" | "mobile" | "email" | "photo";
 
 const CHANGE_LINK_QA: Record<SummaryField, string> = {
   date: "dateAction",
