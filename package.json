@@ -13,6 +13,8 @@
     "test:mpop:headed": "ENV=test playwright test src/tests/mpop --workers=1 --headed",
     "test:e2e:headed": "ENV=test playwright test src/tests/e2e --workers=1 --headed",
     "test:manage-checkins-ui:headed":"playwright test src/tests/manage-checkins-ui --workers=1 --headed",
+    "test:dashboard":"playwright test src/tests/dashboard --workers=1",
+    "test:dashboard:headed":"playwright test src/tests/dashboard --workers=1 --headed",
     "cleanup:crns": "ENV=test tsx src/scripts/cleanupCrns.ts",
     "cleanup:crns:headed": "ENV=test HEADED=true tsx src/scripts/cleanupCrns.ts",
     "report": "playwright show-report",
