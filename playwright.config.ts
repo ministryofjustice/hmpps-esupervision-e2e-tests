@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import process from "process";
 import { loadEnv } from "./src/config/loadEnv";
+import { DASHBOARD_STORAGE_STATE } from "./src/support/utils/paths";
 
 loadEnv();
 
@@ -38,9 +39,32 @@ export default defineConfig({
     {
       name: "checkin:dev",
       testDir: "./src/tests",
+      testIgnore: "**/dashboard/**",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.PROBATION_CHECK_IN_URL,
+        ...(headed ? { viewport: null } : {}),
+      },
+    },
+    {
+      name: "dashboard-setup",
+      testDir: "./src/tests/dashboard",
+      testMatch: /dashboard\.setup\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.DASHBOARD_URL,
+        ...(headed ? { viewport: null } : {}),
+      },
+    },
+    {
+      name: "dashboard",
+      testDir: "./src/tests/dashboard",
+      testMatch: /.*\.spec\.ts/,
+      dependencies: ["dashboard-setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.DASHBOARD_URL,
+        storageState: DASHBOARD_STORAGE_STATE,
         ...(headed ? { viewport: null } : {}),
       },
     },

@@ -1,0 +1,42 @@
+name: Dashboard Playwright Tests
+on:
+  # Run manually via GitHub API / Action tab
+  workflow_dispatch:
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: [self-hosted, hmpps-github-actions-runner]
+    env:
+      TZ: Europe/London
+      # URLs
+      DASHBOARD_URL: https://esupervision-dev.hmpps.service.justice.gov.uk/v2statistics
+
+      # Credentials
+      DELIUS_USERNAME: ${{ secrets.DELIUS_USERNAME }}
+      DELIUS_PASSWORD: ${{ secrets.DELIUS_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install
+      - name: Run Playwright tests
+        id: tests
+        run: npm run test:dashboard
+      - name: Publish JUnit report
+        if: always()
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386
+        id: junit
+        with:
+          check_name: Dashboard end-to-end test results
+          report_paths: junit.xml
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-playwright-report
+          path: playwright-report/
+          retention-days: 7
