@@ -54,15 +54,6 @@ export default abstract class DashboardBasePage extends BasePage {
     return this.page.getByRole("button", { name: "Reset filters" });
   }
 
-  async monthFromOptions(): Promise<string[]> {
-    const values = await this.monthFromSelect()
-      .locator("option")
-      .evaluateAll((options) =>
-        options.map((option) => (option as HTMLOptionElement).value.trim()),
-      );
-    return values.filter((value) => value !== "");
-  }
-
   async selectMonthRange(from: YearMonth, to: YearMonth): Promise<void> {
     await this.monthFromSelect().selectOption(from);
     await this.monthToSelect().selectOption(to);

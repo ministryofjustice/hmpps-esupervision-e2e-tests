@@ -69,10 +69,7 @@ test.describe("data dashboard region totals match the overall tab", () => {
     throw new Error(
       `The stats snapshot changed between reading the two tabs on all ${MAX_ATTEMPTS} attempts ` +
         `(overall: "${overallSnapshot}", region: "${regionSnapshot}"), so the tabs could not be ` +
-        `compared. On dev the refresh job runs every two minutes; if this is persistent rather ` +
-        `than occasional, check whether the region tab renders a per-provider updatedAt — ` +
-        `get_summary takes it from each provider's own latest month, which need not equal the ` +
-        `total's.`,
+        `compared. `,
     );
   });
 });

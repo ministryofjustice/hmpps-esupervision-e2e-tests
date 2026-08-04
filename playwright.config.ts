@@ -52,7 +52,6 @@ export default defineConfig({
       testMatch: /dashboard\.setup\.ts/,
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: process.env.DASHBOARD_URL,
         ...(headed ? { viewport: null } : {}),
       },
     },
@@ -63,7 +62,6 @@ export default defineConfig({
       dependencies: ["dashboard-setup"],
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: process.env.DASHBOARD_URL,
         storageState: DASHBOARD_STORAGE_STATE,
         ...(headed ? { viewport: null } : {}),
       },

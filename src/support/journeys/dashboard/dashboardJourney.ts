@@ -14,6 +14,8 @@ import {
 import { type YearMonth } from "../../utils/dashboard/yearMonth";
 import { DASHBOARD_STORAGE_STATE } from "../../utils/paths";
 
+const baseUrl = (): string => env.dashboardUrl();
+
 export default class DashboardJourney {
   readonly pages: DashboardPages;
 
@@ -51,14 +53,19 @@ export default class DashboardJourney {
   }
 
   async gotoDashboard(): Promise<void> {
-    await this.page.goto(DATA_DASHBOARD_PATH);
+    await this.page.goto(new URL(DATA_DASHBOARD_PATH, baseUrl()).toString());
   }
 
   async openOverall(
     monthFrom?: YearMonth,
     monthTo?: YearMonth,
   ): Promise<DashboardPages> {
-    await this.page.goto(this.url(DATA_DASHBOARD_PATH, monthFrom, monthTo));
+    await this.page.goto(
+      new URL(
+        this.url(DATA_DASHBOARD_PATH, monthFrom, monthTo),
+        baseUrl(),
+      ).toString(),
+    );
     await this.pages.overall.assertOnPage();
     return this.pages;
   }
@@ -67,7 +74,12 @@ export default class DashboardJourney {
     monthFrom?: YearMonth,
     monthTo?: YearMonth,
   ): Promise<DashboardPages> {
-    await this.page.goto(this.url(REGION_DASHBOARD_PATH, monthFrom, monthTo));
+    await this.page.goto(
+      new URL(
+        this.url(REGION_DASHBOARD_PATH, monthFrom, monthTo),
+        baseUrl(),
+      ).toString(),
+    );
     await this.pages.region.assertOnPage();
     return this.pages;
   }
