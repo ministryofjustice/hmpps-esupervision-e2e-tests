@@ -56,13 +56,7 @@ export default abstract class DashboardBasePage extends BasePage {
   }
 
   async applyFilters(from: YearMonth, to: YearMonth): Promise<void> {
-    const navigated = this.page.waitForResponse(
-      (response) =>
-        response.request().isNavigationRequest() &&
-        response.request().frame() === this.page.mainFrame(),
-    );
     await this.applyFiltersButton().click();
-    await navigated;
     await this.page.waitForURL(
       (url) =>
         url.searchParams.get(QUERY_MONTH_FROM) === from &&
