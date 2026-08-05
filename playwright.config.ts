@@ -24,7 +24,7 @@ export default defineConfig({
     timezoneId: "Europe/London",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
+    trace: process.env.CI ? "off" : "on-first-retry",
     permissions: ["camera", "microphone"],
     launchOptions: {
       args: [
@@ -56,10 +56,16 @@ export default defineConfig({
       },
     },
     {
+      name: "dashboard-teardown",
+      testDir: "./src/tests/dashboard",
+      testMatch: /dashboard\.teardown\.ts/,
+    },
+    {
       name: "dashboard",
       testDir: "./src/tests/dashboard",
       testMatch: /.*\.spec\.ts/,
       dependencies: ["dashboard-setup"],
+      teardown: "dashboard-teardown",
       use: {
         ...devices["Desktop Chrome"],
         storageState: DASHBOARD_STORAGE_STATE,

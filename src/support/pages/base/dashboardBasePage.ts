@@ -46,7 +46,7 @@ export default abstract class DashboardBasePage extends BasePage {
     return this.page.getByRole("button", { name: "Apply filters" });
   }
 
-  resetFiltersLink(): Locator {
+  resetFiltersControl(): Locator {
     return this.page.getByRole("button", { name: "Reset filters" });
   }
 

@@ -139,3 +139,15 @@ export const assertRowSumsToTotal = (
     `${context} regions sum to ${summed} but the total is ${total}`,
   ).toEqual(total);
 };
+
+export const assertRowWithinTotal = (
+  cells: string[],
+  columns: string[],
+  context: string,
+): void => {
+  const { total, summed } = splitRow(cells, columns, context);
+  expect(
+    summed,
+    `${context} regions sum to ${summed} which exceeds the total of ${total}`,
+  ).toBeLessThanOrEqual(total);
+};

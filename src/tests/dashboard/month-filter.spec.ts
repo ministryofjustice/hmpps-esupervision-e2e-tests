@@ -53,12 +53,12 @@ test.describe("data dashboard month filter", () => {
     const journey = new DashboardJourney(page);
     const pages = await journey.openOverall(EARLIEST_MONTH, EARLIEST_MONTH);
 
-    await expect(pages.overall.resetFiltersLink()).toHaveAttribute(
+    await expect(pages.overall.resetFiltersControl()).toHaveAttribute(
       "href",
       DATA_DASHBOARD_PATH,
     );
 
-    await pages.overall.resetFiltersLink().click();
+    await pages.overall.resetFiltersControl().click();
     await page.waitForURL((url) => url.pathname === DATA_DASHBOARD_PATH);
     await pages.overall.assertSelectedRange(EARLIEST_MONTH, currentMonth());
   });

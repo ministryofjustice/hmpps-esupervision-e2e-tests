@@ -9,6 +9,7 @@ import {
   REGION_NO_PERCENTAGE,
 } from "../../../data/dashboard/formats";
 import {
+  CHECKIN_ROWS,
   type DashboardRow,
   DURATION_ROWS,
   PEOPLE_ROW_ACTIVE,
@@ -16,15 +17,18 @@ import {
   PEOPLE_ROW_STOPPED,
   REGION_ROWS_WITHOUT_PERCENTAGE,
   REGION_SUMMABLE_ROWS,
+  ROW_CHECKINS_OVER_12HRS,
 } from "../../../data/dashboard/rows";
 import {
   REGION_MATRICES,
+  REGION_MATRIX_CHECKINS,
   REGION_MATRIX_PEOPLE,
 } from "../../../data/dashboard/tables";
 import {
   assertCells,
   assertHasData,
   assertRowSumsToTotal,
+  assertRowWithinTotal,
   parseRow,
 } from "../../utils/dashboard/dashboardTables";
 
@@ -110,6 +114,28 @@ export const assertRegionRowTotals = async (
       }
     });
   }
+};
+
+export const assertCheckInsOver12hrsWithinTotal = async (
+  pages: DashboardPages,
+): Promise<void> => {
+  const row = CHECKIN_ROWS.find(
+    (candidate) => candidate.overall === ROW_CHECKINS_OVER_12HRS,
+  );
+  if (!row) {
+    throw new Error(`${ROW_CHECKINS_OVER_12HRS} row missing from CHECKIN_ROWS`);
+  }
+
+  const matrix = pages.region.matrix(REGION_MATRIX_CHECKINS);
+  const columns = await columnsFor(matrix, REGION_MATRIX_CHECKINS);
+
+  await test.step(`"${REGION_MATRIX_CHECKINS}" / ${row.overall} stays within its total`, async () => {
+    assertRowWithinTotal(
+      await matrix.numberCellTexts(row.region),
+      columns,
+      `${REGION_MATRIX_CHECKINS} / ${row.overall}`,
+    );
+  });
 };
 
 export const assertRegionPeopleReconciliation = async (
