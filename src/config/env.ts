@@ -23,6 +23,7 @@ export function envName(): string {
 export const env = {
   name: envName,
   checkInUrl: (): string => required("PROBATION_CHECK_IN_URL"),
+  dashboardUrl: (): string => required("DASHBOARD_URL"),
   authUrl: (): string => required("AUTH_URL"),
   authClientId: (): string => required("AUTH_CLIENT_ID"),
   authClientSecret: (): string => required("AUTH_CLIENT_SECRET"),

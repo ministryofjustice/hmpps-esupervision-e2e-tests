@@ -25,10 +25,11 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- n
 ## Run
 
 ```bash
-npm test                # run all suites(mpop + e2e + checkin/static)
+npm test                # run all suites except dashboard (mpop + e2e + checkin/static + manage-checkins-ui)
 npm run test:parallel   # check in + static specs
 npm run test:mpop       # run only mpop setup specs (src/tests/mpop)
 npm run test:e2e        # offender lifecycle: create -> setup checkin -> complete checkin
+npm run test:dashboard  # data dashboard specs (src/tests/dashboard)
 npm run cleanup:crns    # delete offenders created by e2e test suite
 npm run report          # open the last HTML report
 npm run typecheck       # tsc --noEmit
@@ -77,9 +78,12 @@ CRNS=X123456,X654321 npm run cleanup:crns
 
 ## CI
 
-The playwright workflow runs on a schedule and via manual `workflow_dispatch`.
+Two workflows run in this repo:
 
-The suite runs in a single `playwright test` and produces one report ( a Junit and HTML report as an artifact)
+- **`playwright.yml`** runs the main suite (`npm run test`, i.e. `checkin:dev`) on a schedule and via manual `workflow_dispatch`.
+- **`dashboard-playwright.yml`** runs the dashboard suite (`npm run test:dashboard`) on a schedule and via manual `workflow_dispatch`. It sets its own `DASHBOARD_URL` and Delius credentials in its `env:` block.
+
+Each workflow runs its suite in a single `playwright test` invocation and produces one report (a JUnit and HTML report as an artifact).
 
 There is no separate teardown step in the specs. Cleanup runs in the reporter at the end of the run, deleting the offenders whose test passed.
 
@@ -91,3 +95,4 @@ Test data differs per suite:
 - **checkin** creates a checkin via API (`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
 - **mpop** the custom question spec creates a fresh offender per run; other mpop specs run against pre-existing CRNs the tests don't create or delete them
 - **manage-checkins-ui** no test data. It signs in and asserts the header, footer and beta phase banner components
+- **dashboard** no test data created or deleted. It signs in against `DASHBOARD_URL` once via a `dashboard-setup` project (see `playwright.config.ts`), reusing the saved storage state for every dashboard spec
