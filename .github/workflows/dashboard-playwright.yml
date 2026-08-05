@@ -1,7 +1,8 @@
 name: Dashboard Playwright Tests
 on:
-  # Run manually via GitHub API / Action tab
-  workflow_dispatch:
+  #temporary
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "0 9 * * 1-5"
 jobs:

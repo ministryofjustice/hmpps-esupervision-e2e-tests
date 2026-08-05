@@ -51,6 +51,7 @@ export default defineConfig({
       name: "dashboard-setup",
       testDir: "./src/tests/dashboard",
       testMatch: /dashboard\.setup\.ts/,
+      teardown: "dashboard-teardown",
       use: {
         ...devices["Desktop Chrome"],
         ...(headed ? { viewport: null } : {}),
@@ -66,7 +67,6 @@ export default defineConfig({
       testDir: "./src/tests/dashboard",
       testMatch: /.*\.spec\.ts/,
       dependencies: ["dashboard-setup"],
-      teardown: "dashboard-teardown",
       use: {
         ...devices["Desktop Chrome"],
         storageState: DASHBOARD_STORAGE_STATE,
