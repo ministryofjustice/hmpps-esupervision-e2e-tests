@@ -22,8 +22,9 @@ export default defineConfig({
   ],
   use: {
     timezoneId: "Europe/London",
-    screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    // Off in CI: trace leaks the Delius password typed via page.fill(); screenshot/video are masked but disabled too since they're only for local debugging.
+    screenshot: process.env.CI ? "off" : "only-on-failure",
+    video: process.env.CI ? "off" : "retain-on-failure",
     trace: process.env.CI ? "off" : "on-first-retry",
     permissions: ["camera", "microphone"],
     launchOptions: {

@@ -13,6 +13,7 @@ import {
 } from "../../../data/dashboard/filters";
 import { type YearMonth } from "../../utils/dashboard/yearMonth";
 import { DASHBOARD_STORAGE_STATE } from "../../utils/paths";
+import { clearSecretField } from "../../utils/clearSecretField";
 
 const baseUrl = (): string => env.dashboardUrl();
 
@@ -28,6 +29,7 @@ export default class DashboardJourney {
     await this.page.fill("#username", username);
     await this.page.fill("#password", password);
     await this.page.click("#submit");
+    await clearSecretField(this.page, "#password");
   }
 
   async signIn(): Promise<DashboardPages> {
