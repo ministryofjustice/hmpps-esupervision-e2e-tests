@@ -30,10 +30,6 @@ export default abstract class DashboardBasePage extends BasePage {
     });
   }
 
-  async snapshotTime(): Promise<string> {
-    return (await this.lastUpdated().innerText()).replace(/\s+/g, " ").trim();
-  }
-
   errorSummary(): Locator {
     return this.page.locator(".govuk-error-summary");
   }

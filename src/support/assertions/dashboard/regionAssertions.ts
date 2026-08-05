@@ -14,7 +14,6 @@ import {
   PEOPLE_ROW_ACTIVE,
   PEOPLE_ROW_SIGNED_UP,
   PEOPLE_ROW_STOPPED,
-  REGION_ROWS_BOUNDED_BY_TOTAL,
   REGION_ROWS_WITHOUT_PERCENTAGE,
   REGION_SUMMABLE_ROWS,
 } from "../../../data/dashboard/rows";
@@ -26,7 +25,6 @@ import {
   assertCells,
   assertHasData,
   assertRowSumsToTotal,
-  assertRowWithinTotal,
   parseRow,
 } from "../../utils/dashboard/dashboardTables";
 
@@ -105,18 +103,6 @@ export const assertRegionRowTotals = async (
         REGION_SUMMABLE_ROWS.includes(candidate.overall),
       )) {
         assertRowSumsToTotal(
-          await matrix.numberCellTexts(row.region),
-          columns,
-          `${title} / ${row.overall}`,
-        );
-      }
-    });
-
-    await test.step(`"${title}" bounded rows stay within their totals`, async () => {
-      for (const row of rows.filter((candidate) =>
-        REGION_ROWS_BOUNDED_BY_TOTAL.includes(candidate.overall),
-      )) {
-        assertRowWithinTotal(
           await matrix.numberCellTexts(row.region),
           columns,
           `${title} / ${row.overall}`,

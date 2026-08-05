@@ -2,6 +2,8 @@ name: Dashboard Playwright Tests
 on:
   # Run manually via GitHub API / Action tab
   workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1-5"
 jobs:
   test:
     timeout-minutes: 15
@@ -9,7 +11,7 @@ jobs:
     env:
       TZ: Europe/London
       # URLs
-      DASHBOARD_URL: https://esupervision-dev.hmpps.service.justice.gov.uk/v2statistics
+      DASHBOARD_URL: https://esupervision-dev.hmpps.service.justice.gov.uk
 
       # Credentials
       DELIUS_USERNAME: ${{ secrets.DELIUS_USERNAME }}

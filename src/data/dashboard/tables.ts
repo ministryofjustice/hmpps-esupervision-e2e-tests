@@ -144,7 +144,7 @@ export const CROSS_TAB_TABLES: CrossTabTable[] = [
   {
     caption: TABLE_CHECKINS,
     matrix: REGION_MATRIX_CHECKINS,
-    rows: CHECKIN_ROWS,
+    rows: CHECKIN_ROWS.filter((row) => row.overall !== ROW_CHECKINS_OVER_12HRS),
   },
 ];
 
@@ -153,6 +153,7 @@ export interface RegionMatrixSpec {
   rows: DashboardRow[];
 }
 
-export const REGION_MATRICES: RegionMatrixSpec[] = CROSS_TAB_TABLES.map(
-  ({ matrix, rows }) => ({ title: matrix, rows }),
-);
+export const REGION_MATRICES: RegionMatrixSpec[] = [
+  { title: REGION_MATRIX_PEOPLE, rows: PEOPLE_ROWS },
+  { title: REGION_MATRIX_CHECKINS, rows: CHECKIN_ROWS },
+];

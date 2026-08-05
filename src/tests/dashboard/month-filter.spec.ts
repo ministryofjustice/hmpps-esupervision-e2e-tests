@@ -34,6 +34,21 @@ test.describe("data dashboard month filter", () => {
     await pages.region.assertSelectedRange(EARLIEST_MONTH, EARLIEST_MONTH);
   });
 
+  test("shows an error when the from month is after the to month", async ({
+    page,
+  }) => {
+    const journey = new DashboardJourney(page);
+    const pages = await journey.openOverall(EARLIEST_MONTH, currentMonth());
+
+    await pages.overall.selectMonthRange(currentMonth(), EARLIEST_MONTH);
+    await pages.overall.applyFilters(currentMonth(), EARLIEST_MONTH);
+
+    await expect(pages.overall.errorSummary()).toBeVisible();
+    await expect(pages.overall.errorSummary()).toContainText(
+      "The 'From' month must be before the 'To' month",
+    );
+  });
+
   test("reset filters returns to the default range", async ({ page }) => {
     const journey = new DashboardJourney(page);
     const pages = await journey.openOverall(EARLIEST_MONTH, EARLIEST_MONTH);

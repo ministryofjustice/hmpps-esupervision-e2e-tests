@@ -11,6 +11,7 @@ export const test = base.extend<{ noBrokenValues: void }>({
       if (testInfo.status !== testInfo.expectedStatus) return;
       if (page.isClosed()) return;
       if (!page.url().includes(DATA_DASHBOARD_PATH)) return;
+      if (await page.locator(".govuk-error-summary").count()) return;
       await assertNoBrokenValues(page);
     },
     { auto: true },

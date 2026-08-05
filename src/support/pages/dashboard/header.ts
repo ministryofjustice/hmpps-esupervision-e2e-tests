@@ -7,10 +7,6 @@ export default class Header {
     return this.page.locator(".govuk-header");
   }
 
-  homepageLink(): Locator {
-    return this.header().getByRole("link", { name: "GOV.UK" });
-  }
-
   serviceName(): Locator {
     return this.page.locator(".govuk-service-navigation__service-name");
   }
