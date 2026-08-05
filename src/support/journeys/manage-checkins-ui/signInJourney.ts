@@ -1,7 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { env } from "../../../config/env";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
-import { clearSecretField } from "../../utils/clearSecretField";
 
 export default class SignInJourney {
   readonly pages: ManageCheckinsUiPages;
@@ -19,7 +18,6 @@ export default class SignInJourney {
       await this.page.fill("#username", username);
       await this.page.fill("#password", password);
       await this.page.click("#submit");
-      await clearSecretField(this.page, "#password");
       await expect(this.pages.header.userName()).toBeVisible();
     });
     return this.pages;
