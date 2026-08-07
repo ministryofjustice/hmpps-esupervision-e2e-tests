@@ -28,8 +28,12 @@ export default class AssistancePage extends CheckinBasePage {
   }
 
   async selectNoHelpAndContinue(): Promise<void> {
-    await this.checkbox("NO_HELP").check();
+    await this.selectNoHelp();
     await this.clickContinue();
+  }
+
+  async selectNoHelp(): Promise<void> {
+    await this.checkbox("NO_HELP").check();
   }
 
   /** Selects one or more support needs with comments. */

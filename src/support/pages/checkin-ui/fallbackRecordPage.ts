@@ -38,8 +38,17 @@ export default class FallbackRecordPage extends CheckinBasePage {
     return this.noMatchScreen().locator("[data-fallback-video]");
   }
 
+  // Works in any language; submitVideoAnywayLink() below narrows this by English text.
+  secondaryActionLink(): Locator {
+    return this.noMatchScreen().locator("a.govuk-button--secondary");
+  }
+
+  async clickSecondaryAction(): Promise<void> {
+    await this.secondaryActionLink().click();
+  }
+
   submitVideoAnywayLink(): Locator {
-    return this.noMatchScreen().locator("a.govuk-button--secondary", {
+    return this.secondaryActionLink().filter({
       hasText: "Submit video anyway",
     });
   }

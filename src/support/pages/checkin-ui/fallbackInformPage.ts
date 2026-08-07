@@ -6,8 +6,9 @@ export default class FallbackInformPage extends CheckinBasePage {
     super(page, "Confirm your identity");
   }
 
+  // Derived from primaryButton() so it works in any language.
   continueLink(): Locator {
-    return this.page.locator("a.govuk-button", { hasText: "Continue" });
+    return this.primaryButton().filter({ hasText: "Continue" });
   }
 
   async clickContinue(): Promise<void> {

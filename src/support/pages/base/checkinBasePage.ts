@@ -22,4 +22,26 @@ export default abstract class CheckinBasePage extends BasePage {
   async clickContinue(): Promise<void> {
     await this.continueButton().click();
   }
+
+  primaryButton(): Locator {
+    return this.page
+      .locator("main button.govuk-button, main a.govuk-button")
+      .first();
+  }
+
+  async clickPrimaryButton(): Promise<void> {
+    await this.primaryButton().click();
+  }
+
+  cymraegLink(): Locator {
+    return this.page.getByRole("link", { name: "Cymraeg" });
+  }
+
+  async switchToWelsh(): Promise<void> {
+    await this.cymraegLink().click();
+  }
+
+  async assertLanguage(lang: string): Promise<void> {
+    await expect(this.page.locator("html")).toHaveAttribute("lang", lang);
+  }
 }
