@@ -49,7 +49,13 @@ test("video fallback: no match, submit anyway, checkin completes", async ({
   await journey.completePersonalDetails(offender.person);
   await journey.completeMentalHealthQuestion(mentalHealth);
   await journey.completeAssistanceQuestion(assistance);
-  await journey.completeFallbackVideoNoMatchFlow(uuid);
+  await journey.completeFallbackVideoNoMatchFlow(uuid, {
+    onNoMatchScreen: () =>
+      journey.verifyHeadingContainsText(
+        "We cannot confirm this is you",
+        "No match heading must show 'We cannot confirm this is you'",
+      ),
+  });
   await journey.verifyCheckAnswersPage();
   await journey.verifySummaryContains(
     "How have you been feeling since we last spoke?",

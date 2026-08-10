@@ -173,6 +173,9 @@ export default class CheckinJourney {
       ).toBeVisible({ timeout: 60000 });
       await hooks?.onNoMatchScreen?.();
       await expect(this.pages.fallbackRecord.recordAgainLink()).toBeVisible();
+      await expect(
+        this.pages.fallbackRecord.secondaryActionLink(),
+      ).toBeVisible();
       await this.pages.fallbackRecord.clickSecondaryAction();
       await expect(this.page, "URL must contain check-your-answers").toHaveURL(
         /check-your-answers/,
@@ -224,5 +227,22 @@ export default class CheckinJourney {
     await expect(this.page, "URL must contain /confirmation").toHaveURL(
       /\/confirmation/,
     );
+  }
+
+  async verifyPageLanguage(lang: string): Promise<void> {
+    await expect(
+      this.page.locator("html"),
+      `Page language must be "${lang}"`,
+    ).toHaveAttribute("lang", lang);
+  }
+
+  async verifyHeadingContainsText(
+    expected: string,
+    message: string,
+  ): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { level: 1 }),
+      message,
+    ).toContainText(expected);
   }
 }

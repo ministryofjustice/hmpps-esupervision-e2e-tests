@@ -25,7 +25,9 @@ export default abstract class CheckinBasePage extends BasePage {
 
   primaryButton(): Locator {
     return this.page
-      .locator("main button.govuk-button, main a.govuk-button")
+      .locator(
+        "main button.govuk-button:not(.govuk-button--secondary), main a.govuk-button:not(.govuk-button--secondary)",
+      )
       .first();
   }
 
