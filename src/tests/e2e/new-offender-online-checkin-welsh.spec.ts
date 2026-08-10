@@ -12,6 +12,7 @@ import {
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { env } from "../../config/env";
 import { Pages } from "../../support/pages/checkin-ui/Pages";
+import { welshHeadings } from "../../data/labels";
 
 test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   page,
@@ -35,11 +36,22 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   await test.step("Switch to Welsh", async () => {
     await page.goto(`${env.checkInUrl()}/${uuid}`);
     await pages.homepage.switchToWelsh();
-    await pages.homepage.assertLanguage("cy");
+    await expect(page.locator("html"), "Page must be in Welsh").toHaveAttribute(
+      "lang",
+      "cy",
+    );
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Home page heading must be in Welsh",
+    ).toContainText(welshHeadings.home);
   });
 
   await test.step("Start check in and complete personal details", async () => {
     await pages.homepage.clickPrimaryButton(); // Start now
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Personal details heading must be in Welsh",
+    ).toContainText(welshHeadings.personalDetails);
     const { day, month, year } = dobParts(offender.person.dob);
     await pages.personalDetails.completeForm({
       firstName: offender.person.firstName,
@@ -52,46 +64,45 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   });
 
   await test.step("Answer mental health and assistance questions", async () => {
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Mental health heading must be in Welsh",
+    ).toContainText(welshHeadings.mentalHealth);
     await pages.mentalHealth.selectOption("OK");
     await pages.mentalHealth.clickPrimaryButton(); // Continue
 
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Assistance heading must be in Welsh",
+    ).toContainText(welshHeadings.assistance);
     await pages.assistance.selectNoHelp();
     await pages.assistance.clickPrimaryButton(); // Continue
   });
 
-  await test.step("Complete video fallback flow (no match, submit anyway)", async () => {
-    await page.goto(`${env.checkInUrl()}/${uuid}/liveness/record`);
-    await page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
-    await page.goto(`${env.checkInUrl()}/${uuid}/liveness/fallback-inform`);
-    await pages.fallbackInform.clickPrimaryButton(); // Continue
-    await expect(page, "Should reach /liveness/fallback-record").toHaveURL(
-      /\/liveness\/fallback-record/,
-    );
-
-    await expect(pages.fallbackRecord.startBtn()).toBeEnabled({
-      timeout: 10000,
-    });
-    await pages.fallbackRecord.clickStart();
-
-    await expect(
-      pages.fallbackRecord.reviewVideo(),
-      "Review screen must appear after recording",
-    ).toBeVisible({ timeout: 60000 });
-    await pages.fallbackRecord.clickReviewVideoContinue();
-
-    await expect(
-      pages.fallbackRecord.noMatchScreen(),
-      "'We cannot confirm this is you' screen must appear",
-    ).toBeVisible({ timeout: 60000 });
-    await pages.fallbackRecord.clickSecondaryAction(); // Submit video anyway
-    await expect(page, "URL must contain check-your-answers").toHaveURL(
-      /check-your-answers/,
-    );
+  await journey.completeFallbackVideoNoMatchFlow(uuid, {
+    onFallbackInform: () =>
+      expect(
+        page.getByRole("heading", { level: 1 }),
+        "Fallback inform heading must be in Welsh",
+      ).toContainText(welshHeadings.fallbackInform),
+    onNoMatchScreen: () =>
+      expect(
+        page.getByRole("heading", { level: 1 }),
+        "No match heading must be in Welsh",
+      ).toContainText(welshHeadings.noMatch),
   });
 
   await test.step("Complete check in", async () => {
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Check answers heading must be in Welsh",
+    ).toContainText(welshHeadings.checkAnswers);
     await pages.checkAnswers.confirmCheckbox().check();
     await pages.checkAnswers.clickPrimaryButton(); // Complete check in
     await journey.verifyConfirmationPage();
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+      "Confirmation heading must be in Welsh",
+    ).toContainText(welshHeadings.confirmation);
   });
 });

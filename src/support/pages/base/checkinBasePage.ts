@@ -40,8 +40,4 @@ export default abstract class CheckinBasePage extends BasePage {
   async switchToWelsh(): Promise<void> {
     await this.cymraegLink().click();
   }
-
-  async assertLanguage(lang: string): Promise<void> {
-    await expect(this.page.locator("html")).toHaveAttribute("lang", lang);
-  }
 }

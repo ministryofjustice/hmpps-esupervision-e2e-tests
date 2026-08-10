@@ -135,7 +135,13 @@ export default class CheckinJourney {
     );
   }
 
-  async completeFallbackVideoNoMatchFlow(uuid: string): Promise<void> {
+  async completeFallbackVideoNoMatchFlow(
+    uuid: string,
+    hooks?: {
+      onFallbackInform?: () => Promise<void>;
+      onNoMatchScreen?: () => Promise<void>;
+    },
+  ): Promise<void> {
     await test.step("Record video (NO MATCH) and submit video anyway", async () => {
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
       // The liveness widget can't run in headless CI, so
@@ -143,8 +149,8 @@ export default class CheckinJourney {
       // navigate to fallback directly
       await this.page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
-      await this.pages.fallbackInform.isOnPage();
-      await this.pages.fallbackInform.clickContinue();
+      await hooks?.onFallbackInform?.();
+      await this.pages.fallbackInform.clickPrimaryButton();
       await expect(
         this.page,
         "Should reach /liveness/fallback-record",
@@ -165,15 +171,12 @@ export default class CheckinJourney {
         this.pages.fallbackRecord.noMatchScreen(),
         "'We cannot confirm this is you' screen must appear",
       ).toBeVisible({ timeout: 60000 });
-      await expect(this.pages.fallbackRecord.noMatchHeading()).toContainText(
-        "We cannot confirm this is you",
-      );
-      await expect(
-        this.pages.fallbackRecord.submitVideoAnywayLink(),
-      ).toBeVisible();
+      await hooks?.onNoMatchScreen?.();
       await expect(this.pages.fallbackRecord.recordAgainLink()).toBeVisible();
-      await this.pages.fallbackRecord.clickSubmitVideoAnyway();
-      await expect(this.page).toHaveURL(/check-your-answers/);
+      await this.pages.fallbackRecord.clickSecondaryAction();
+      await expect(this.page, "URL must contain check-your-answers").toHaveURL(
+        /check-your-answers/,
+      );
     });
   }
 

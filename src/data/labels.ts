@@ -51,3 +51,15 @@ export const label = lookup(MAP);
 export const mpopAssistanceLabel = lookup(MPOP_ASSISTANCE_MAP);
 
 export const mpopAssistanceCommentKey = lookup(MPOP_ASSISTANCE_COMMENT_KEY);
+
+export const welshHeadings = {
+  home: "Cyfarfod diweddaru gyda’ch swyddog prawf",
+  personalDetails: "Manylion personol",
+  mentalHealth: "Sut ydych chi wedi bod yn teimlo ers i ni siarad ddiwethaf?",
+  assistance:
+    "Oes angen cymorth arnoch chi neu ydych chi eisiau rhoi gwybod i ni am unrhyw beth?",
+  fallbackInform: "Cadarnhau pwy ydych chi",
+  noMatch: "Ni allwn gadarnhau mai chi sydd yno",
+  checkAnswers: "Gwiriwch eich atebion cyn cwblhau eich cyfarfod diweddaru",
+  confirmation: "Wedi cwblhau’r cyfarfod diweddaru",
+};
