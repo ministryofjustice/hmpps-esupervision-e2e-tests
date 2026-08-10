@@ -35,7 +35,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
 
   await test.step("Switch to Welsh", async () => {
     await page.goto(`${env.checkInUrl()}/${uuid}`);
-    await pages.homepage.switchToWelsh();
+    await pages.header.switchToWelsh();
     await journey.verifyPageLanguage("cy");
     await journey.verifyHeadingContainsText(
       pages.homepage.mainHeading(),
@@ -80,19 +80,20 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
     await pages.assistance.clickPrimaryButton(); // Continue
   });
 
-  await journey.completeFallbackVideoNoMatchFlow(uuid, {
-    onFallbackInform: (heading) =>
-      journey.verifyHeadingContainsText(
-        heading,
-        welshHeadings.fallbackInform,
-        "Fallback inform heading must be in Welsh",
-      ),
-    onNoMatchScreen: (heading) =>
-      journey.verifyHeadingContainsText(
-        heading,
-        welshHeadings.noMatch,
-        "No match heading must be in Welsh",
-      ),
+  await test.step("Fallback video: no match, submit anyway", async () => {
+    await journey.goToFallbackInform(uuid);
+    await journey.verifyHeadingContainsText(
+      pages.fallbackInform.mainHeading(),
+      welshHeadings.fallbackInform,
+      "Fallback inform heading must be in Welsh",
+    );
+    await journey.recordFallbackVideoNoMatch();
+    await journey.verifyHeadingContainsText(
+      pages.fallbackRecord.noMatchHeading(),
+      welshHeadings.noMatch,
+      "No match heading must be in Welsh",
+    );
+    await journey.submitFallbackVideoAnyway();
   });
 
   await test.step("Complete check in", async () => {

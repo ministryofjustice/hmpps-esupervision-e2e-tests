@@ -32,12 +32,4 @@ export default abstract class CheckinBasePage extends BasePage {
   async clickPrimaryButton(): Promise<void> {
     await this.primaryButton().click();
   }
-
-  cymraegLink(): Locator {
-    return this.page.getByRole("link", { name: "Cymraeg" });
-  }
-
-  async switchToWelsh(): Promise<void> {
-    await this.cymraegLink().click();
-  }
 }

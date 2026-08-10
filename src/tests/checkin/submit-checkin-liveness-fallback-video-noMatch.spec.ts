@@ -14,6 +14,7 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
+import { Pages } from "../../support/pages/checkin-ui/Pages";
 
 // Randomised per run, the chosen values are logged below so
 // a failing run can be reproduced manually
@@ -43,20 +44,28 @@ test("video fallback: no match, submit anyway, checkin completes", async ({
   console.log(`uuid=${uuid} feelingQuestion=${mentalHealth}
     support=${assistance.map((a) => a.option).join("+")}`);
 
+  const pages = new Pages(page);
   const journey = new CheckinJourney(page);
   await journey.navigateToCheckin(uuid);
   await journey.clickStart();
   await journey.completePersonalDetails(offender.person);
   await journey.completeMentalHealthQuestion(mentalHealth);
   await journey.completeAssistanceQuestion(assistance);
-  await journey.completeFallbackVideoNoMatchFlow(uuid, {
-    onNoMatchScreen: (heading) =>
-      journey.verifyHeadingContainsText(
-        heading,
-        "We cannot confirm this is you",
-        "No match heading must show 'We cannot confirm this is you'",
-      ),
-  });
+
+  await journey.goToFallbackInform(uuid);
+  await journey.verifyHeadingContainsText(
+    pages.fallbackInform.mainHeading(),
+    "Confirm your identity",
+    "Fallback inform heading must show 'Confirm your identity'",
+  );
+  await journey.recordFallbackVideoNoMatch();
+  await journey.verifyHeadingContainsText(
+    pages.fallbackRecord.noMatchHeading(),
+    "We cannot confirm this is you",
+    "No match heading must show 'We cannot confirm this is you'",
+  );
+  await journey.submitFallbackVideoAnyway();
+
   await journey.verifyCheckAnswersPage();
   await journey.verifySummaryContains(
     "How have you been feeling since we last spoke?",

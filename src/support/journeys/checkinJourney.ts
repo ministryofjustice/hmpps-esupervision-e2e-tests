@@ -140,21 +140,19 @@ export default class CheckinJourney {
     );
   }
 
-  async completeFallbackVideoNoMatchFlow(
-    uuid: string,
-    hooks?: {
-      onFallbackInform?: (heading: Locator) => Promise<void>;
-      onNoMatchScreen?: (heading: Locator) => Promise<void>;
-    },
-  ): Promise<void> {
-    await test.step("Record video (NO MATCH) and submit video anyway", async () => {
+  async goToFallbackInform(uuid: string): Promise<void> {
+    await test.step("Reach fallback-inform page", async () => {
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/record`);
       // The liveness widget can't run in headless CI, so
       // navigated to an outcome page. I cannot click through UI and
       // navigate to fallback directly
       await this.page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
-      await hooks?.onFallbackInform?.(this.pages.fallbackInform.mainHeading());
+    });
+  }
+
+  async recordFallbackVideoNoMatch(): Promise<void> {
+    await test.step("Record fallback video and reach no-match screen", async () => {
       await this.pages.fallbackInform.clickPrimaryButton();
       await expect(
         this.page,
@@ -176,9 +174,11 @@ export default class CheckinJourney {
         this.pages.fallbackRecord.noMatchScreen(),
         "'We cannot confirm this is you' screen must appear",
       ).toBeVisible({ timeout: 60000 });
-      await hooks?.onNoMatchScreen?.(
-        this.pages.fallbackRecord.noMatchHeading(),
-      );
+    });
+  }
+
+  async submitFallbackVideoAnyway(): Promise<void> {
+    await test.step("Submit video anyway", async () => {
       await expect(this.pages.fallbackRecord.recordAgainLink()).toBeVisible();
       await expect(
         this.pages.fallbackRecord.secondaryActionLink(),
