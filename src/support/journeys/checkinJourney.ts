@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, Locator, Page } from "@playwright/test";
 import { dobParts } from "../utils/date";
 import {
   MentalHealthOption,
@@ -9,6 +9,7 @@ import {
 import { env } from "../../config/env";
 import { Pages } from "../pages/checkin-ui/Pages";
 import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionPage";
+import CheckinBasePage from "../pages/base/checkinBasePage";
 
 const baseUrl = (): string => env.checkInUrl();
 
@@ -19,10 +20,14 @@ export default class CheckinJourney {
     this.pages = new Pages(page);
   }
 
+  private async assertOnPage(page: CheckinBasePage): Promise<void> {
+    await expect(page.mainHeading()).toContainText(page.heading);
+  }
+
   async navigateToCheckin(uuid: string): Promise<void> {
     await test.step(`Open check in ${uuid}`, async () => {
       await this.page.goto(`${baseUrl()}/${uuid}`);
-      await this.pages.homepage.isOnPage();
+      await this.assertOnPage(this.pages.homepage);
       await expect(this.pages.homepage.startButton()).toBeVisible();
     });
   }
@@ -33,7 +38,7 @@ export default class CheckinJourney {
 
   async completePersonalDetails(person: CheckInPerson): Promise<void> {
     await test.step("Complete personal details", async () => {
-      await this.pages.personalDetails.isOnPage();
+      await this.assertOnPage(this.pages.personalDetails);
       const { day, month, year } = dobParts(person.dob);
       await this.pages.personalDetails.completeFormAndContinue({
         firstName: person.firstName,
@@ -49,7 +54,7 @@ export default class CheckinJourney {
     option: MentalHealthOption,
   ): Promise<void> {
     await test.step("Answer Mental health question", async () => {
-      await this.pages.mentalHealth.isOnPage();
+      await this.assertOnPage(this.pages.mentalHealth);
       await expect(
         this.pages.mentalHealth.veryWellRadio(),
         "VERY_WELL radio must be present",
@@ -75,7 +80,7 @@ export default class CheckinJourney {
   }
 
   async completeAssistanceWithNoHelp(): Promise<void> {
-    await this.pages.assistance.isOnPage();
+    await this.assertOnPage(this.pages.assistance);
     await this.pages.assistance.selectNoHelpAndContinue();
   }
 
@@ -83,7 +88,7 @@ export default class CheckinJourney {
     selections: AssistanceSelection[],
   ): Promise<void> {
     await test.step(`Answer assistance: ${selections.map((s) => s.option).join(", ")}`, async () => {
-      await this.pages.assistance.isOnPage();
+      await this.assertOnPage(this.pages.assistance);
       await this.pages.assistance.selectOptionsAndContinue(selections);
     });
   }
@@ -138,8 +143,8 @@ export default class CheckinJourney {
   async completeFallbackVideoNoMatchFlow(
     uuid: string,
     hooks?: {
-      onFallbackInform?: () => Promise<void>;
-      onNoMatchScreen?: () => Promise<void>;
+      onFallbackInform?: (heading: Locator) => Promise<void>;
+      onNoMatchScreen?: (heading: Locator) => Promise<void>;
     },
   ): Promise<void> {
     await test.step("Record video (NO MATCH) and submit video anyway", async () => {
@@ -149,7 +154,7 @@ export default class CheckinJourney {
       // navigate to fallback directly
       await this.page.waitForURL(/\/liveness\/outcome\//, { timeout: 30000 });
       await this.page.goto(`${baseUrl()}/${uuid}/liveness/fallback-inform`);
-      await hooks?.onFallbackInform?.();
+      await hooks?.onFallbackInform?.(this.pages.fallbackInform.mainHeading());
       await this.pages.fallbackInform.clickPrimaryButton();
       await expect(
         this.page,
@@ -171,7 +176,9 @@ export default class CheckinJourney {
         this.pages.fallbackRecord.noMatchScreen(),
         "'We cannot confirm this is you' screen must appear",
       ).toBeVisible({ timeout: 60000 });
-      await hooks?.onNoMatchScreen?.();
+      await hooks?.onNoMatchScreen?.(
+        this.pages.fallbackRecord.noMatchHeading(),
+      );
       await expect(this.pages.fallbackRecord.recordAgainLink()).toBeVisible();
       await expect(
         this.pages.fallbackRecord.secondaryActionLink(),
@@ -188,7 +195,7 @@ export default class CheckinJourney {
       await expect(this.page, "URL must contain check-your-answers").toHaveURL(
         /check-your-answers/,
       );
-      await this.pages.checkAnswers.isOnPage();
+      await this.assertOnPage(this.pages.checkAnswers);
     });
   }
 
@@ -237,12 +244,10 @@ export default class CheckinJourney {
   }
 
   async verifyHeadingContainsText(
+    heading: Locator,
     expected: string,
     message: string,
   ): Promise<void> {
-    await expect(
-      this.page.getByRole("heading", { level: 1 }),
-      message,
-    ).toContainText(expected);
+    await expect(heading, message).toContainText(expected);
   }
 }

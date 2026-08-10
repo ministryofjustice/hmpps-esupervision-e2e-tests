@@ -30,6 +30,10 @@ export default class FallbackRecordPage extends CheckinBasePage {
     return this.getByID("fallbackNoMatchScreen");
   }
 
+  noMatchHeading(): Locator {
+    return this.noMatchScreen().getByRole("heading", { level: 1 });
+  }
+
   recordAgainLink(): Locator {
     return this.noMatchScreen().locator("[data-fallback-video]");
   }

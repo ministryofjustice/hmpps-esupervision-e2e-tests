@@ -50,8 +50,9 @@ test("video fallback: no match, submit anyway, checkin completes", async ({
   await journey.completeMentalHealthQuestion(mentalHealth);
   await journey.completeAssistanceQuestion(assistance);
   await journey.completeFallbackVideoNoMatchFlow(uuid, {
-    onNoMatchScreen: () =>
+    onNoMatchScreen: (heading) =>
       journey.verifyHeadingContainsText(
+        heading,
         "We cannot confirm this is you",
         "No match heading must show 'We cannot confirm this is you'",
       ),

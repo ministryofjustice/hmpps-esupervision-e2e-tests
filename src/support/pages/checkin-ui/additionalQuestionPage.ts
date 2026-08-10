@@ -10,16 +10,12 @@ export default class AdditionalQuestionPage extends CheckinBasePage {
     super(page, "");
   }
 
-  questionHeading(): Locator {
-    return this.page.getByRole("heading", { level: 1 });
-  }
-
   answerField(): Locator {
     return this.page.locator("#additionalAnswer");
   }
 
   async questionText(): Promise<string> {
-    return (await this.questionHeading().textContent())?.trim() ?? "";
+    return (await this.mainHeading().textContent())?.trim() ?? "";
   }
 
   async answerAndContinue(answer: string): Promise<void> {

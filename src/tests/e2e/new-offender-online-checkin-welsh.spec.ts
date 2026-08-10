@@ -38,6 +38,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
     await pages.homepage.switchToWelsh();
     await journey.verifyPageLanguage("cy");
     await journey.verifyHeadingContainsText(
+      pages.homepage.mainHeading(),
       welshHeadings.home,
       "Home page heading must be in Welsh",
     );
@@ -46,6 +47,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   await test.step("Start check in and complete personal details", async () => {
     await pages.homepage.clickPrimaryButton(); // Start now
     await journey.verifyHeadingContainsText(
+      pages.personalDetails.mainHeading(),
       welshHeadings.personalDetails,
       "Personal details heading must be in Welsh",
     );
@@ -62,6 +64,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
 
   await test.step("Answer mental health and assistance questions", async () => {
     await journey.verifyHeadingContainsText(
+      pages.mentalHealth.mainHeading(),
       welshHeadings.mentalHealth,
       "Mental health heading must be in Welsh",
     );
@@ -69,6 +72,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
     await pages.mentalHealth.clickPrimaryButton(); // Continue
 
     await journey.verifyHeadingContainsText(
+      pages.assistance.mainHeading(),
       welshHeadings.assistance,
       "Assistance heading must be in Welsh",
     );
@@ -77,13 +81,15 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   });
 
   await journey.completeFallbackVideoNoMatchFlow(uuid, {
-    onFallbackInform: () =>
+    onFallbackInform: (heading) =>
       journey.verifyHeadingContainsText(
+        heading,
         welshHeadings.fallbackInform,
         "Fallback inform heading must be in Welsh",
       ),
-    onNoMatchScreen: () =>
+    onNoMatchScreen: (heading) =>
       journey.verifyHeadingContainsText(
+        heading,
         welshHeadings.noMatch,
         "No match heading must be in Welsh",
       ),
@@ -91,6 +97,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
 
   await test.step("Complete check in", async () => {
     await journey.verifyHeadingContainsText(
+      pages.checkAnswers.mainHeading(),
       welshHeadings.checkAnswers,
       "Check answers heading must be in Welsh",
     );
@@ -98,6 +105,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
     await pages.checkAnswers.clickPrimaryButton(); // Complete check in
     await journey.verifyConfirmationPage();
     await journey.verifyHeadingContainsText(
+      pages.confirmation.mainHeading(),
       welshHeadings.confirmation,
       "Confirmation heading must be in Welsh",
     );
