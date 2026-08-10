@@ -9,7 +9,7 @@ import {
 import { env } from "../../config/env";
 import { Pages } from "../pages/checkin-ui/Pages";
 import { ADDITIONAL_QUESTION_URL } from "../pages/checkin-ui/additionalQuestionPage";
-import CheckinBasePage from "../pages/base/checkinBasePage";
+import type CheckinBasePage from "../pages/base/checkinBasePage";
 
 const baseUrl = (): string => env.checkInUrl();
 

@@ -26,7 +26,7 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- n
 
 ```bash
 npm test                # run all suites except dashboard (mpop + e2e + checkin/static + manage-checkins-ui)
-npm run test:parallel   # check in + static specs
+npm run test:static     # static pages spec (src/tests/static)
 npm run test:mpop       # run only mpop setup specs (src/tests/mpop)
 npm run test:e2e        # offender lifecycle: create -> setup checkin -> complete checkin
 npm run test:welsh      # e2e checkin with the UI set to Welsh (Cymraeg)

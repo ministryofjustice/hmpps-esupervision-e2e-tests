@@ -82,6 +82,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
 
   await test.step("Fallback video: no match, submit anyway", async () => {
     await journey.goToFallbackInform(uuid);
+    await journey.verifyPageLanguage("cy");
     await journey.verifyHeadingContainsText(
       pages.fallbackInform.mainHeading(),
       welshHeadings.fallbackInform,

@@ -38,7 +38,8 @@ export default class FallbackRecordPage extends CheckinBasePage {
     return this.noMatchScreen().locator("[data-fallback-video]");
   }
 
-  // Works in any language.
+  // Only "Submit video anyway" carries govuk-button--secondary; "Record again" is a
+  // plain govuk-button, so this class selector is a genuine single match in any language.
   secondaryActionLink(): Locator {
     return this.noMatchScreen().locator("a.govuk-button--secondary");
   }
