@@ -31,20 +31,20 @@ export default class FallbackRecordPage extends CheckinBasePage {
   }
 
   noMatchHeading(): Locator {
-    return this.noMatchScreen().locator("h1");
+    return this.noMatchScreen().getByRole("heading", { level: 1 });
   }
 
   recordAgainLink(): Locator {
     return this.noMatchScreen().locator("[data-fallback-video]");
   }
 
-  submitVideoAnywayLink(): Locator {
-    return this.noMatchScreen().locator("a.govuk-button--secondary", {
-      hasText: "Submit video anyway",
-    });
+  // Only "Submit video anyway" carries govuk-button--secondary; "Record again" is a
+  // plain govuk-button, so this class selector is a genuine single match in any language.
+  secondaryActionLink(): Locator {
+    return this.noMatchScreen().locator("a.govuk-button--secondary");
   }
 
-  async clickSubmitVideoAnyway(): Promise<void> {
-    await this.submitVideoAnywayLink().click();
+  async clickSecondaryAction(): Promise<void> {
+    await this.secondaryActionLink().click();
   }
 }

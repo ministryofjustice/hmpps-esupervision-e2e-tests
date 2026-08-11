@@ -10,8 +10,10 @@ import LivenessViewPage from "./livenessViewPage";
 import LivenessRecordPage from "./livenessRecordPage";
 import FallbackRecordPage from "./fallbackRecordPage";
 import AdditionalQuestionPage from "./additionalQuestionPage";
+import HeaderPage from "./headerPage";
 
 export class Pages {
+  readonly header: HeaderPage;
   readonly homepage: HomePage;
   readonly personalDetails: PersonalDetailsPage;
   readonly mentalHealth: MentalHealthPage;
@@ -25,6 +27,7 @@ export class Pages {
   readonly additionalQuestion: AdditionalQuestionPage;
 
   constructor(page: Page) {
+    this.header = new HeaderPage(page);
     this.homepage = new HomePage(page);
     this.personalDetails = new PersonalDetailsPage(page);
     this.mentalHealth = new MentalHealthPage(page);

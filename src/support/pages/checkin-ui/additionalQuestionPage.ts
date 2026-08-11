@@ -5,13 +5,8 @@ export const ADDITIONAL_QUESTION_URL = /\/questions\/additional\/\d+/;
 
 export default class AdditionalQuestionPage extends CheckinBasePage {
   constructor(page: Page) {
-    // The h1 is the dynamic custom-question text, so there is no stable title
-    // to assert on. Arrival is verified ADDITIONAL_QUESTION_URL by callers
+    // The h1 is the dynamic custom-question text, there is no static heading to assert
     super(page, "");
-  }
-
-  questionHeading(): Locator {
-    return this.page.getByRole("heading", { level: 1 });
   }
 
   answerField(): Locator {
@@ -19,7 +14,7 @@ export default class AdditionalQuestionPage extends CheckinBasePage {
   }
 
   async questionText(): Promise<string> {
-    return (await this.questionHeading().textContent())?.trim() ?? "";
+    return (await this.mainHeading().textContent())?.trim() ?? "";
   }
 
   async answerAndContinue(answer: string): Promise<void> {
