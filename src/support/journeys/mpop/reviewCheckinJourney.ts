@@ -1,5 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { expect, Locator, Page, test } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
+import { loginToMpop } from "../../pages/mpop/loginPage";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
@@ -10,13 +11,14 @@ import {
   mpopAssistanceLabel,
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
-import { env } from "../../../config/env";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
+import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
+import { assertCaseBanner } from "../../utils/caseBanner";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -38,15 +40,23 @@ export interface Annotation {
 
 export default class ReviewCheckinJourney {
   private readonly pages: MpopPages;
+  private onNewUi = false;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
+  }
+
+  async login(): Promise<void> {
+    await test.step("Log in to MPOP as practitioner", async () => {
+      await loginToMpop(this.page);
+    });
   }
 
   async reviewCompletedCheckin(
     crn: string,
     decision: ReviewDecision = {},
     details?: CompletedCheckinDetails,
+    expectedUi?: ExpectedUi,
   ): Promise<void> {
     const {
       identity = IdentityDecision.MATCH,
@@ -56,13 +66,22 @@ export default class ReviewCheckinJourney {
     } = decision;
 
     // Review the check in: Identity page, then the review notes page
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, expectedUi);
     await this.pages.reviewIdentity.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_IDENTITY_TITLE);
+    if (this.onNewUi) {
+      await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_IDENTITY_TITLE);
+      await assertCaseBanner(this.page, crn);
+    }
     await this.pages.reviewIdentity.completePage(identity);
 
     await this.pages.reviewNotes.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_QUESTIONS_TITLE);
+    if (this.onNewUi) {
+      await assertManageOnlineCheckinsUiTitle(
+        this.page,
+        REVIEW_QUESTIONS_TITLE,
+      );
+      await assertCaseBanner(this.page, crn);
+    }
     await expect(
       this.pages.reviewNotes.notesField(),
       "Should be on the review notes page, not still on identity",
@@ -77,9 +96,15 @@ export default class ReviewCheckinJourney {
     });
 
     // Re-open the check in and verify the review was saved
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, expectedUi);
     await this.pages.reviewedCheckin.assertOnPage();
-    await assertManageOnlineCheckinsUiTitle(this.page, REVIEWED_CHECK_IN_TITLE);
+    if (this.onNewUi) {
+      await assertManageOnlineCheckinsUiTitle(
+        this.page,
+        REVIEWED_CHECK_IN_TITLE,
+      );
+      await assertCaseBanner(this.page, crn);
+    }
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
     if (details) {
@@ -91,14 +116,15 @@ export default class ReviewCheckinJourney {
   async annotateReviewedCheckin(
     crn: string,
     annotation: Annotation = {},
+    expectedUi?: ExpectedUi,
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, expectedUi);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.pages.reviewedCheckin.addNote(note, sensitive);
 
     // Re-open and verify the note was saved
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, expectedUi);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewSummaryShows(note);
   }
@@ -202,7 +228,10 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(crn: string): Promise<void> {
+  private async openCheckinContact(
+    crn: string,
+    expectedUi?: ExpectedUi,
+  ): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
@@ -212,9 +241,6 @@ export default class ReviewCheckinJourney {
       });
     }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
     await this.pages.activityLog.openCheckinReview();
-    //enableESUPCheckinNewReview redirects to the manage online check ins service
-    await expect(this.page).toHaveURL(
-      new RegExp(`^${env.manageCheckinsUiUrl()}`),
-    );
+    this.onNewUi = assertOnExpectedUi(this.page, "Review journey", expectedUi);
   }
 }

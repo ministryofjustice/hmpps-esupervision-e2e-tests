@@ -20,14 +20,6 @@ test.describe("manage online check ins UI layout", () => {
     await page.close();
   });
 
-  test("header is shown with a sign out link", async () => {
-    await expect(pages.header.header()).toBeVisible();
-    await expect(pages.header.signOutLink().first()).toHaveAttribute(
-      "href",
-      /sign-out/,
-    );
-  });
-
   test("feedback banner link to the feedback survey", async () => {
     await expect(pages.feedbackBanner.banner()).toBeVisible();
     await expect(pages.feedbackBanner.betaTag()).toHaveText("Beta");

@@ -4,7 +4,9 @@ import { TEST_CONTACT } from "../../../data/mpop/testData";
 import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
-import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
+import SetupOnlineCheckinsJourney, {
+  ExpectedUi,
+} from "../mpop/setupOnlineCheckinsJourney";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
   AdditionalAnswer,
@@ -32,6 +34,7 @@ export default class OnlineCheckinJourney {
 
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
+    expectedUi?: ExpectedUi,
   ): Promise<NewOffender> {
     const offender = await new DeliusOffenderJourney(
       this.page,
@@ -39,7 +42,7 @@ export default class OnlineCheckinJourney {
     const setup = new SetupOnlineCheckinsJourney(this.page);
     await setup.login();
     await setup.startSetup(offender.crn);
-    const summary = await setup.completeSetupToSummary({
+    const summary = await setup.completeSetupToSummary(offender.crn, {
       date: firstCheckin,
       frequency: FrequencyOptions.EVERY_WEEK,
       preference: Preference.EMAIL,
@@ -47,6 +50,7 @@ export default class OnlineCheckinJourney {
       photo: PhotoOptions.UPLOAD,
       eligibilityIds: [9],
       rationale: "E2E test rationale",
+      expectedUi,
     });
     await setup.submitSetup(summary);
     return offender;
@@ -98,11 +102,21 @@ export default class OnlineCheckinJourney {
     crn: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
+    expectedUi?: ExpectedUi,
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details);
+    await this.review.reviewCompletedCheckin(
+      crn,
+      decision,
+      details,
+      expectedUi,
+    );
   }
 
-  async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {
-    await this.review.annotateReviewedCheckin(crn, annotation);
+  async annotateCheckin(
+    crn: string,
+    annotation?: Annotation,
+    expectedUi?: ExpectedUi,
+  ): Promise<void> {
+    await this.review.annotateReviewedCheckin(crn, annotation, expectedUi);
   }
 }

@@ -14,12 +14,16 @@ export default class ReviewedCheckinPage extends MPopBasePage {
     return this.getQA("reviewSummary").locator(".govuk-tag");
   }
 
+  private checkinSummary(): Locator {
+    return this.getQA("checkInSummary");
+  }
+
   referenceImage(): Locator {
-    return this.getQA("checkInSummary").getByAltText(/^Profile image of/);
+    return this.checkinSummary().getByAltText(/^Profile image of/);
   }
 
   checkinImageRow(): Locator {
-    return this.getQA("checkInSummary")
+    return this.checkinSummary()
       .locator(".govuk-summary-list__row")
       .filter({ hasText: "Image from check in" });
   }

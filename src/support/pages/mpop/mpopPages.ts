@@ -46,6 +46,7 @@ export class MpopPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
+  readonly changeCheckinSettings: DateFrequencyPage;
 
   readonly howToWriteQuestions: HowToWriteQuestionsPage;
   readonly addQuestions: AddQuestionsPage;
@@ -80,6 +81,7 @@ export class MpopPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+    this.changeCheckinSettings = new DateFrequencyPage(page, "manage");
 
     this.howToWriteQuestions = new HowToWriteQuestionsPage(page);
     this.addQuestions = new AddQuestionsPage(page);
@@ -92,7 +94,7 @@ export class MpopPages {
     this.reviewNotes = new ReviewNotesPage(page);
     this.reviewedCheckin = new ReviewedCheckinPage(page);
 
-    this.restartDateFrequency = new DateFrequencyPage(page, true);
+    this.restartDateFrequency = new DateFrequencyPage(page, "restart");
     this.restartContactPreference = new ContactPreferencePage(page, true);
     this.restartSummary = new CheckInSummaryPage(page, true);
     this.restartConfirmation = new CheckInConfirmationPage(page, true);

@@ -70,4 +70,12 @@ export default abstract class MPopBasePage {
     await this.getQA(qa).getByRole("textbox").clear();
     await this.getQA(qa).getByRole("textbox").fill(note);
   }
+
+  errorSummary(): Locator {
+    return this.page.locator(".govuk-error-summary");
+  }
+
+  fieldError(message: string): Locator {
+    return this.page.locator(".govuk-error-message", { hasText: message });
+  }
 }

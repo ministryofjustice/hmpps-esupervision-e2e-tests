@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
@@ -8,21 +8,93 @@ import { ContactDetails } from "../../pages/mpop/updateContactDetailsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import test from "@playwright/test";
 import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
+import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
+import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
+import { assertCaseBanner } from "../../utils/caseBanner";
+import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
+import {
+  CONTACT_PREFERENCE_TITLE,
+  EDIT_CONTACT_DETAILS_TITLE,
+} from "../../../data/manage-checkins-ui/pageTitles";
 
-interface SetupValues {
-  date: string;
-  frequency: FrequencyOptions;
+export type { ExpectedUi };
+
+interface ContactPreferenceValues {
   preference: Preference;
   contact?: ContactDetails;
+  expectedUi?: ExpectedUi;
+}
+
+interface SetupValues extends ContactPreferenceValues {
+  date: string;
+  frequency: FrequencyOptions;
   photo: PhotoOptions;
   eligibilityIds: number[];
   rationale: string;
 }
 export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
+  private readonly newUiPages: ManageCheckinsUiPages;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
+    this.newUiPages = new ManageCheckinsUiPages(page);
+  }
+
+  private async completeContactPreference(
+    crn: string,
+    setup: ContactPreferenceValues,
+  ): Promise<void> {
+    const onNewUi = assertOnExpectedUi(
+      this.page,
+      "Contact preference",
+      setup.expectedUi,
+    );
+
+    if (onNewUi) {
+      await assertCaseBanner(this.page, crn);
+      const contactPreference = this.newUiPages.contactPreference;
+      await expect(contactPreference.preferenceGroup()).toBeVisible();
+      await assertManageOnlineCheckinsUiTitle(
+        this.page,
+        CONTACT_PREFERENCE_TITLE,
+      );
+      await contactPreference.selectPreferenceAndContinue(setup.preference);
+
+      // The next screen is either "confirm the detail on file" or, if NDelius has no
+      // matching detail yet, "enter the missing detail" - wait for whichever appears.
+      await expect(
+        contactPreference
+          .confirmDetailsGroup()
+          .or(contactPreference.missingDetailsField()),
+      ).toBeVisible();
+
+      if (await contactPreference.missingDetailsField().isVisible()) {
+        await assertManageOnlineCheckinsUiTitle(
+          this.page,
+          EDIT_CONTACT_DETAILS_TITLE,
+        );
+        await assertCaseBanner(this.page, crn);
+        const value =
+          setup.preference === Preference.EMAIL
+            ? setup.contact?.email
+            : setup.contact?.mobile;
+        if (value === undefined) {
+          throw new Error(
+            "manage-checkins-ui asked for a missing contact detail but setup.contact has none for the chosen preference",
+          );
+        }
+        await contactPreference.enterMissingDetailsAndContinue(value);
+      } else {
+        await contactPreference.confirmDetailsAndContinue();
+      }
+    } else {
+      await this.pages.contactPreference.assertOnPage();
+      await this.pages.contactPreference.completePage(
+        setup.preference,
+        setup.contact,
+      );
+    }
   }
   async login(): Promise<void> {
     await test.step("Log in to MPOP as practitioner", async () => {
@@ -53,6 +125,7 @@ export default class SetupOnlineCheckinsJourney {
     await this.pages.photoMeetRules.completePage();
   }
   async completeSetupToSummary(
+    crn: string,
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
     return test.step("Complete set up online check ins", async () => {
@@ -71,11 +144,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.dateFrequency.assertOnPage();
       await this.pages.dateFrequency.completePage(setup.date, setup.frequency);
 
-      await this.pages.contactPreference.assertOnPage();
-      await this.pages.contactPreference.completePage(
-        setup.preference,
-        setup.contact,
-      );
+      await this.completeContactPreference(crn, setup);
 
       await this.completePhotoSteps(setup.photo);
       await this.pages.summary.assertOnPage();
@@ -98,15 +167,39 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   async changeContactPreferenceFromSummary(
+    crn: string,
     summary: CheckInSummaryPage,
-    opts: { preference?: Preference; contact?: ContactDetails },
+    opts: {
+      preference?: Preference;
+      contact?: ContactDetails;
+      expectedUi?: ExpectedUi;
+    },
   ): Promise<void> {
     await summary.clickChange("contactPreference");
-    await this.pages.contactPreference.assertOnPage();
-    await this.pages.contactPreference.changePage(
-      opts.preference,
-      opts.contact,
+
+    const onNewUi = assertOnExpectedUi(
+      this.page,
+      "Contact preference",
+      opts.expectedUi,
     );
+
+    if (onNewUi) {
+      if (opts.preference === undefined) {
+        throw new Error(
+          "manage-checkins-ui requires a preference to be selected when changing contact preference from the summary",
+        );
+      }
+      await this.completeContactPreference(crn, {
+        preference: opts.preference,
+        contact: opts.contact,
+      });
+    } else {
+      await this.pages.contactPreference.assertOnPage();
+      await this.pages.contactPreference.changePage(
+        opts.preference,
+        opts.contact,
+      );
+    }
     await summary.assertOnPage();
   }
 

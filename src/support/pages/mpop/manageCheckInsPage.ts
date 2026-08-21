@@ -20,6 +20,20 @@ export default class ManageCheckInsPage extends MPopBasePage {
     await this.changeQuestionsLink().click();
   }
 
+  changeContactDetailsLink(): Locator {
+    return this.page.getByRole("link", { name: /change contact details/i });
+  }
+  async clickChangeContactDetails(): Promise<void> {
+    await this.changeContactDetailsLink().click();
+  }
+
+  changeCheckinSettingsLink(): Locator {
+    return this.page.getByRole("link", { name: /Change check in settings/i });
+  }
+  async clickChangeCheckinSettings(): Promise<void> {
+    await this.changeCheckinSettingsLink().click();
+  }
+
   questionsAddedBanner(): Locator {
     return this.page.getByText(/added additional questions/);
   }
