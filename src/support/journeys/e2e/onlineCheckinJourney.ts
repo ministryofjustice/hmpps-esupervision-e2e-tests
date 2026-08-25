@@ -43,6 +43,9 @@ export default class OnlineCheckinJourney {
       date: firstCheckin,
       frequency: FrequencyOptions.EVERY_WEEK,
       preference: Preference.EMAIL,
+      // TODO(legacy-mpop): Drop the mobile when legacy MPOP is removed. MPOP saves
+      // both details inline; MOCI can hold both too, but in its setup summary it
+      // shows only the preferred contact, so the mobile here is unused on that path.
       contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
       photo: PhotoOptions.UPLOAD,
       eligibilityIds: [9],

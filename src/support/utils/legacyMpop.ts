@@ -52,13 +52,14 @@ export async function assertExpectedService(
 
 /**
  * Assert the case banner and page title only Manage Online Check Ins renders, so
- * no journey needs a branch for it. On retirement, delete the first line.
+ * no journey needs a branch for it.
  */
 export const assertManageCheckinsPage = async (
   page: Page,
   crn: string,
   title: string,
 ): Promise<void> => {
+  // TODO (legacy-mpop): Delete this early return when legacy MPOP is removed
   if (LEGACY_MPOP) return;
   await assertManageOnlineCheckinsUiTitle(page, title);
   await assertCaseBanner(page, crn);

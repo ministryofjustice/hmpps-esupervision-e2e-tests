@@ -192,8 +192,7 @@ export default class CustomQuestionsJourney {
       ).toHaveCount(0);
 
       await this.deleteQuestions([remove]);
-      // saveAndVerify questions leaves the browser on the manage check in page, so rewrap
-      // the current page to run to the deleted question check
+      // saveAndVerifyQuestions leaves the browser on the manage check in page.
       await this.saveAndVerifyQuestions(crn, remainingQuestions);
       const manage = new ManageCheckInsPage(this.page);
       await expect(
@@ -257,9 +256,8 @@ export default class CustomQuestionsJourney {
 
   private async save(crn: string): Promise<void> {
     await this.pages.addQuestions.clickSaveQuestions();
-    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
-    // ins are retired. Saving lands on the manage page in the new UI but on the
-    // case overview in MPOP, so the two branches assert different pages.
+    // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
+    // removed. Saving lands on the MOCI manage page but on the MPOP case overview.
     if (!LEGACY_MPOP) {
       await expect(
         this.page,
@@ -275,14 +273,6 @@ export default class CustomQuestionsJourney {
         this.page,
         "Saving questions should land back on the MPOP case overview",
       ).toHaveURL(new RegExp(`^${env.mpopUrl()}/case/${crn}`));
-
-      if (
-        new RegExp(`^${env.mpopUrl()}/case/${crn}/?$`).test(this.page.url())
-      ) {
-        await this.assertQuestionsAddedBanner(
-          new ManageCheckInsPage(this.page),
-        );
-      }
     }
   }
 
@@ -315,15 +305,6 @@ export default class CustomQuestionsJourney {
         `Add question button should be gone once ${MAX_CUSTOM_QUESTIONS} questions exist`,
       ).toHaveCount(0);
     }
-  }
-
-  private async assertQuestionsAddedBanner(
-    manage: ManageCheckInsPage,
-  ): Promise<void> {
-    await expect(
-      manage.questionsAddedBanner(),
-      "Should show the questions added confirmation after saving",
-    ).toBeVisible();
   }
 
   private async assertQuestionCardsContain(

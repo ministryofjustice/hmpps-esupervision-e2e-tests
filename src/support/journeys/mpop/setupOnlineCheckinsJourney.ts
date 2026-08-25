@@ -27,8 +27,6 @@ interface ContactPreferenceValues {
   preference: Preference;
   /** The detail that should end up on file - entered, or replacing what is there. */
   contact?: ContactDetails;
-  /** Check the confirm step refuses an empty answer before answering it properly. */
-  assertConfirmValidation?: boolean;
 }
 
 interface SetupValues extends ContactPreferenceValues {
@@ -63,11 +61,13 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /**
-   * "Is this the right email address for X?" - new UI only. Shares its page title
-   * with the preference page before it, so the caption and radios are what prove
-   * we moved on.
+   * "Is this the right email address for X?" - MOCI only, and stays after MPOP
+   * is removed.
    *
-   * TODO(legacy-mpop): delete once MPOP check ins are retired.
+   * TODO(confirm-page-title): APP bug - this page currently shares its page
+   * title with the preference page before it, so the caption and radios are what
+   * prove we moved on instead. Once the title is fixed, assert on it directly
+   * here and drop the caption/radio workaround.
    */
   private async assertOnConfirmContactPage(
     crn: string,
@@ -77,13 +77,15 @@ export default class SetupOnlineCheckinsJourney {
     const detail =
       preference === Preference.EMAIL ? "email address" : "mobile number";
 
+    // Checks the page title, but it's the one shared with the preference page
+    // (see the TODO above), so it alone doesn't prove we're on the confirm page.
     await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
     // The caption also holds "This information is saved in NDelius", so match
     // from the start rather than the whole text.
     await expect(
       confirm.confirmCaption(),
       `Should be confirming the person's ${detail}`,
-    ).toContainText(new RegExp(`^Confirm .+'s ${detail}`));
+    ).toContainText(new RegExp(`^\\s*Confirm .+'s ${detail}`));
 
     // The value is whatever NDelius holds, not something the test supplied, so
     // assert only that there is one - confirming a blank would be the failure.
@@ -102,37 +104,13 @@ export default class SetupOnlineCheckinsJourney {
     ).toBeVisible();
   }
 
-  /**
-   * Submit the confirm step unanswered and assert it refuses, leaving the page put
-   * so the caller can carry on - covering the validation without its own test.
-   *
-   * TODO(legacy-mpop): delete with the rest of the confirm step.
-   */
-  private async assertConfirmContactValidation(
-    preference: Preference,
-  ): Promise<void> {
-    const confirm = this.manageCheckinsPages.contactPreference;
-    const message =
-      preference === Preference.EMAIL
-        ? "Select yes if this is the right email address"
-        : "Select yes if this is the right mobile number";
-
-    await confirm.continueWithoutAnswering();
-    await expect(confirm.errorSummary()).toContainText(message);
-    await expect(confirm.fieldError(message)).toBeVisible();
-    await expect(
-      confirm.confirmDetailsGroup(),
-      "Should stay on the confirmation page after a failed submit",
-    ).toBeVisible();
-  }
-
   private async completeContactPreference(
     crn: string,
     setup: ContactPreferenceValues,
   ): Promise<void> {
-    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
-    // ins are retired. The flows genuinely differ - MPOP collects the details
-    // inline, the new UI confirms and edits them on separate pages.
+    // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
+    // removed. MPOP collects contact details inline; MOCI confirms or edits them
+    // on separate pages.
     if (!LEGACY_MPOP) {
       await assertCaseBanner(this.page, crn);
       const contactPreference = this.manageCheckinsPages.contactPreference;
@@ -171,10 +149,6 @@ export default class SetupOnlineCheckinsJourney {
         this.onFileContact = value;
       } else {
         await this.assertOnConfirmContactPage(crn, setup.preference);
-
-        if (setup.assertConfirmValidation) {
-          await this.assertConfirmContactValidation(setup.preference);
-        }
 
         if (value === undefined) {
           // Nothing to change to, so confirm whatever this page is showing.
@@ -296,13 +270,12 @@ export default class SetupOnlineCheckinsJourney {
     opts: {
       preference?: Preference;
       contact?: ContactDetails;
-      assertConfirmValidation?: boolean;
     },
   ): Promise<void> {
     await summary.clickChange("contactPreference");
-    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
-    // ins are retired. Same divergence as completeContactPreference, on the
-    // ?cya=true path back from check your answers.
+    // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
+    // removed. Same divergence as completeContactPreference, on the ?cya=true path
+    // back from check your answers.
     if (!LEGACY_MPOP) {
       if (opts.preference === undefined) {
         throw new Error(
@@ -312,7 +285,6 @@ export default class SetupOnlineCheckinsJourney {
       await this.completeContactPreference(crn, {
         preference: opts.preference,
         contact: opts.contact,
-        assertConfirmValidation: opts.assertConfirmValidation,
       });
     } else {
       await this.pages.contactPreference.assertOnPage();

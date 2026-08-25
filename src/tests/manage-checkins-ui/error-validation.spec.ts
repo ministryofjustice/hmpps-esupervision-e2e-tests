@@ -11,9 +11,10 @@ import { firstCheckinDateString } from "../../support/utils/date";
 import { env } from "../../config/env";
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { ManageCheckinsUiPages } from "../../support/pages/manage-checkins-ui/manageCheckinsUiPages";
+import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
 
-// Validation is server side and the markup is identical in both services, so these
-// run against whichever UI the run targets.
+// The questions, stop and date tests run against whichever UI the run targets.
+// The contact details test does not - that page is MOCI only.
 //
 // Owns its offender: the questions test clears assigned questions as a
 // precondition, which would fight any other spec sharing it.
@@ -27,6 +28,11 @@ test.describe("Validation errors", () => {
   test("shows validation errors when changing contact details", async ({
     page,
   }, testInfo) => {
+    test.skip(
+      LEGACY_MPOP,
+      "MOCI only: MPOP has no manage-page edit contact details flow",
+    );
+
     await attachCreatedCrn(testInfo, offender.crn);
 
     const manage = new ManageCheckInsJourney(page);

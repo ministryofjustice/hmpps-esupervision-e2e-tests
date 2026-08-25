@@ -36,11 +36,9 @@ export default class ContactPreferencePage extends MPopBasePage {
     await this.clickContinue();
   }
 
-  // Applies whatever is supplied, whether the detail is on file already or not -
-  // the new UI's confirm step behaves the same way.
-  //
-  // TODO(legacy-mpop): delete this method and its call above once MPOP check ins
-  // are retired. Only MPOP has these inline Change actions.
+  // TODO(legacy-mpop): Delete this method and its call above when legacy MPOP is
+  // removed. Only MPOP has these inline Change actions; MOCI routes through its
+  // confirm and edit pages instead.
   private async setContactDetails(contact: ContactDetails): Promise<void> {
     if (contact.mobile === undefined && contact.email === undefined) return;
 

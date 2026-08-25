@@ -3,8 +3,11 @@ import { getOffenderByCrn, reactivateOffender } from "../../api/offender";
 import { isoDateString, today } from "./date";
 
 /**
- * Put TEST_MPOP_STOP_RESTART_CRN back into VERIFIED with an active schedule, so
- * the restart spec repairs its own precondition rather than assuming one.
+ * Reactivate the CRN if a previous run left it INACTIVE, so the stop/restart spec
+ * repairs its own precondition rather than assuming one. Returns an API token for
+ * the caller to reuse.
+ * Reactivating with EMAIL requires an email address in NDelius - the API rejects
+ * it otherwise
  */
 export const ensureActiveCheckin = async (crn: string): Promise<string> => {
   const token = await getToken();

@@ -83,8 +83,8 @@ export default class ManageCheckInsJourney {
       await manage.clickChangeContactDetails();
       await assertExpectedService(this.page, "Change contact details");
 
-      // No legacy branch: both services render the same manage-contact page, so one
-      // path drives both. Only the setup wizard's contact step really differs.
+      // MOCI only - MPOP has no equivalent page, case banner, or edit page here.
+      // Callers should skip this test under LEGACY_MPOP instead of branching.
       if (opts.preference === undefined) {
         throw new Error(
           "changeContactDetails requires a preference to be selected",

@@ -73,19 +73,6 @@ export default class ContactPreferencePage {
     await this.continueButton().click();
   }
 
-  errorSummary(): Locator {
-    return this.page.locator(".govuk-error-summary");
-  }
-
-  fieldError(message: string): Locator {
-    return this.page.locator(".govuk-error-message", { hasText: message });
-  }
-
-  /** Submit the confirm step without answering, to reach its validation. */
-  async continueWithoutAnswering(): Promise<void> {
-    await this.continueButton().click();
-  }
-
   async confirmDetailsAndContinue(): Promise<void> {
     await this.confirmYesRadio().check();
     await this.continueButton().click();
