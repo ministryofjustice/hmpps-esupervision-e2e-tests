@@ -76,19 +76,29 @@ is the complete work list. In outline:
 1. Delete `src/support/utils/legacyMpop.ts` and all `assertExpectedService(...)` call
    sites (8 in the journeys).
 2. Delete each `if (!LEGACY_MPOP) { ... } else { ... }` else branch and unindent:
-   `setupOnlineCheckinsJourney` (x2), `customQuestionsJourney.save`.
+   `setupOnlineCheckinsJourney` (x2, at the contact preference and change-from-summary
+   steps), `customQuestionsJourney.save`. Also delete the bare `if (!LEGACY_MPOP &&
+   preference === undefined)` guard in `setupOnlineCheckinsJourney` (no else branch -
+   just remove the `!LEGACY_MPOP &&` condition and make `preference` required).
 3. Delete the `LEGACY_MPOP` test skips in `setup-online-checkins`,
-   `change-contact-details` and `error-validation`; those tests then always run.
-4. Delete `src/support/pages/mpop/updateContactDetailsPage.ts`,
-   `ContactPreferencePage.setContactDetails`, and `MpopPages.contactPreference`.
+   `change-contact-details` and `error-validation`, and the separate
+   `if (LEGACY_MPOP) return;` guard in `change-contact-details`'s `beforeAll`;
+   those tests then always run.
+4. Delete `MpopPages.contactPreference` (the field, not the class).
 5. Delete `LEGACY_MPOP` from `.env.example` and the section above, and
    `originPattern` from `src/support/utils/url.ts`.
 6. Remove the early return in `src/support/assertions/manage-checkins-ui/manageCheckinsAssertions.ts`.
 
-**Do not delete** `src/support/utils/manageCheckinsPage.ts`, `src/data/contact.ts`,
-or the rest of `src/support/pages/mpop/`. Despite the folder name, most of those page
-objects drive the migrated MOCI pages - MOCI reuses the same headings and `data-qa`
-hooks. Only the three items in step 4 are MPOP-only.
+**Do not delete** `src/support/pages/mpop/contactPreferencePage.ts` (including
+`setContactDetails`), `src/support/pages/mpop/updateContactDetailsPage.ts`,
+`src/support/assertions/manage-checkins-ui/manageCheckinsAssertions.ts`,
+`src/data/models.ts`, or the rest of `src/support/pages/mpop/`. Despite the folder
+name, most of those page objects drive the migrated MOCI pages - MOCI reuses the
+same headings and `data-qa` hooks. In particular, `MpopPages.restartContactPreference`
+drives the MOCI restart page's inline Change actions via the same
+`ContactPreferencePage`/`UpdateContactDetailsPage` classes, so those two files and
+`setContactDetails` are not MPOP-only. Only the `contactPreference` field in step 4
+is.
 
 ## ENV: dev vs test
 

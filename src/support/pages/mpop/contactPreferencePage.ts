@@ -29,9 +29,9 @@ export default class ContactPreferencePage extends MPopBasePage {
     await this.clickContinue();
   }
 
-  // TODO(legacy-mpop): Delete this method and its call above when legacy MPOP is
-  // removed. Only MPOP has these inline Change actions; MOCI routes through its
-  // confirm and edit pages instead.
+  // Not legacy-MPOP-only: the restart flow's MOCI page also uses these inline
+  // Change actions (only the main setup journey was migrated to MOCI's separate
+  // confirm/edit pages), so this stays even once legacy MPOP is removed.
   private async setContactDetails(contact: ContactDetails): Promise<void> {
     if (contact.mobile === undefined && contact.email === undefined) return;
 

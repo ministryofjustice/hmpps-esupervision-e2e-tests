@@ -2,9 +2,9 @@ import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 import { ContactDetails } from "../../../data/models";
 
-// Only reached from MPOP's inline Change actions.
-// TODO(legacy-mpop): Delete this whole file when legacy MPOP is removed. Nothing
-// else needs it - ContactDetails now lives in src/data/contact.ts.
+// Not legacy-MPOP-only: also reached from the restart flow's MOCI page (see
+// ContactPreferencePage.setContactDetails), so this stays even once legacy MPOP
+// is removed.
 export default class UpdateContactDetailsPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Edit contact details for");
