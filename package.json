@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Playwright E2E tests for online check ins and eSupervision user journeys",
   "main": "index.js",
- "scripts": {
+  "scripts": {
     "test": "ENV=test playwright test --project=checkin:dev --workers=1",
     "test:e2e": "ENV=test playwright test src/tests/e2e --workers=1",
     "test:mpop": "ENV=test playwright test src/tests/mpop --workers=1",

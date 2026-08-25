@@ -20,13 +20,13 @@ and resolve secrets at runtime:
 
 ```bash
 eval $(op signin)
-op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm test
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run test
 ```
 
 ## Run
 
 ```bash
-npm test                          # everything except dashboard
+npm run test                          # everything except dashboard
 npm run test:mpop                 # practitioner journeys
 npm run test:manage-checkins-ui   # manage online check ins UI
 npm run test:e2e                  # create offender -> set up -> complete a check in
@@ -60,7 +60,7 @@ The suite supports two states:
 
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- \
-  env LEGACY_MPOP=true npm test
+  env LEGACY_MPOP=true npm run test
 ```
 
 One run targets one service. Mixed states fail fast with an actionable message
