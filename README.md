@@ -83,7 +83,7 @@ is the complete work list. In outline:
    `ContactPreferencePage.setContactDetails`, and `MpopPages.contactPreference`.
 5. Delete `LEGACY_MPOP` from `.env.example` and the section above, and
    `originPattern` from `src/support/utils/url.ts`.
-6. Remove the early return in `src/support/utils/manageCheckinsPage.ts`.
+6. Remove the early return in `src/support/assertions/manage-checkins-ui/manageCheckinsAssertions.ts`.
 
 **Do not delete** `src/support/utils/manageCheckinsPage.ts`, `src/data/contact.ts`,
 or the rest of `src/support/pages/mpop/`. Despite the folder name, most of those page

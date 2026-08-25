@@ -148,8 +148,8 @@ test.describe("Validation errors", () => {
 
   // Uses TEST_MPOP_CRN, not this spec's offender - the wizard is abandoned before
   // completing setup, so no check in state changes. Verified that an abandoned
-  // wizard leaves no resumable draft: eligibility-outcomes, which shares this CRN,
-  // starts a fresh wizard run straight after this test.
+  // wizard leaves no resumable draft, so it's safe to share this CRN with
+  // eligibility-outcomes.
   test("rejects a first check in date that is in the past or malformed", async ({
     page,
   }) => {

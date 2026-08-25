@@ -55,8 +55,9 @@ export const deleteAssignedQuestions = async (
   token: string,
 ): Promise<void> =>
   withApiContext(async (ctx) => {
-    const response = await ctx.delete(`/v2/questions/assignment?crn=${crn}`, {
+    const response = await ctx.delete(`/v2/questions/assignment`, {
       headers: authHeader(token),
+      params: { crn },
     });
     await assertOk(response, `Delete assigned questions for ${crn}`);
   });

@@ -85,6 +85,7 @@ export enum Preference {
   EMAIL = 1,
 }
 
+// Shared by MOCI and MPOP contact preference flows.
 export interface ContactDetails {
   mobile?: string;
   email?: string;

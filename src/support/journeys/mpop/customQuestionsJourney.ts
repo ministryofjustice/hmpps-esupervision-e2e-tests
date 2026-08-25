@@ -21,6 +21,7 @@ import {
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
+import { urlPattern } from "../../utils/url";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -73,11 +74,10 @@ export default class CustomQuestionsJourney {
     ).toHaveText(nextCheckinDate);
   }
 
-  private async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
+  private async goToAddQuestionsPage(crn: string): Promise<void> {
     const { manage, nextCheckinDate } =
       await this.openManageForFutureCheckin(crn);
     await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
-    return manage;
   }
 
   private async previewFeelingQuestion(crn: string): Promise<void> {
@@ -260,8 +260,9 @@ export default class CustomQuestionsJourney {
         this.page,
         "Saving questions should land on the manage-checkins-ui manage page",
       ).toHaveURL(
-        new RegExp(
-          `^${env.manageCheckinsUiUrl()}/case/${crn}/appointments/check-in/manage/`,
+        urlPattern(
+          env.manageCheckinsUiUrl(),
+          `/case/${crn}/appointments/check-in/manage/`,
         ),
       );
       await assertCaseBanner(this.page, crn);
@@ -269,7 +270,7 @@ export default class CustomQuestionsJourney {
       await expect(
         this.page,
         "Saving questions should land back on the MPOP case overview",
-      ).toHaveURL(new RegExp(`^${env.mpopUrl()}/case/${crn}`));
+      ).toHaveURL(urlPattern(env.mpopUrl(), `/case/${crn}`));
     }
   }
 

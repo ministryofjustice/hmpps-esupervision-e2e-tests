@@ -41,9 +41,9 @@ export default defineConfig({
       name: "checkin:dev",
       testDir: "./src/tests",
       testIgnore: "**/dashboard/**",
-      // Specs share a single Delius account, one worker scoped offender and the
-      // stop/restart CRN, so they must not run concurrently. Pinned here rather
-      // than left to the --workers flag
+      // Specs share a single Delius account and pre-existing CRNs (TEST_MPOP_CRN,
+      // TEST_MPOP_STOP_RESTART_CRN), so they must not run concurrently. Pinned
+      // here rather than left to the --workers flag.
       workers: 1,
       use: {
         ...devices["Desktop Chrome"],
