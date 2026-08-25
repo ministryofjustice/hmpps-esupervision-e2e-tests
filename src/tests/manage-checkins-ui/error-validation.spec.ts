@@ -73,9 +73,7 @@ test.describe("Validation errors", () => {
       .emailAddressField()
       .fill("not-an-email");
     await manageCheckinsPages.editContactDetails.save();
-    // Exact app wording - ends with "name@example.com", no full stop (unlike the mobile error).
-    const emailFormat =
-      "Enter an email address in the correct format, like name@example.com";
+    const emailFormat = "Enter an email address in the correct format.";
     await expect(
       manageCheckinsPages.editContactDetails.errorSummary(),
     ).toContainText(emailFormat);

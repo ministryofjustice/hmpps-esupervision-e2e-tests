@@ -10,7 +10,8 @@ import { originPattern } from "./url";
  * TODO(legacy-mpop): Delete this whole file when legacy MPOP is retired, along
  * with every `assertExpectedService(...)` call site (grep for it - 8 at time of
  * writing) and the `if (LEGACY_MPOP)` branches listed in the README.
- * KEEP ./manageCheckinsPage.ts - those are MOCI's own assertions, not legacy.
+ * KEEP ../assertions/manage-checkins-ui/manageCheckinsAssertions.ts - those are
+ * MOCI's own assertions, not legacy.
  */
 
 /** True when this run targets legacy MPOP instead of Manage Online Check Ins. */

@@ -125,7 +125,7 @@ Two suites cover the step differently:
 ## Test data
 
 - **e2e** — creates its own offender per run.
-- **checkin** — creates a check in via API for `TEST_CRN`, then drives the UI.
+- **checkin** — creates its own offender, then drives a check in via API.
 - **mpop** — most specs create their own offender, because they
   mutate it and sharing would make specs order dependent. Two use pre-existing
   CRNs: `eligibility-outcomes` reads `TEST_MPOP_CRN` without submitting, and
