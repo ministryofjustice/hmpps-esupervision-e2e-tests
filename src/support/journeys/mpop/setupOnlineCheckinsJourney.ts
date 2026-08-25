@@ -1,7 +1,9 @@
 import { expect, Page } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import { Preference } from "../../pages/mpop/contactPreferencePage";
-import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
+import DateFrequencyPage, {
+  FrequencyOptions,
+} from "../../pages/mpop/dateFrequencyPage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import { ContactDetails } from "../../pages/mpop/updateContactDetailsPage";
@@ -9,7 +11,11 @@ import { MpopPages } from "../../pages/mpop/mpopPages";
 import test from "@playwright/test";
 import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
-import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
+import {
+  assertExpectedService,
+  assertManageCheckinsPage,
+  LEGACY_MPOP,
+} from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
@@ -17,12 +23,12 @@ import {
   EDIT_CONTACT_DETAILS_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
 
-export type { ExpectedUi };
-
 interface ContactPreferenceValues {
   preference: Preference;
+  /** The detail that should end up on file - entered, or replacing what is there. */
   contact?: ContactDetails;
-  expectedUi?: ExpectedUi;
+  /** Check the confirm step refuses an empty answer before answering it properly. */
+  assertConfirmValidation?: boolean;
 }
 
 interface SetupValues extends ContactPreferenceValues {
@@ -34,26 +40,102 @@ interface SetupValues extends ContactPreferenceValues {
 }
 export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
-  private readonly newUiPages: ManageCheckinsUiPages;
+  private readonly manageCheckinsPages: ManageCheckinsUiPages;
+  private onFileContact?: string;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
-    this.newUiPages = new ManageCheckinsUiPages(page);
+    this.manageCheckinsPages = new ManageCheckinsUiPages(page);
+  }
+
+  /**
+   * The contact detail the wizard left on file - entered when NDelius held none,
+   * confirmed when it did. Assert the summary against this rather than the value
+   * the spec passed in, which the confirm route never uses.
+   */
+  contactOnFile(): string {
+    if (this.onFileContact === undefined) {
+      throw new Error(
+        "contactOnFile() is only available once the contact preference step has run",
+      );
+    }
+    return this.onFileContact;
+  }
+
+  /**
+   * "Is this the right email address for X?" - new UI only. Shares its page title
+   * with the preference page before it, so the caption and radios are what prove
+   * we moved on.
+   *
+   * TODO(legacy-mpop): delete once MPOP check ins are retired.
+   */
+  private async assertOnConfirmContactPage(
+    crn: string,
+    preference: Preference,
+  ): Promise<void> {
+    const confirm = this.manageCheckinsPages.contactPreference;
+    const detail =
+      preference === Preference.EMAIL ? "email address" : "mobile number";
+
+    await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
+    // The caption also holds "This information is saved in NDelius", so match
+    // from the start rather than the whole text.
+    await expect(
+      confirm.confirmCaption(),
+      `Should be confirming the person's ${detail}`,
+    ).toContainText(new RegExp(`^Confirm .+'s ${detail}`));
+
+    // The value is whatever NDelius holds, not something the test supplied, so
+    // assert only that there is one - confirming a blank would be the failure.
+    await expect(
+      confirm.confirmedContactValue(),
+      `Should show the ${detail} held in NDelius`,
+    ).toHaveText(/\S/);
+
+    await expect(
+      confirm.confirmYesRadio(),
+      "Should offer to confirm the detail as correct",
+    ).toBeVisible();
+    await expect(
+      confirm.confirmChangeRadio(),
+      `Should offer to change the ${detail}`,
+    ).toBeVisible();
+  }
+
+  /**
+   * Submit the confirm step unanswered and assert it refuses, leaving the page put
+   * so the caller can carry on - covering the validation without its own test.
+   *
+   * TODO(legacy-mpop): delete with the rest of the confirm step.
+   */
+  private async assertConfirmContactValidation(
+    preference: Preference,
+  ): Promise<void> {
+    const confirm = this.manageCheckinsPages.contactPreference;
+    const message =
+      preference === Preference.EMAIL
+        ? "Select yes if this is the right email address"
+        : "Select yes if this is the right mobile number";
+
+    await confirm.continueWithoutAnswering();
+    await expect(confirm.errorSummary()).toContainText(message);
+    await expect(confirm.fieldError(message)).toBeVisible();
+    await expect(
+      confirm.confirmDetailsGroup(),
+      "Should stay on the confirmation page after a failed submit",
+    ).toBeVisible();
   }
 
   private async completeContactPreference(
     crn: string,
     setup: ContactPreferenceValues,
   ): Promise<void> {
-    const onNewUi = assertOnExpectedUi(
-      this.page,
-      "Contact preference",
-      setup.expectedUi,
-    );
-
-    if (onNewUi) {
+    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
+    // ins are retired. The flows genuinely differ - MPOP collects the details
+    // inline, the new UI confirms and edits them on separate pages.
+    if (!LEGACY_MPOP) {
       await assertCaseBanner(this.page, crn);
-      const contactPreference = this.newUiPages.contactPreference;
+      const contactPreference = this.manageCheckinsPages.contactPreference;
       await expect(contactPreference.preferenceGroup()).toBeVisible();
       await assertManageOnlineCheckinsUiTitle(
         this.page,
@@ -61,32 +143,61 @@ export default class SetupOnlineCheckinsJourney {
       );
       await contactPreference.selectPreferenceAndContinue(setup.preference);
 
-      // The next screen is either "confirm the detail on file" or, if NDelius has no
-      // matching detail yet, "enter the missing detail" - wait for whichever appears.
+      // Next is either "confirm the detail on file" or "enter the missing detail",
+      // so wait for whichever appears.
       await expect(
         contactPreference
           .confirmDetailsGroup()
           .or(contactPreference.missingDetailsField()),
       ).toBeVisible();
 
+      const value =
+        setup.preference === Preference.EMAIL
+          ? setup.contact?.email
+          : setup.contact?.mobile;
+
       if (await contactPreference.missingDetailsField().isVisible()) {
-        await assertManageOnlineCheckinsUiTitle(
+        await assertManageCheckinsPage(
           this.page,
+          crn,
           EDIT_CONTACT_DETAILS_TITLE,
         );
-        await assertCaseBanner(this.page, crn);
-        const value =
-          setup.preference === Preference.EMAIL
-            ? setup.contact?.email
-            : setup.contact?.mobile;
         if (value === undefined) {
           throw new Error(
             "manage-checkins-ui asked for a missing contact detail but setup.contact has none for the chosen preference",
           );
         }
         await contactPreference.enterMissingDetailsAndContinue(value);
+        this.onFileContact = value;
       } else {
-        await contactPreference.confirmDetailsAndContinue();
+        await this.assertOnConfirmContactPage(crn, setup.preference);
+
+        if (setup.assertConfirmValidation) {
+          await this.assertConfirmContactValidation(setup.preference);
+        }
+
+        if (value === undefined) {
+          // Nothing to change to, so confirm whatever this page is showing.
+          this.onFileContact = (
+            await contactPreference.confirmedContactValue().innerText()
+          ).trim();
+          await contactPreference.confirmDetailsAndContinue();
+        } else {
+          // A value for a detail already on file means replace it, so answer
+          // "No, I need to change ..." and enter it on the edit page.
+          await contactPreference.rejectDetailsAndContinue();
+          await assertManageCheckinsPage(
+            this.page,
+            crn,
+            EDIT_CONTACT_DETAILS_TITLE,
+          );
+          await expect(
+            contactPreference.missingDetailsField(),
+            "Answering No should lead to the edit contact details page",
+          ).toBeVisible();
+          await contactPreference.enterMissingDetailsAndContinue(value);
+          this.onFileContact = value;
+        }
       }
     } else {
       await this.pages.contactPreference.assertOnPage();
@@ -94,6 +205,11 @@ export default class SetupOnlineCheckinsJourney {
         setup.preference,
         setup.contact,
       );
+      // MPOP collects the details inline, so what is on file is what we typed.
+      this.onFileContact =
+        setup.preference === Preference.EMAIL
+          ? setup.contact?.email
+          : setup.contact?.mobile;
     }
   }
   async login(): Promise<void> {
@@ -107,6 +223,9 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.assertOnPage();
       await this.pages.overview.clickSetupOnlineCheckIns();
+      // The hand-off: MPOP either renders the wizard or redirects the whole of it,
+      // so asserting here covers every page that follows.
+      await assertExpectedService(this.page, "Setup online check ins");
     });
   }
 
@@ -124,11 +243,15 @@ export default class SetupOnlineCheckinsJourney {
     await this.pages.photoMeetRules.assertOnPage();
     await this.pages.photoMeetRules.completePage();
   }
-  async completeSetupToSummary(
-    crn: string,
-    setup: SetupValues,
-  ): Promise<CheckInSummaryPage> {
-    return test.step("Complete set up online check ins", async () => {
+  /**
+   * Drive the wizard as far as the date and frequency page and stop there, so a
+   * test can exercise it without completing a setup it does not need.
+   */
+  async completeSetupToDateFrequency(setup: {
+    eligibilityIds: number[];
+    rationale: string;
+  }): Promise<DateFrequencyPage> {
+    await test.step("Complete eligibility to the check in date page", async () => {
       await this.pages.eligibility.assertOnPage();
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
@@ -142,7 +265,17 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.rationale.completePage(setup.rationale);
 
       await this.pages.dateFrequency.assertOnPage();
-      await this.pages.dateFrequency.completePage(setup.date, setup.frequency);
+    });
+    return this.pages.dateFrequency;
+  }
+
+  async completeSetupToSummary(
+    crn: string,
+    setup: SetupValues,
+  ): Promise<CheckInSummaryPage> {
+    return test.step("Complete set up online check ins", async () => {
+      const dateFrequency = await this.completeSetupToDateFrequency(setup);
+      await dateFrequency.completePage(setup.date, setup.frequency);
 
       await this.completeContactPreference(crn, setup);
 
@@ -157,33 +290,20 @@ export default class SetupOnlineCheckinsJourney {
     await new CheckInConfirmationPage(this.page).assertOnPage();
   }
 
-  async changePhotoSummary(
-    summary: CheckInSummaryPage,
-    photo: PhotoOptions,
-  ): Promise<void> {
-    await summary.clickChange("photo");
-    await this.completePhotoSteps(photo);
-    await summary.assertOnPage();
-  }
-
   async changeContactPreferenceFromSummary(
     crn: string,
     summary: CheckInSummaryPage,
     opts: {
       preference?: Preference;
       contact?: ContactDetails;
-      expectedUi?: ExpectedUi;
+      assertConfirmValidation?: boolean;
     },
   ): Promise<void> {
     await summary.clickChange("contactPreference");
-
-    const onNewUi = assertOnExpectedUi(
-      this.page,
-      "Contact preference",
-      opts.expectedUi,
-    );
-
-    if (onNewUi) {
+    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
+    // ins are retired. Same divergence as completeContactPreference, on the
+    // ?cya=true path back from check your answers.
+    if (!LEGACY_MPOP) {
       if (opts.preference === undefined) {
         throw new Error(
           "manage-checkins-ui requires a preference to be selected when changing contact preference from the summary",
@@ -192,6 +312,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.completeContactPreference(crn, {
         preference: opts.preference,
         contact: opts.contact,
+        assertConfirmValidation: opts.assertConfirmValidation,
       });
     } else {
       await this.pages.contactPreference.assertOnPage();

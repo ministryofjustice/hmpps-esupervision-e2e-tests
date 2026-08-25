@@ -8,6 +8,9 @@ import { firstCheckinDateString } from "../../support/utils/date";
 import { TEST_CONTACT } from "../../data/mpop/testData";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 
+// The mirror of setup-online-checkins.spec.ts, which enters a missing mobile.
+// Each direction is its own branch: the preference picks both the field and the
+// `change` parameter.
 test("practitioner enters a missing email when changing preference to email for an offender with only a mobile number on file", async ({
   page,
 }, testInfo) => {
@@ -41,41 +44,5 @@ test("practitioner enters a missing email when changing preference to email for 
   );
   await expect(summary.summaryValueLocator("email")).toContainText(
     TEST_CONTACT.email,
-  );
-});
-
-test("practitioner enters a missing mobile number when changing preference to text message for an offender with only an email on file", async ({
-  page,
-}, testInfo) => {
-  const offender = await new DeliusOffenderJourney(page).createTestOffender();
-  await attachCreatedCrn(testInfo, offender.crn);
-
-  const journey = new SetupOnlineCheckinsJourney(page);
-  await journey.login();
-  await journey.startSetup(offender.crn);
-
-  const summary = await journey.completeSetupToSummary(offender.crn, {
-    date: firstCheckinDateString(7),
-    frequency: FrequencyOptions.EVERY_WEEK,
-    preference: Preference.EMAIL,
-    contact: { email: TEST_CONTACT.email },
-    photo: PhotoOptions.UPLOAD,
-    eligibilityIds: [9],
-    rationale: "E2E test rationale",
-  });
-  await expect(summary.summaryValueLocator("contactPreference")).toContainText(
-    "Email",
-  );
-
-  await journey.changeContactPreferenceFromSummary(offender.crn, summary, {
-    preference: Preference.TEXT,
-    contact: { mobile: TEST_CONTACT.mobile },
-  });
-
-  await expect(summary.summaryValueLocator("contactPreference")).toContainText(
-    "Text message",
-  );
-  await expect(summary.summaryValueLocator("mobile")).toContainText(
-    TEST_CONTACT.mobile,
   );
 });

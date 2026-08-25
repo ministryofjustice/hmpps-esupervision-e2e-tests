@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Page, Locator } from "@playwright/test";
 
 export default class Header {
   constructor(private readonly page: Page) {}
@@ -13,7 +13,9 @@ export default class Header {
     );
   }
 
-  signOutLink(): Locator {
-    return this.header().locator('a[href*="sign-out"]');
+  accountMenuToggle(): Locator {
+    return this.header().locator(
+      "button.probation-common-header__user-menu-toggle",
+    );
   }
 }

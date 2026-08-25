@@ -28,7 +28,7 @@ export default class ContactPreferencePage extends MPopBasePage {
     contact?: ContactDetails,
   ): Promise<void> {
     if (contact) {
-      await this.addMissingContactDetails(contact);
+      await this.setContactDetails(contact);
     }
     if (preference !== undefined) {
       await this.clickRadioById("checkInPreferredComs", preference);
@@ -36,33 +36,22 @@ export default class ContactPreferencePage extends MPopBasePage {
     await this.clickContinue();
   }
 
-  private async addMissingContactDetails(
-    contact: ContactDetails,
-  ): Promise<void> {
-    const addMobile =
-      contact.mobile !== undefined &&
-      (await this.isMissing("mobileNumberValue"));
-    const addEmail =
-      contact.email !== undefined &&
-      (await this.isMissing("emailAddressValue"));
-    if (!addMobile && !addEmail) return;
+  // Applies whatever is supplied, whether the detail is on file already or not -
+  // the new UI's confirm step behaves the same way.
+  //
+  // TODO(legacy-mpop): delete this method and its call above once MPOP check ins
+  // are retired. Only MPOP has these inline Change actions.
+  private async setContactDetails(contact: ContactDetails): Promise<void> {
+    if (contact.mobile === undefined && contact.email === undefined) return;
 
     await this.getQA(
-      addMobile ? "mobileNumberAction" : "emailAddressAction",
+      contact.mobile !== undefined
+        ? "mobileNumberAction"
+        : "emailAddressAction",
     ).click();
 
     const details = new UpdateContactDetailsPage(this.page);
     await details.assertOnPage();
-    await details.completePage({
-      mobile: addMobile ? contact.mobile : undefined,
-      email: addEmail ? contact.email : undefined,
-    });
-  }
-
-  private async isMissing(valueQa: string): Promise<boolean> {
-    const value = this.getQA(valueQa);
-    if ((await value.count()) === 0) return true;
-    const text = (await value.textContent())?.trim() ?? "";
-    return text === "" || /^No\b/i.test(text);
+    await details.completePage(contact);
   }
 }

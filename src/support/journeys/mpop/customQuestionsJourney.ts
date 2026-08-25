@@ -11,7 +11,6 @@ import {
   DEFAULT_SUPPORT_QUESTION_TEXT,
 } from "../../../data/mpop/customQuestionConstants";
 import { env } from "../../../config/env";
-import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   ADD_QUESTIONS_TITLE,
   CHOOSE_QUESTION_TITLE,
@@ -19,13 +18,16 @@ import {
   HOW_TO_WRITE_QUESTIONS_TITLE,
   questionPreviewTitle,
 } from "../../../data/manage-checkins-ui/pageTitles";
-import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
+import {
+  assertExpectedService,
+  assertManageCheckinsPage,
+  LEGACY_MPOP,
+} from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
   private readonly manage: ManageCheckInsJourney;
-  private onNewUi = false;
 
   constructor(private readonly page: Page) {
     this.manage = new ManageCheckInsJourney(page);
@@ -54,48 +56,30 @@ export default class CustomQuestionsJourney {
     manage: ManageCheckInsPage,
     nextCheckinDate: string,
     crn: string,
-    expectedUi?: ExpectedUi,
   ): Promise<void> {
     await manage.clickChangeQuestions();
 
-    this.onNewUi = assertOnExpectedUi(
-      this.page,
-      "Questions journey",
-      expectedUi,
-    );
+    await assertExpectedService(this.page, "Questions journey");
 
     await this.pages.howToWriteQuestions.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        HOW_TO_WRITE_QUESTIONS_TITLE,
-      );
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      HOW_TO_WRITE_QUESTIONS_TITLE,
+    );
     await this.pages.howToWriteQuestions.clickAddQuestions();
     await this.pages.addQuestions.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(this.page, ADD_QUESTIONS_TITLE);
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(this.page, crn, ADD_QUESTIONS_TITLE);
     await expect(
       this.pages.addQuestions.nextCheckinDate(),
       "Add questions page should show the same next check in date as manage check in page",
     ).toHaveText(nextCheckinDate);
   }
 
-  private async goToAddQuestionsPage(
-    crn: string,
-    expectedUi?: ExpectedUi,
-  ): Promise<ManageCheckInsPage> {
+  private async goToAddQuestionsPage(crn: string): Promise<ManageCheckInsPage> {
     const { manage, nextCheckinDate } =
       await this.openManageForFutureCheckin(crn);
-    await this.navigateToAddQuestionsPage(
-      manage,
-      nextCheckinDate,
-      crn,
-      expectedUi,
-    );
+    await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
     return manage;
   }
 
@@ -103,13 +87,11 @@ export default class CustomQuestionsJourney {
     const preview = this.pages.questionPreview;
     await this.pages.addQuestions.clickPreviewFeeling();
     await preview.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        questionPreviewTitle(DEFAULT_FEELING_QUESTION_TEXT),
-      );
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      questionPreviewTitle(DEFAULT_FEELING_QUESTION_TEXT),
+    );
 
     for (const option of FEELING_PREVIEW_OPTIONS) {
       await expect(
@@ -128,13 +110,11 @@ export default class CustomQuestionsJourney {
 
     await this.pages.addQuestions.clickPreviewSupport();
     await preview.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        questionPreviewTitle(DEFAULT_SUPPORT_QUESTION_TEXT),
-      );
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      questionPreviewTitle(DEFAULT_SUPPORT_QUESTION_TEXT),
+    );
 
     for (const checkbox of SUPPORT_PREVIEW_CHECKBOXES) {
       await expect(
@@ -154,9 +134,8 @@ export default class CustomQuestionsJourney {
   async addCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
-    expectedUi?: ExpectedUi,
   ): Promise<void> {
-    await this.goToAddQuestionsPage(crn, expectedUi);
+    await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
       this.previewDefaultQuestions(crn));
     await test.step("Add custom questions", async () =>
@@ -171,10 +150,9 @@ export default class CustomQuestionsJourney {
   async assignCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
-    expectedUi?: ExpectedUi,
   ): Promise<void> {
     await test.step(`Assign ${questions.length} custom question(s)`, async () => {
-      await this.goToAddQuestionsPage(crn, expectedUi);
+      await this.goToAddQuestionsPage(crn);
       await this.enterCustomQuestions(questions, crn);
       await this.save(crn);
     });
@@ -185,7 +163,6 @@ export default class CustomQuestionsJourney {
     original: string[],
     edit: { from: string; to: string; template: string },
     remove: string,
-    expectedUi?: ExpectedUi,
   ): Promise<string[]> {
     const remainingQuestions = original
       .map((q) => (q === edit.from ? edit.to : q))
@@ -193,17 +170,15 @@ export default class CustomQuestionsJourney {
 
     await test.step("Edit and delete configured questions, then save", async () => {
       const addPage = this.pages.addQuestions;
-      await this.goToAddQuestionsPage(crn, expectedUi);
+      await this.goToAddQuestionsPage(crn);
 
       await addPage.clickEditQuestion(edit.from);
       await this.pages.editQuestion.assertOnPage();
-      if (this.onNewUi) {
-        await assertManageOnlineCheckinsUiTitle(
-          this.page,
-          editQuestionTitle(edit.template),
-        );
-        await assertCaseBanner(this.page, crn);
-      }
+      await assertManageCheckinsPage(
+        this.page,
+        crn,
+        editQuestionTitle(edit.template),
+      );
       await this.pages.editQuestion.enterQuestion(edit.to);
       await addPage.assertOnPage();
       await expect(
@@ -230,16 +205,12 @@ export default class CustomQuestionsJourney {
     return remainingQuestions;
   }
 
-  async clearCustomQuestions(
-    crn: string,
-    questions: string[],
-    expectedUi?: ExpectedUi,
-  ): Promise<void> {
+  async clearCustomQuestions(crn: string, questions: string[]): Promise<void> {
     await test.step("Remove the added questions and save", async () => {
-      await this.goToAddQuestionsPage(crn, expectedUi);
+      await this.goToAddQuestionsPage(crn);
       await this.deleteQuestions(questions);
       await this.save(crn);
-      await this.goToAddQuestionsPage(crn, expectedUi);
+      await this.goToAddQuestionsPage(crn);
       await this.assertQuestionsNotShown(questions);
     });
   }
@@ -258,22 +229,14 @@ export default class CustomQuestionsJourney {
     for (const { template, text } of questions) {
       await this.pages.addQuestions.clickAddQuestion();
       await this.pages.chooseQuestion.assertOnPage();
-      if (this.onNewUi) {
-        await assertManageOnlineCheckinsUiTitle(
-          this.page,
-          CHOOSE_QUESTION_TITLE,
-        );
-        await assertCaseBanner(this.page, crn);
-      }
+      await assertManageCheckinsPage(this.page, crn, CHOOSE_QUESTION_TITLE);
       await this.pages.chooseQuestion.selectQuestionByTemplate(template);
       await this.pages.editQuestion.assertOnPage();
-      if (this.onNewUi) {
-        await assertManageOnlineCheckinsUiTitle(
-          this.page,
-          editQuestionTitle(template),
-        );
-        await assertCaseBanner(this.page, crn);
-      }
+      await assertManageCheckinsPage(
+        this.page,
+        crn,
+        editQuestionTitle(template),
+      );
       await this.pages.editQuestion.enterQuestion(text);
       await this.pages.addQuestions.assertOnPage();
     }
@@ -294,8 +257,10 @@ export default class CustomQuestionsJourney {
 
   private async save(crn: string): Promise<void> {
     await this.pages.addQuestions.clickSaveQuestions();
-    if (this.onNewUi) {
-   
+    // TODO(legacy-mpop): delete the `else` and unindent this block once MPOP check
+    // ins are retired. Saving lands on the manage page in the new UI but on the
+    // case overview in MPOP, so the two branches assert different pages.
+    if (!LEGACY_MPOP) {
       await expect(
         this.page,
         "Saving questions should land on the manage-checkins-ui manage page",
@@ -327,7 +292,6 @@ export default class CustomQuestionsJourney {
   ): Promise<void> {
     await test.step("Save and verify the saved questions", async () => {
       await this.save(crn);
-      // save currently lands on MPOP overview, so reopen the manage check in page to verify saved questions
       const manage = await this.manage.openManage(crn);
       await this.assertQuestionCardsContain(manage, questions);
     });

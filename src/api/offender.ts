@@ -7,17 +7,31 @@ export interface Offender {
   status: string;
 }
 
-export const getOffenderByCrn = async (
+export const findOffenderByCrn = async (
   crn: string,
   token: string,
-): Promise<Offender> =>
-  withApiContext<Offender>(async (ctx) => {
+): Promise<Offender | null> =>
+  withApiContext<Offender | null>(async (ctx) => {
     const response = await ctx.get(`/v2/offenders/crn/${crn}`, {
       headers: authHeader(token),
     });
+    if (response.status() === 404) {
+      return null;
+    }
     await assertOk(response, `Get offender ${crn}`);
     return (await response.json()) as Offender;
   });
+
+export const getOffenderByCrn = async (
+  crn: string,
+  token: string,
+): Promise<Offender> => {
+  const offender = await findOffenderByCrn(crn, token);
+  if (!offender) {
+    throw new Error(`Get offender ${crn} failed: 404 not registered`);
+  }
+  return offender;
+};
 
 export interface CheckinScheduleOpts {
   firstCheckin?: string;

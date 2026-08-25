@@ -1,37 +1,25 @@
 import test, { expect } from "@playwright/test";
 import { env } from "../../config/env";
-import { getToken } from "../../api/auth";
 import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
-
 import {
+  displayedCheckinDate,
   firstCheckinDateString,
-  isoDateString,
-  today,
 } from "../../support/utils/date";
 import { Preference } from "../../support/pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
-import { getOffenderByCrn, reactivateOffender } from "../../api/offender";
+import { getOffenderByCrn } from "../../api/offender";
+import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 
-/* 
-stop then restart online check ins (MPOP UI) for an already setup offender
-Serial: stop->INACTIVE, restart->verified, so the CRN ends as it started and stays reusable.
-Uses its own MPOP_STOP_RESTART_CRN */
+// Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
+// the precondition for restart -> VERIFIED, which leaves the CRN as it started.
+test.describe.configure({ mode: "serial" });
 
-test.describe.serial("stop then restart online checkin (existing CRN)", () => {
+test.describe("restart online check ins (existing CRN)", () => {
   const crn = env.mpopStopRestartCrn();
   let token: string;
 
-  //   start from VERIFIED: reactivate only if a prior run left it inactive
   test.beforeAll(async () => {
-    token = await getToken();
-    const offender = await getOffenderByCrn(crn, token);
-    if (offender?.status === "INACTIVE" && offender.uuid) {
-      await reactivateOffender(offender.uuid, token, {
-        firstCheckin: isoDateString(today.plus({ days: 7 })),
-        checkinInterval: "WEEKLY",
-        contactPreference: "EMAIL",
-      });
-    }
+    token = await ensureActiveCheckin(crn);
   });
 
   test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE", async ({
@@ -58,5 +46,17 @@ test.describe.serial("stop then restart online checkin (existing CRN)", () => {
     await expect
       .poll(async () => (await getOffenderByCrn(crn, token))?.status)
       .toBe("VERIFIED");
+
+    // VERIFIED alone would pass if restart ignored the schedule, so read it back
+    // off the manage page - in the display format that page renders.
+    const manage = await journey.openManage(crn);
+    await expect(
+      manage.settingsNextCheckinDate(),
+      "Restart should save the first check in date that was entered",
+    ).toContainText(displayedCheckinDate(7));
+    await expect(
+      manage.settingsFrequency(),
+      "Restart should save the frequency that was selected",
+    ).toContainText("Every 8 weeks");
   });
 });

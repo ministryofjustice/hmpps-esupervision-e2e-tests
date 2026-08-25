@@ -16,6 +16,16 @@ export default class ReviewNotesPage extends MPopBasePage {
     return this.getQA("notes");
   }
 
+  /** Everything but the sensitive answer, so only that validation fires. */
+  async submitWithoutSensitiveAnswer(
+    note: string,
+    riskManagement = false,
+  ): Promise<void> {
+    await this.fillText("notes", note);
+    await this.clickRadioByName("riskManagement", this.yesNo(riskManagement));
+    await this.clickContinue();
+  }
+
   async completePage({
     note,
     riskManagement = false,

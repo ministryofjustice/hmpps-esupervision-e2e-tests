@@ -8,7 +8,10 @@ import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
-import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
+import {
+  assertExpectedService,
+  assertManageCheckinsPage,
+} from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
@@ -26,11 +29,11 @@ export interface RestartValues {
 
 export default class ManageCheckInsJourney {
   private readonly pages: MpopPages;
-  private readonly newUiPages: ManageCheckinsUiPages;
+  private readonly manageCheckinsPages: ManageCheckinsUiPages;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
-    this.newUiPages = new ManageCheckinsUiPages(page);
+    this.manageCheckinsPages = new ManageCheckinsUiPages(page);
   }
 
   async login(): Promise<void> {
@@ -44,32 +47,22 @@ export default class ManageCheckInsJourney {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.assertOnPage();
       await this.pages.overview.clickViewAllOnlineCheckinDetails();
+      // The manage page is itself behind a flag, so assert before anything reached
+      // from it.
+      await assertExpectedService(this.page, "Manage check ins page");
       await this.pages.manage.assertOnPage();
     });
     return this.pages.manage;
   }
 
- 
-  async stopCheckIns(
-    crn: string,
-    reason: string,
-    expectedUi?: ExpectedUi,
-  ): Promise<void> {
+  async stopCheckIns(crn: string, reason: string): Promise<void> {
     await test.step(`Stop online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickStopCheckIns();
-
-      const onNewUi = assertOnExpectedUi(
-        this.page,
-        "Stop check ins",
-        expectedUi,
-      );
+      await assertExpectedService(this.page, "Stop check ins");
 
       await this.pages.stop.assertOnPage();
-      if (onNewUi) {
-        await assertManageOnlineCheckinsUiTitle(this.page, STOP_CHECKINS_TITLE);
-        await assertCaseBanner(this.page, crn);
-      }
+      await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
       await this.pages.stop.completePage(reason);
     });
   }
@@ -79,7 +72,6 @@ export default class ManageCheckInsJourney {
     opts: {
       preference?: Preference;
       contact?: ContactDetails;
-      expectedUi?: ExpectedUi;
     },
   ): Promise<void> {
     await test.step(`Change contact details for ${crn}`, async () => {
@@ -89,63 +81,50 @@ export default class ManageCheckInsJourney {
         "Change contact details link should be present for an active check in",
       ).toBeVisible();
       await manage.clickChangeContactDetails();
+      await assertExpectedService(this.page, "Change contact details");
 
-      const onNewUi = assertOnExpectedUi(
-        this.page,
-        "Change contact details",
-        opts.expectedUi,
-      );
-
-      if (onNewUi) {
-        if (opts.preference === undefined) {
-          throw new Error(
-            "manage-checkins-ui requires a preference to be selected when changing contact details",
-          );
-        }
-        await assertCaseBanner(this.page, crn);
-        const contactDetails = this.newUiPages.contactDetails;
-        await expect(contactDetails.preferenceGroup()).toBeVisible();
-        await assertManageOnlineCheckinsUiTitle(
-          this.page,
-          CONTACT_PREFERENCE_TITLE,
-        );
-
-        const value =
-          opts.preference === Preference.EMAIL
-            ? opts.contact?.email
-            : opts.contact?.mobile;
-        if (value !== undefined) {
-          const changeButton =
-            opts.preference === Preference.EMAIL
-              ? contactDetails.changeEmailAddressButton()
-              : contactDetails.changeMobileNumberButton();
-          await changeButton.click();
-          const editContactDetails = this.newUiPages.editContactDetails;
-          const field =
-            opts.preference === Preference.EMAIL
-              ? editContactDetails.emailAddressField()
-              : editContactDetails.mobileNumberField();
-          await assertManageOnlineCheckinsUiTitle(
-            this.page,
-            EDIT_CONTACT_DETAILS_TITLE,
-          );
-          await assertCaseBanner(this.page, crn);
-          await field.fill(value);
-          await editContactDetails.save();
-          await expect(contactDetails.preferenceGroup()).toBeVisible();
-        }
-
-        await contactDetails.selectPreference(opts.preference);
-        await contactDetails.save();
-      } else {
-        // Legacy MPOP path - delete this branch once change-contact-details
-        // is on manage-checkins-ui everywhere.
-        await this.pages.contactPreference.assertOnPage();
-        await this.pages.contactPreference.changePage(
-          opts.preference,
-          opts.contact,
+      // No legacy branch: both services render the same manage-contact page, so one
+      // path drives both. Only the setup wizard's contact step really differs.
+      if (opts.preference === undefined) {
+        throw new Error(
+          "changeContactDetails requires a preference to be selected",
         );
       }
+      await assertCaseBanner(this.page, crn);
+      const contactDetails = this.manageCheckinsPages.contactDetails;
+      await expect(contactDetails.preferenceGroup()).toBeVisible();
+      await assertManageOnlineCheckinsUiTitle(
+        this.page,
+        CONTACT_PREFERENCE_TITLE,
+      );
+
+      const value =
+        opts.preference === Preference.EMAIL
+          ? opts.contact?.email
+          : opts.contact?.mobile;
+      if (value !== undefined) {
+        const changeButton =
+          opts.preference === Preference.EMAIL
+            ? contactDetails.changeEmailAddressButton()
+            : contactDetails.changeMobileNumberButton();
+        await changeButton.click();
+        const editContactDetails = this.manageCheckinsPages.editContactDetails;
+        const field =
+          opts.preference === Preference.EMAIL
+            ? editContactDetails.emailAddressField()
+            : editContactDetails.mobileNumberField();
+        await assertManageOnlineCheckinsUiTitle(
+          this.page,
+          EDIT_CONTACT_DETAILS_TITLE,
+        );
+        await assertCaseBanner(this.page, crn);
+        await field.fill(value);
+        await editContactDetails.save();
+        await expect(contactDetails.preferenceGroup()).toBeVisible();
+      }
+
+      await contactDetails.selectPreference(opts.preference);
+      await contactDetails.save();
     });
   }
 
@@ -172,6 +151,7 @@ export default class ManageCheckInsJourney {
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
+      await assertExpectedService(this.page, "Restart check ins");
       await this.pages.restartDateFrequency.assertOnPage();
       await this.pages.restartDateFrequency.completePage(
         values.date,

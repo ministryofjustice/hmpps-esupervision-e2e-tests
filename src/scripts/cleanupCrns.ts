@@ -1,6 +1,6 @@
 import { chromium } from "@playwright/test";
 import { getToken } from "../api/auth";
-import { getOffenderByCrn, deactivateOffender } from "../api/offender";
+import { deactivateOffender, findOffenderByCrn } from "../api/offender";
 import DeliusOffenderJourney from "../support/journeys/ndelius/deliusOffenderJourney";
 import {
   readCreatedCrns,
@@ -21,7 +21,7 @@ const deactivateAll = async (crns: string[]): Promise<void> => {
 
   for (const crn of crns) {
     try {
-      const offender = await getOffenderByCrn(crn, token);
+      const offender = await findOffenderByCrn(crn, token);
       if (offender?.status === "VERIFIED" && offender.uuid) {
         await deactivateOffender(offender.uuid, token);
         console.log(`Deactivated offender ${crn}`);

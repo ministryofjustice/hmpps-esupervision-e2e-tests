@@ -1,8 +1,8 @@
-import { Locator, Page } from "@playwright/test";
+import { Page, Locator } from "@playwright/test";
 import { Preference } from "../mpop/contactPreferencePage";
 
-// Shared with ContactDetailsPage, which renders the same preference radios
-// on a different screen (direct "Change contact details" link vs this
+// Shared with ContactDetailsPage, which renders the same preference radios on the
+// manage page.
 export function preferenceGroup(page: Page): Locator {
   return page.getByRole("group", {
     name: /How does .+ want us to send a link to the service\?/,
@@ -36,8 +36,7 @@ export default class ContactPreferencePage {
     return this.page.getByRole("button", { name: "Continue" });
   }
 
-  // After choosing a preference, the app asks to confirm the matching contact
-  // detail already held in NDelius before moving on.
+  // Shown after choosing a preference when NDelius already holds the detail.
   confirmDetailsGroup(): Locator {
     return this.page.getByRole("group", {
       name: /Is this the right (email address|mobile number) for .+\?/,
@@ -46,6 +45,23 @@ export default class ContactPreferencePage {
 
   confirmYesRadio(): Locator {
     return this.confirmDetailsGroup().getByRole("radio", { name: "Yes" });
+  }
+
+  /** "No, I need to change the email address" - the route to the edit page. */
+  confirmChangeRadio(): Locator {
+    return this.confirmDetailsGroup().getByRole("radio", {
+      name: /No, I need to change the (email address|mobile number)/,
+    });
+  }
+
+  /** Table caption, e.g. "Confirm Tara's email address". */
+  confirmCaption(): Locator {
+    return this.page.locator("caption.govuk-table__caption");
+  }
+
+  /** The detail held in NDelius that the page is asking us to confirm. */
+  confirmedContactValue(): Locator {
+    return this.page.locator("td.govuk-table__cell").first();
   }
 
   async selectPreferenceAndContinue(preference: Preference): Promise<void> {
@@ -57,19 +73,36 @@ export default class ContactPreferencePage {
     await this.continueButton().click();
   }
 
+  errorSummary(): Locator {
+    return this.page.locator(".govuk-error-summary");
+  }
+
+  fieldError(message: string): Locator {
+    return this.page.locator(".govuk-error-message", { hasText: message });
+  }
+
+  /** Submit the confirm step without answering, to reach its validation. */
+  async continueWithoutAnswering(): Promise<void> {
+    await this.continueButton().click();
+  }
+
   async confirmDetailsAndContinue(): Promise<void> {
     await this.confirmYesRadio().check();
     await this.continueButton().click();
   }
 
-  // Shown instead of confirmDetailsGroup when the chosen preference's contact detail
-  // isn't on file in NDelius yet, e.g. "What is Tara's mobile number?"
+  /** Answer "No, I need to change ..." - routes to the edit contact page. */
+  async rejectDetailsAndContinue(): Promise<void> {
+    await this.confirmChangeRadio().check();
+    await this.continueButton().click();
+  }
+
+  // Shown instead of confirmDetailsGroup when the detail isn't on file yet.
   missingDetailsField(): Locator {
     return this.page.getByRole("textbox", {
       name: /What is .+'s (mobile number|email address)\?/,
     });
   }
-
   async enterMissingDetailsAndContinue(value: string): Promise<void> {
     await this.missingDetailsField().fill(value);
     await this.continueButton().click();

@@ -6,11 +6,9 @@ import {
   emailRadio,
 } from "./contactPreferencePage";
 
-// The direct "Change contact details" link on an active check in's manage
-// page - a single page combining the current contact details (each with its
-// own "Change" button to a shared edit-contact sub-page) and the preference
-// radios, submitted with one "Save changes" button. Distinct from
-// ContactPreferencePage, which models the multi-step setup wizard flow.
+// The "Change contact details" page reached from an active check in's manage page:
+// current details and preference radios saved together. Distinct from
+// ContactPreferencePage, which models the setup wizard's multi-step flow.
 export default class ContactDetailsPage {
   constructor(private readonly page: Page) {}
 
@@ -24,6 +22,11 @@ export default class ContactDetailsPage {
 
   emailRadio(): Locator {
     return emailRadio(this.page);
+  }
+
+  /** The mobile number currently held on the record, as this page renders it. */
+  mobileNumberValue(): Locator {
+    return this.page.locator('[data-qa="mobileNumberValue"]');
   }
 
   changeMobileNumberButton(): Locator {

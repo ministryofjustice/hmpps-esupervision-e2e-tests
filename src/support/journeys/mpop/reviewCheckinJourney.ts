@@ -11,14 +11,15 @@ import {
   mpopAssistanceLabel,
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
-import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
-import { assertOnExpectedUi, ExpectedUi } from "../../utils/expectedUi";
-import { assertCaseBanner } from "../../utils/caseBanner";
+import {
+  assertExpectedService,
+  assertManageCheckinsPage,
+} from "../../utils/legacyMpop";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -31,6 +32,11 @@ export interface ReviewDecision {
   note?: string;
   riskManagement?: boolean;
   sensitive?: boolean;
+  /**
+   * Submit each review page once with its safeguarding answer missing and assert
+   * it refuses, then answer properly - covered inside a review already happening.
+   */
+  assertValidation?: boolean;
 }
 
 export interface Annotation {
@@ -40,7 +46,6 @@ export interface Annotation {
 
 export default class ReviewCheckinJourney {
   private readonly pages: MpopPages;
-  private onNewUi = false;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
@@ -56,7 +61,6 @@ export default class ReviewCheckinJourney {
     crn: string,
     decision: ReviewDecision = {},
     details?: CompletedCheckinDetails,
-    expectedUi?: ExpectedUi,
   ): Promise<void> {
     const {
       identity = IdentityDecision.MATCH,
@@ -66,28 +70,25 @@ export default class ReviewCheckinJourney {
     } = decision;
 
     // Review the check in: Identity page, then the review notes page
-    await this.openCheckinContact(crn, expectedUi);
+    await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(this.page, REVIEW_IDENTITY_TITLE);
-      await assertCaseBanner(this.page, crn);
+    await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
+    if (decision.assertValidation) {
+      await this.assertIdentityDecisionRequired();
     }
     await this.pages.reviewIdentity.completePage(identity);
 
     await this.pages.reviewNotes.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        REVIEW_QUESTIONS_TITLE,
-      );
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(this.page, crn, REVIEW_QUESTIONS_TITLE);
     await expect(
       this.pages.reviewNotes.notesField(),
       "Should be on the review notes page, not still on identity",
     ).toBeVisible();
     if (details) {
       await this.assertCheckinDetails(this.pages.reviewNotes, details);
+    }
+    if (decision.assertValidation) {
+      await this.assertSensitiveAnswerRequired(note, riskManagement);
     }
     await this.pages.reviewNotes.completePage({
       note,
@@ -96,15 +97,9 @@ export default class ReviewCheckinJourney {
     });
 
     // Re-open the check in and verify the review was saved
-    await this.openCheckinContact(crn, expectedUi);
+    await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
-    if (this.onNewUi) {
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        REVIEWED_CHECK_IN_TITLE,
-      );
-      await assertCaseBanner(this.page, crn);
-    }
+    await assertManageCheckinsPage(this.page, crn, REVIEWED_CHECK_IN_TITLE);
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
     if (details) {
@@ -113,18 +108,50 @@ export default class ReviewCheckinJourney {
     await this.assertIdentityImages(identity);
   }
 
+  /** Without an identity decision an unverified check in would be filed as reviewed. */
+  private async assertIdentityDecisionRequired(): Promise<void> {
+    const message =
+      "Select if the person in the check in image is the right person";
+    const identity = this.pages.reviewIdentity;
+
+    await identity.submitWithoutDecision();
+    await expect(identity.errorSummary()).toContainText(message);
+    await expect(identity.fieldError(message)).toBeVisible();
+    await expect(
+      identity.identityGroup(),
+      "Should stay on the identity page after a failed submit",
+    ).toBeVisible();
+  }
+
+  /** The sensitive answer governs disclosure, so a review must not be filed without one. */
+  private async assertSensitiveAnswerRequired(
+    note: string,
+    riskManagement: boolean,
+  ): Promise<void> {
+    const message =
+      "Select if this online check in includes sensitive information";
+    const notes = this.pages.reviewNotes;
+
+    await notes.submitWithoutSensitiveAnswer(note, riskManagement);
+    await expect(notes.errorSummary()).toContainText(message);
+    await expect(notes.fieldError(message)).toBeVisible();
+    await expect(
+      notes.notesField(),
+      "Should stay on the review notes page after a failed submit",
+    ).toBeVisible();
+  }
+
   async annotateReviewedCheckin(
     crn: string,
     annotation: Annotation = {},
-    expectedUi?: ExpectedUi,
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
-    await this.openCheckinContact(crn, expectedUi);
+    await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.pages.reviewedCheckin.addNote(note, sensitive);
 
     // Re-open and verify the note was saved
-    await this.openCheckinContact(crn, expectedUi);
+    await this.openCheckinContact(crn);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewSummaryShows(note);
   }
@@ -187,9 +214,9 @@ export default class ReviewCheckinJourney {
     }
   }
 
-  // Identity images are decision driven: the reference photo shows only on
-  // NO_MATCH, the check in image row on anything other than MATCH. Liveness is skipped
-  // so the check in row shows it reads "No image available"
+  // Decision driven: the reference photo shows only on NO_MATCH and the check in
+  // row on anything other than MATCH. Liveness is skipped, so it reads
+  // "No image available"
   private async assertIdentityImages(
     identity: IdentityDecision,
   ): Promise<void> {
@@ -228,10 +255,7 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(
-    crn: string,
-    expectedUi?: ExpectedUi,
-  ): Promise<void> {
+  private async openCheckinContact(crn: string): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
@@ -241,6 +265,6 @@ export default class ReviewCheckinJourney {
       });
     }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
     await this.pages.activityLog.openCheckinReview();
-    this.onNewUi = assertOnExpectedUi(this.page, "Review journey", expectedUi);
+    await assertExpectedService(this.page, "Review journey");
   }
 }

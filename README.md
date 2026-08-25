@@ -1,6 +1,6 @@
 # hmpps-esupervision-e2e-tests
 
-Playwright E2E tests for online check ins and eSupervision user journeys
+Playwright E2E tests for online check ins and eSupervision user journeys.
 
 ## Setup
 
@@ -12,89 +12,123 @@ cp .env.example .env     # then fill in the values
 
 ## Configuration
 
-Credentials and URLs are configured using a `.env` file at the project root and loaded via `src/config/loadEnv.ts` and accessed through `src/config/env.ts`.
+URLs and credentials come from `.env` at the project root. See `.env.example`
+for the full list.
 
-If you have access to the eSupervision-E2E-tests 1Password Vault, you can skip the
-`.env` file and resolve secrets at runtime by prefixing commands with `op run`
+With access to the eSupervision-E2E-tests 1Password vault you can skip `.env`
+and resolve secrets at runtime:
 
 ```bash
 eval $(op signin)
-op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run test
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm test
 ```
 
 ## Run
 
 ```bash
-npm test                # run all suites except dashboard (mpop + e2e + checkin/static + manage-checkins-ui)
-npm run test:static     # static pages spec (src/tests/static)
-npm run test:mpop       # run only mpop setup specs (src/tests/mpop)
-npm run test:e2e        # offender lifecycle: create -> setup checkin -> complete checkin
-npm run test:welsh      # e2e checkin with the UI set to Welsh (Cymraeg)
-npm run test:fallback-video # checkin liveness video fallback: NO_MATCH, submit anyway
-npm run test:dashboard  # data dashboard specs (src/tests/dashboard)
-npm run cleanup:crns    # delete offenders created by e2e test suite
-npm run report          # open the last HTML report
-npm run typecheck       # tsc --noEmit
-npm run lint            # eslint
+npm test                          # everything except dashboard
+npm run test:mpop                 # practitioner journeys
+npm run test:manage-checkins-ui   # manage online check ins UI
+npm run test:e2e                  # create offender -> set up -> complete a check in
+npm run test:welsh                # e2e check in in Welsh (Cymraeg)
+npm run test:fallback-video       # liveness video fallback: NO_MATCH, submit anyway
+npm run test:static               # static pages
+npm run test:dashboard            # data dashboard
 ```
 
-Append `:headed` to most scripts (e.g `test:e2e:headed`) to watch them run
+```bash
+npm run typecheck                 # tsc --noEmit
+npm run lint                      # eslint
+npm run lint:fix                  # eslint --fix
+npm run report                    # open the last HTML report
+npm run cleanup:crns              # delete offenders left behind by a run
+```
+
+Append `:headed` to most test scripts (e.g. `test:e2e:headed`) to watch them run.
+
+## Manage Online Check Ins vs legacy MPOP
+
+Check in journeys are moving from MPOP to the Manage Online Check Ins UI behind
+feature flags. Practitioners still start in MPOP, which either renders the check
+in pages itself or redirects the journey to the new service.
+
+The suite supports two states:
+
+- **Normal** — migration flags ON. Journeys land in Manage Online Check Ins.
+  Used by CI and PR runs.
+- **Legacy regression** — flags OFF in Flipt **and** `LEGACY_MPOP=true`.
+
+```bash
+op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- \
+  env LEGACY_MPOP=true npm test
+```
+
+One run targets one service. Mixed states fail fast with an actionable message
+rather than testing the wrong service.
+
+Legacy-only code is marked `TODO(legacy-mpop)`, so retiring MPOP check ins is a
+mechanical delete.
 
 ## ENV: dev vs test
 
-All suites read the same .env file.
+All suites read the same `.env`.
 
-`ENV` selects Delius the offender create/delete path goes through `hmpps-probation-integration-e2e-tests` package, which resolves the Delius host from ENV, so the e2e tests run under ENV= test. The app journeys (mpop,checkin,status) read URLs directly and unaffected by ENV.
+`ENV` only affects offender create/delete, which goes through
+`hmpps-probation-integration-e2e-tests` and resolves the Delius host from it —
+hence `ENV=test` on those scripts. App journeys read their URLs directly and
+ignore `ENV`.
 
-The per suite scrips set ENV accordingly (see package.json scripts)
+## Liveness and the fake camera
 
-## How the video / liveness step is handled
+The real AWS Face Liveness check is never run. Chromium is launched with a fake
+camera (`src/media/mock-camera-capture.y4m`, wired up in `playwright.config.ts`),
+so no webcam is needed locally or in CI.
 
-The real AWS Face Liveness check is **not** run in these tests. The browser is
-launched with a **fake camera** (a recorded file, see `playwright.config.ts`):
+Two suites cover the step differently:
 
-```
---use-fake-device-for-media-stream
---use-fake-ui-for-media-stream
---use-file-for-fake-video-capture=<absolute path to src/media/mock-camera-capture.y4m>
-```
-Two suites cover the liveness step in two different ways:
+- **checkin** — records with the fake camera, gets NO_MATCH, then takes
+  "Submit video anyway".
+- **e2e** — skips liveness by going straight to `/liveness/view` and taking
+  "Submit anyway".
 
-checkin (submit-checkin-liveness-fallback-video-noMatch) test the video fallback: the widget can't run headlessly so it self-navigates to an outcome page(which unlocks the fallback); the test records with the fake camera, gets NO match and takes "Submit video anyway" to complete check in.
+## Test data
 
-e2e (new-offender-online-checkin) skip liveness: it goes straight to /liveness/view and takes "Submit anyway" so no video is recorded
+- **e2e** — creates its own offender per run.
+- **checkin** — creates a check in via API for `TEST_CRN`, then drives the UI.
+- **mpop** — most specs create their own offender, because they
+  mutate it and sharing would make specs order dependent. Two exceptions use
+  pre-existing CRNs: `eligibility-outcomes` and the date validation test read
+  `TEST_MPOP_CRN` without submitting, and `restart-checkin` owns
+  `TEST_MPOP_STOP_RESTART_CRN` and restores it before running.
+- **manage-checkins-ui** — `change-contact-details` and `error-validation`
+  create their own offender; `layout` needs none.
+- **dashboard** — creates nothing. Signs in once via the `dashboard-setup`
+  project and reuses the storage state.
+
+A full run creates around 13 offenders.
 
 ## Cleanup
 
-The e2e suite and the mpop custom questions spec create offenders and record every CRN they create in `created-crns.txt` (gitIgnored). Cleanup runs automatically at the end of a run via Playwright reporter `src/support/utils/crnCleanupReporter.ts` which deletes the offenders.
-Deletion is per offender, a CRN is deleted only when every test that used it passed. Each test tags the CRN it creates with `testInfo.attach("created-crn",..)` and the reporter reads those to decide. So a failure in an unrelated spec does not block cleanup if CRN whose own tests passed.
+Every created CRN is recorded in `created-crns.txt` (gitignored). Cleanup runs
+automatically at the end of a run via the reporter in
+`src/support/utils/crnCleanupReporter.ts`.
+
+A CRN is deleted only when every test that used it passed, so an unrelated
+failure does not block cleanup. Anything that fails to delete stays in the file
+for the next run.
+
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns
-```
 
-Any crn that fail to delete stay in the file `created-crns.txt` for the next run. To target specific CRNs directly
-
-```bash
-CRNS=X123456,X654321 npm run cleanup:crns
+CRNS=X123456,X654321 npm run cleanup:crns   # target specific CRNs
 ```
 
 ## CI
 
-Two workflows run in this repo:
+- **`playwright.yml`** — main suite (`npm test`), on a schedule and via
+  `workflow_dispatch`.
+- **`dashboard-playwright.yml`** — dashboard suite, with its own `DASHBOARD_URL`
+  and Delius credentials.
 
-- **`playwright.yml`** runs the main suite (`npm run test`, i.e. `checkin:dev`) on a schedule and via manual `workflow_dispatch`.
-- **`dashboard-playwright.yml`** runs the dashboard suite (`npm run test:dashboard`) on a schedule and via manual `workflow_dispatch`. It sets its own `DASHBOARD_URL` and Delius credentials in its `env:` block.
-
-Each workflow runs its suite in a single `playwright test` invocation and produces one report (a JUnit and HTML report as an artifact).
-
-There is no separate teardown step in the specs. Cleanup runs in the reporter at the end of the run, deleting the offenders whose test passed.
-
-## Notes
-
-Test data differs per suite:
-
-- **e2e** spec creates its own offender in Delius per run.
-- **checkin** creates a checkin via API (`createEsupervisionCheckin`) for `TEST_CRN`, then drives the UI.
-- **mpop** the custom question spec creates a fresh offender per run; other mpop specs run against pre-existing CRNs the tests don't create or delete them
-- **manage-checkins-ui** no test data. It signs in and asserts the header, footer and beta phase banner components
-- **dashboard** no test data created or deleted. It signs in against `DASHBOARD_URL` once via a `dashboard-setup` project (see `playwright.config.ts`), reusing the saved storage state for every dashboard spec
+Each runs a single `playwright test` invocation and uploads JUnit and HTML
+reports. There is no separate teardown step — cleanup happens in the reporter.
