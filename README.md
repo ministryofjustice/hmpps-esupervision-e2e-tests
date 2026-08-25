@@ -13,7 +13,9 @@ cp .env.example .env     # then fill in the values
 ## Configuration
 
 URLs and credentials come from `.env` at the project root. See `.env.example`
-for the full list.
+for the full list. `LEGACY_MPOP` is read straight from the environment rather than
+through `src/config/env.ts`, because it selects which service the whole run targets
+rather than a URL or credential.
 
 With access to the eSupervision-E2E-tests 1Password vault you can skip `.env`
 and resolve secrets at runtime:
@@ -66,8 +68,27 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- \
 One run targets one service. Mixed states fail fast with an actionable message
 rather than testing the wrong service.
 
-Legacy-only code is marked `TODO(legacy-mpop)`, so retiring MPOP check ins is a
-mechanical delete.
+### Retiring legacy MPOP
+
+Every legacy-only line carries `TODO(legacy-mpop)`. `grep -rn "TODO(legacy-mpop)" src .env.example`
+is the complete work list. In outline:
+
+1. Delete `src/support/utils/legacyMpop.ts` and all `assertExpectedService(...)` call
+   sites (8 in the journeys).
+2. Delete each `if (!LEGACY_MPOP) { ... } else { ... }` else branch and unindent:
+   `setupOnlineCheckinsJourney` (x2), `customQuestionsJourney.save`.
+3. Delete the `LEGACY_MPOP` test skips in `setup-online-checkins`,
+   `change-contact-details` and `error-validation`; those tests then always run.
+4. Delete `src/support/pages/mpop/updateContactDetailsPage.ts`,
+   `ContactPreferencePage.setContactDetails`, and `MpopPages.contactPreference`.
+5. Delete `LEGACY_MPOP` from `.env.example` and the section above, and
+   `originPattern` from `src/support/utils/url.ts`.
+6. Remove the early return in `src/support/utils/manageCheckinsPage.ts`.
+
+**Do not delete** `src/support/utils/manageCheckinsPage.ts`, `src/data/contact.ts`,
+or the rest of `src/support/pages/mpop/`. Despite the folder name, most of those page
+objects drive the migrated MOCI pages - MOCI reuses the same headings and `data-qa`
+hooks. Only the three items in step 4 are MPOP-only.
 
 ## ENV: dev vs test
 
@@ -96,16 +117,19 @@ Two suites cover the step differently:
 - **e2e** — creates its own offender per run.
 - **checkin** — creates a check in via API for `TEST_CRN`, then drives the UI.
 - **mpop** — most specs create their own offender, because they
-  mutate it and sharing would make specs order dependent. Two exceptions use
-  pre-existing CRNs: `eligibility-outcomes` and the date validation test read
-  `TEST_MPOP_CRN` without submitting, and `restart-checkin` owns
-  `TEST_MPOP_STOP_RESTART_CRN` and restores it before running.
-- **manage-checkins-ui** — `change-contact-details` and `error-validation`
-  create their own offender; `layout` needs none.
+  mutate it and sharing would make specs order dependent. Two use pre-existing
+  CRNs: `eligibility-outcomes` reads `TEST_MPOP_CRN` without submitting, and
+  `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before
+  running.
+- **manage-checkins-ui** — `change-contact-details` and `error-validation` create
+  their own offender; `layout` needs none. Only the contact details tests there are
+  MOCI only: `error-validation`'s questions, stop and date tests run against
+  whichever service the run targets, and its date test walks the setup wizard for
+  `TEST_MPOP_CRN` as far as the date page without completing it.
 - **dashboard** — creates nothing. Signs in once via the `dashboard-setup`
   project and reuses the storage state.
 
-A full run creates around 13 offenders.
+A full run creates roughly a dozen offenders.
 
 ## Cleanup
 

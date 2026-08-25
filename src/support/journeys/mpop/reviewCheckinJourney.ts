@@ -16,10 +16,8 @@ import {
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
-import {
-  assertExpectedService,
-  assertManageCheckinsPage,
-} from "../../utils/legacyMpop";
+import { assertExpectedService } from "../../utils/legacyMpop";
+import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;

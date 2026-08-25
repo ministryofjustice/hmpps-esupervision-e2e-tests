@@ -29,7 +29,7 @@ test.describe("manage online check ins UI layout", () => {
     await page.close();
   });
 
-  test("header shows a working account menu", async () => {
+  test("header account menu button is un-hidden by the component JavaScript", async () => {
     const header = pages.header;
     await expect(header.header()).toBeVisible();
 

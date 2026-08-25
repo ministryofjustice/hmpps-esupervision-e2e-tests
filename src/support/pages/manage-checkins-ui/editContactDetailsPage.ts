@@ -1,4 +1,6 @@
 import { Locator, Page } from "@playwright/test";
+import { errorSummary, fieldError } from "../base/errors";
+
 
 export default class EditContactDetailsPage {
   constructor(private readonly page: Page) {}
@@ -24,10 +26,10 @@ export default class EditContactDetailsPage {
   }
 
   errorSummary(): Locator {
-    return this.page.locator(".govuk-error-summary");
+    return errorSummary(this.page);
   }
 
   fieldError(message: string): Locator {
-    return this.page.locator(".govuk-error-message", { hasText: message });
+    return fieldError(this.page, message);
   }
 }

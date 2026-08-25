@@ -1,7 +1,6 @@
 import { Page } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
 import { TEST_CONTACT } from "../../../data/mpop/testData";
-import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
@@ -9,6 +8,7 @@ import {
   AdditionalAnswer,
   CompletedCheckinDetails,
   CustomQuestion,
+  Preference,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
@@ -32,10 +32,15 @@ export default class OnlineCheckinJourney {
 
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
+    onOffenderCreated?: (crn: string) => void,
   ): Promise<NewOffender> {
     const offender = await new DeliusOffenderJourney(
       this.page,
     ).createTestOffender();
+    // Before setup runs: everything after this point can fail, and the CRN needs to
+    // be recoverable by cleanup if it does.
+    onOffenderCreated?.(offender.crn);
+
     const setup = new SetupOnlineCheckinsJourney(this.page);
     await setup.login();
     await setup.startSetup(offender.crn);

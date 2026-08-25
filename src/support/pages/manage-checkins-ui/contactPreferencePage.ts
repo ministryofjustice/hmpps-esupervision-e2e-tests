@@ -1,5 +1,6 @@
 import { Page, Locator } from "@playwright/test";
-import { Preference } from "../mpop/contactPreferencePage";
+import { Preference } from "../../../data/models";
+
 
 // Shared with ContactDetailsPage, which renders the same preference radios on the
 // manage page.
@@ -24,15 +25,15 @@ export default class ContactPreferencePage {
     return preferenceGroup(this.page);
   }
 
-  textMessageRadio(): Locator {
+  private textMessageRadio(): Locator {
     return textMessageRadio(this.page);
   }
 
-  emailRadio(): Locator {
+  private emailRadio(): Locator {
     return emailRadio(this.page);
   }
 
-  continueButton(): Locator {
+  private continueButton(): Locator {
     return this.page.getByRole("button", { name: "Continue" });
   }
 
@@ -56,12 +57,27 @@ export default class ContactPreferencePage {
 
   /** Table caption, e.g. "Confirm Tara's email address". */
   confirmCaption(): Locator {
-    return this.page.locator("caption.govuk-table__caption");
+    // .first(): unscoped, so a second table on the page would otherwise be a strict
+    // mode violation rather than a useful failure.
+    return this.page.locator("caption.govuk-table__caption").first();
   }
 
-  /** The detail held in NDelius that the page is asking us to confirm. */
+  /**
+   * The confirm page's radios. Their data-qa is checkInConfirmPreferredComs, where
+   * the preference page's is checkInPreferredComs - the only reliable way to tell
+   * the two apart, because the app gives them the same page title.
+   */
+  confirmRadiosGroup(): Locator {
+    return this.page.locator('[data-qa="checkInConfirmPreferredComs"]');
+  }
+
+  /**
+   * The detail held in NDelius that the page is asking us to confirm. Positional,
+   * but the template renders exactly one table with one row - a <th> label and this
+   * <td> value - so the first cell is the value.
+   */
   confirmedContactValue(): Locator {
-    return this.page.locator("td.govuk-table__cell").first();
+    return this.page.locator("table.govuk-table td.govuk-table__cell").first();
   }
 
   async selectPreferenceAndContinue(preference: Preference): Promise<void> {
@@ -85,11 +101,17 @@ export default class ContactPreferencePage {
   }
 
   // Shown instead of confirmDetailsGroup when the detail isn't on file yet.
+  //
+  // This is the wizard's own edit page, not the manage page's. Both share the page
+  // title "Edit contact details for the person" but render different fields: the
+  // wizard asks only for the detail matching the chosen preference, the manage page
+  // shows both. EditContactDetailsPage models the other one.
   missingDetailsField(): Locator {
     return this.page.getByRole("textbox", {
       name: /What is .+'s (mobile number|email address)\?/,
     });
   }
+
   async enterMissingDetailsAndContinue(value: string): Promise<void> {
     await this.missingDetailsField().fill(value);
     await this.continueButton().click();

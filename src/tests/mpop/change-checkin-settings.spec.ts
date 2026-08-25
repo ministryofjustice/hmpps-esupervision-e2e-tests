@@ -4,7 +4,7 @@ import { createCheckinOffender } from "../../support/fixtures/checkinOffender";
 import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import {
-  displayedCheckinDate,
+  displayedCheckinDatePattern,
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
@@ -30,9 +30,10 @@ test("practitioner changes the next check in date and frequency from the manage 
   });
 
   // In the display format the manage page renders, not the d/M/yyyy the input takes.
+  // Anchored, so "5 August" cannot match inside "25 August".
   const manage = await journey.openManage(offender.crn);
   await expect(manage.settingsNextCheckinDate()).toContainText(
-    displayedCheckinDate(14),
+    displayedCheckinDatePattern(14),
   );
   await expect(manage.settingsFrequency()).toContainText("Every 4 weeks");
 });

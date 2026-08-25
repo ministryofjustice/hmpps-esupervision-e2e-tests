@@ -11,8 +11,10 @@ import { isoDateString, today } from "./date";
  */
 export const ensureActiveCheckin = async (crn: string): Promise<string> => {
   const token = await getToken();
+  // getOffenderByCrn throws if the CRN is not registered, which is the right
+  // failure here: this spec's CRN is expected to exist.
   const offender = await getOffenderByCrn(crn, token);
-  if (offender?.status === "INACTIVE" && offender.uuid) {
+  if (offender.status === "INACTIVE" && offender.uuid) {
     await reactivateOffender(offender.uuid, token, {
       firstCheckin: isoDateString(today.plus({ days: 7 })),
       checkinInterval: "WEEKLY",

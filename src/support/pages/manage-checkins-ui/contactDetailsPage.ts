@@ -1,10 +1,10 @@
 import { Locator, Page } from "@playwright/test";
-import { Preference } from "../mpop/contactPreferencePage";
 import {
   preferenceGroup,
   textMessageRadio,
   emailRadio,
 } from "./contactPreferencePage";
+import { Preference } from "../../../data/models";
 
 // The "Change contact details" page reached from an active check in's manage page:
 // current details and preference radios saved together. Distinct from

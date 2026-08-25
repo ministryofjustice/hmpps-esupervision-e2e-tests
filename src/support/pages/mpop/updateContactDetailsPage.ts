@@ -1,14 +1,10 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-
-export interface ContactDetails {
-  mobile?: string;
-  email?: string;
-}
+import { ContactDetails } from "../../../data/models";
 
 // Only reached from MPOP's inline Change actions.
-// TODO(legacy-mpop): Delete this class when legacy MPOP is removed. Keep
-// ContactDetails, which the MOCI journeys also use.
+// TODO(legacy-mpop): Delete this whole file when legacy MPOP is removed. Nothing
+// else needs it - ContactDetails now lives in src/data/contact.ts.
 export default class UpdateContactDetailsPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Edit contact details for");

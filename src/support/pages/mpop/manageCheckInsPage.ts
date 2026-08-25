@@ -38,18 +38,20 @@ export default class ManageCheckInsPage extends MPopBasePage {
     return this.page.getByText(/added additional questions/);
   }
 
-  // "Next check in" shown above the questions card. Also used to cross check the
-  // date on the add questions page.
+  // "Next check in" inside the upcoming check in card. The same data-qa also
+  // appears in the settings card from a different source value, so this is scoped
+  // rather than taken by DOM order. Used to cross check the date on the add
+  // questions page.
   nextCheckinDate(): Locator {
-    return this.getQA("nextCheckInValue").first();
+    return this.getQA("nextCheckInValue", this.questionCard());
   }
 
   private settingsCard(): Locator {
     return this.getQA("checkinSettingsCard");
   }
 
-  // The same data-qa appears twice on the page, so the settings assertions scope
-  // to the check in settings card rather than taking the first match.
+  // Scoped to the settings card: the same data-qa is also rendered in the
+  // questions card.
   settingsNextCheckinDate(): Locator {
     return this.getQA("nextCheckInValue", this.settingsCard());
   }

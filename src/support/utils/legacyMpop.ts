@@ -1,29 +1,23 @@
 import { expect, Page, test } from "@playwright/test";
 import { env } from "../../config/env";
-import { assertManageOnlineCheckinsUiTitle } from "./pageTitle";
-import { assertCaseBanner } from "./caseBanner";
+import { originPattern } from "./url";
 
 /**
  * Selects which service a run targets and asserts it got it. One run, one service:
  * the check in flag is normally on, so runs target Manage Online Check Ins. Turn
  * the flag off and set LEGACY_MPOP=true to validate MPOP instead.
  *
- * TODO(legacy-mpop): delete this file once MPOP check ins are retired.
+ * TODO(legacy-mpop): Delete this whole file when legacy MPOP is retired, along
+ * with every `assertExpectedService(...)` call site (grep for it - 8 at time of
+ * writing) and the `if (LEGACY_MPOP)` branches listed in the README.
+ * KEEP ./manageCheckinsPage.ts - those are MOCI's own assertions, not legacy.
  */
 
 /** True when this run targets legacy MPOP instead of Manage Online Check Ins. */
 export const LEGACY_MPOP = process.env.LEGACY_MPOP === "true";
 
-const escapeRegExp = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const serviceOrigin = (): RegExp => {
-  const url = (LEGACY_MPOP ? env.mpopUrl() : env.manageCheckinsUiUrl()).replace(
-    /\/$/,
-    "",
-  );
-  return new RegExp(`^${escapeRegExp(url)}(/|$)`);
-};
+const serviceOrigin = (): RegExp =>
+  originPattern(LEGACY_MPOP ? env.mpopUrl() : env.manageCheckinsUiUrl());
 
 /**
  * Fail fast at a hand-off if the other service answered, which means the flag and
@@ -49,18 +43,3 @@ export async function assertExpectedService(
       `Enable the check in feature flag, or run with LEGACY_MPOP=true to target MPOP.`,
   ).toHaveURL(serviceOrigin());
 }
-
-/**
- * Assert the case banner and page title only Manage Online Check Ins renders, so
- * no journey needs a branch for it.
- */
-export const assertManageCheckinsPage = async (
-  page: Page,
-  crn: string,
-  title: string,
-): Promise<void> => {
-  // TODO (legacy-mpop): Delete this early return when legacy MPOP is removed
-  if (LEGACY_MPOP) return;
-  await assertManageOnlineCheckinsUiTitle(page, title);
-  await assertCaseBanner(page, crn);
-};

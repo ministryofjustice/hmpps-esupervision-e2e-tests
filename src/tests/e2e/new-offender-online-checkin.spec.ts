@@ -39,7 +39,8 @@ const scenarios: CheckinScenario[] = [
 
     // First check is in today, so the "change questions" link should not be available
     expectNoChangeQuestions: true,
-    // Both review pages refuse their safeguarding answer being left blank, then
+    // Both review pages refuse their required answer being left blank - the
+    // identity decision, then the sensitive information answer - and then
     // the review carries on. Covered here rather than in a spec of its own: it
     // needs a completed check in, which this scenario already has.
     review: {

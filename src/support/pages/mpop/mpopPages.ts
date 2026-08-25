@@ -38,6 +38,9 @@ export class MpopPages {
   readonly partiallyEligible: OutcomePage;
   readonly spoApproval: SpoApprovalPage;
   readonly dateFrequency: DateFrequencyPage;
+  // TODO(legacy-mpop): Delete this field when legacy MPOP is removed - only the
+  // legacy branches in setupOnlineCheckinsJourney use it. restartContactPreference
+  // below drives the MOCI restart page and stays.
   readonly contactPreference: ContactPreferencePage;
   readonly photoOptions: PhotoOptionsPage;
   readonly uploadPhoto: UploadPhotoPage;
@@ -73,6 +76,7 @@ export class MpopPages {
     this.partiallyEligible = new OutcomePage(page, PARTIALLY_ELIGIBLE_HEADING);
     this.spoApproval = new SpoApprovalPage(page);
     this.dateFrequency = new DateFrequencyPage(page);
+    // TODO(legacy-mpop): Delete with the field above.
     this.contactPreference = new ContactPreferencePage(page);
     this.photoOptions = new PhotoOptionsPage(page);
     this.uploadPhoto = new UploadPhotoPage(page);

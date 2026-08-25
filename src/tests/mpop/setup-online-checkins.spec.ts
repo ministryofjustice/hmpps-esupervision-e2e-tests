@@ -1,13 +1,13 @@
 import test, { expect } from "@playwright/test";
 import DeliusOffenderJourney from "../../support/journeys/ndelius/deliusOffenderJourney";
 import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineCheckinsJourney";
-import { Preference } from "../../support/pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../support/pages/mpop/photoOptionsPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import { TEST_CONTACT, UPDATED_CONTACT } from "../../data/mpop/testData";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
+import { Preference } from "../../data/models";
 
 // The contact step asks for the detail when the record has none and offers it
 // to confirm when it does. A test covers each route.
@@ -106,6 +106,8 @@ test("practitioner sets up online check ins by entering a missing contact detail
 test("practitioner confirms, then replaces, the contact detail already held", async ({
   page,
 }, testInfo) => {
+  // TODO(legacy-mpop): Delete this skip when legacy MPOP is removed - the test
+  // then always runs.
   test.skip(LEGACY_MPOP, "MOCI only: MPOP has no confirm contact step");
 
   const offender = await new DeliusOffenderJourney(page).createTestOffender();

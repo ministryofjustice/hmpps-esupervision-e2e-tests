@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
+import { errorSummary, fieldError } from "./errors";
 
 export default abstract class MPopBasePage {
   constructor(
@@ -72,10 +73,10 @@ export default abstract class MPopBasePage {
   }
 
   errorSummary(): Locator {
-    return this.page.locator(".govuk-error-summary");
+    return errorSummary(this.page);
   }
 
   fieldError(message: string): Locator {
-    return this.page.locator(".govuk-error-message", { hasText: message });
+    return fieldError(this.page, message);
   }
 }

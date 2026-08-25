@@ -2,19 +2,19 @@ import test, { expect } from "@playwright/test";
 import { env } from "../../config/env";
 import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
 import {
-  displayedCheckinDate,
+  displayedCheckinDatePattern,
   firstCheckinDateString,
 } from "../../support/utils/date";
-import { Preference } from "../../support/pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import { getOffenderByCrn } from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
+import { Preference } from "../../data/models";
 
 // Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
 // the precondition for restart -> VERIFIED, which leaves the CRN as it started.
 test.describe.configure({ mode: "serial" });
 
-test.describe("restart online check ins (existing CRN)", () => {
+test.describe("stop then restart online check ins (existing CRN)", () => {
   const crn = env.mpopStopRestartCrn();
   let token: string;
 
@@ -29,7 +29,7 @@ test.describe("restart online check ins (existing CRN)", () => {
     await journey.login();
     await journey.stopCheckIns(crn, "E2E test stop");
     await expect
-      .poll(async () => (await getOffenderByCrn(crn, token))?.status)
+      .poll(async () => (await getOffenderByCrn(crn, token)).status)
       .toBe("INACTIVE");
   });
 
@@ -44,7 +44,7 @@ test.describe("restart online check ins (existing CRN)", () => {
       preference: Preference.EMAIL,
     });
     await expect
-      .poll(async () => (await getOffenderByCrn(crn, token))?.status)
+      .poll(async () => (await getOffenderByCrn(crn, token)).status)
       .toBe("VERIFIED");
 
     // VERIFIED alone would pass if restart ignored the schedule, so read it back
@@ -53,7 +53,7 @@ test.describe("restart online check ins (existing CRN)", () => {
     await expect(
       manage.settingsNextCheckinDate(),
       "Restart should save the first check in date that was entered",
-    ).toContainText(displayedCheckinDate(7));
+    ).toContainText(displayedCheckinDatePattern(7));
     await expect(
       manage.settingsFrequency(),
       "Restart should save the frequency that was selected",

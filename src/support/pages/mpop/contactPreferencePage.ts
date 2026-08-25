@@ -1,15 +1,8 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import UpdateContactDetailsPage, {
-  ContactDetails,
-} from "./updateContactDetailsPage";
+import UpdateContactDetailsPage from "./updateContactDetailsPage";
+import { Preference, ContactDetails } from "../../../data/models";
 
-export enum Preference {
-  TEXT = 0,
-  EMAIL = 1,
-}
-
-export type { ContactDetails };
 
 export default class ContactPreferencePage extends MPopBasePage {
   constructor(page: Page, restart = false) {

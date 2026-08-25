@@ -1,27 +1,23 @@
 import { expect, Page } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
-import { Preference } from "../../pages/mpop/contactPreferencePage";
 import DateFrequencyPage, {
   FrequencyOptions,
 } from "../../pages/mpop/dateFrequencyPage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
-import { ContactDetails } from "../../pages/mpop/updateContactDetailsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import test from "@playwright/test";
 import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
-import {
-  assertExpectedService,
-  assertManageCheckinsPage,
-  LEGACY_MPOP,
-} from "../../utils/legacyMpop";
+import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
+import { Preference, ContactDetails } from "../../../data/models";
+import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 
 interface ContactPreferenceValues {
   preference: Preference;
@@ -47,9 +43,8 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /**
-   * The contact detail the wizard left on file - entered when NDelius held none,
-   * confirmed when it did. Assert the summary against this rather than the value
-   * the spec passed in, which the confirm route never uses.
+   * The contact detail actually saved by the wizard - not necessarily the
+   * value the test passed in, since the confirm route ignores that.
    */
   contactOnFile(): string {
     if (this.onFileContact === undefined) {
@@ -61,13 +56,10 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /**
-   * "Is this the right email address for X?" - MOCI only, and stays after MPOP
-   * is removed.
+   * Asserts we're on the "confirm this email/mobile?" page (MOCI only).
    *
-   * TODO(confirm-page-title): APP bug - this page currently shares its page
-   * title with the preference page before it, so the caption and radios are what
-   * prove we moved on instead. Once the title is fixed, assert on it directly
-   * here and drop the caption/radio workaround.
+   * TODO(confirm-page-title): this page shares its title with the preference
+   * page, so we check the caption/radios instead. Fix once APP corrects the title.
    */
   private async assertOnConfirmContactPage(
     crn: string,
@@ -77,26 +69,24 @@ export default class SetupOnlineCheckinsJourney {
     const detail =
       preference === Preference.EMAIL ? "email address" : "mobile number";
 
-    // Checks the page title, but it's the one shared with the preference page
-    // (see the TODO above), so it alone doesn't prove we're on the confirm page.
+    // Title alone doesn't prove we're here - it's shared with the preference page (see TODO above).
     await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
-    // The caption also holds "This information is saved in NDelius", so match
-    // from the start rather than the whole text.
+    // Match from the start only - the caption also contains "This information is saved in NDelius".
     await expect(
       confirm.confirmCaption(),
       `Should be confirming the person's ${detail}`,
     ).toContainText(new RegExp(`^\\s*Confirm .+'s ${detail}`));
 
-    // The value is whatever NDelius holds, not something the test supplied, so
-    // assert only that there is one - confirming a blank would be the failure.
+    // Value comes from NDelius, not the test, so just check its shape (email/phone format).
     await expect(
       confirm.confirmedContactValue(),
       `Should show the ${detail} held in NDelius`,
-    ).toHaveText(/\S/);
+    ).toHaveText(preference === Preference.EMAIL ? /\S+@\S+/ : /\d{5,}/);
 
+    // These radios have a different data-qa than the preference page's - that's what confirms we're here.
     await expect(
-      confirm.confirmYesRadio(),
-      "Should offer to confirm the detail as correct",
+      confirm.confirmRadiosGroup(),
+      "Should be on the confirm page, not the preference page it shares a title with",
     ).toBeVisible();
     await expect(
       confirm.confirmChangeRadio(),
@@ -108,9 +98,8 @@ export default class SetupOnlineCheckinsJourney {
     crn: string,
     setup: ContactPreferenceValues,
   ): Promise<void> {
-    // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
-    // removed. MPOP collects contact details inline; MOCI confirms or edits them
-    // on separate pages.
+    // TODO(legacy-mpop): remove else branch once legacy MPOP is gone.
+    // MPOP collects contact details inline; MOCI uses separate confirm/edit pages.
     if (!LEGACY_MPOP) {
       await assertCaseBanner(this.page, crn);
       const contactPreference = this.manageCheckinsPages.contactPreference;
@@ -157,8 +146,7 @@ export default class SetupOnlineCheckinsJourney {
           ).trim();
           await contactPreference.confirmDetailsAndContinue();
         } else {
-          // A value for a detail already on file means replace it, so answer
-          // "No, I need to change ..." and enter it on the edit page.
+          // A value was supplied for a detail already on file, so reject it and edit instead.
           await contactPreference.rejectDetailsAndContinue();
           await assertManageCheckinsPage(
             this.page,
@@ -197,8 +185,7 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.assertOnPage();
       await this.pages.overview.clickSetupOnlineCheckIns();
-      // The hand-off: MPOP either renders the wizard or redirects the whole of it,
-      // so asserting here covers every page that follows.
+      // MPOP either shows the wizard itself or redirects to MOCI - this assertion covers both.
       await assertExpectedService(this.page, "Setup online check ins");
     });
   }
@@ -272,18 +259,21 @@ export default class SetupOnlineCheckinsJourney {
       contact?: ContactDetails;
     },
   ): Promise<void> {
+    const preference = opts.preference;
+    // MOCI needs a preference to proceed - fail early with a clear message.
+    // TODO(legacy-mpop): remove this guard when legacy MPOP is gone and make
+    // opts.preference required instead.
+    if (!LEGACY_MPOP && preference === undefined) {
+      throw new Error(
+        "manage-checkins-ui requires a preference to be selected when changing contact preference from the summary",
+      );
+    }
     await summary.clickChange("contactPreference");
-    // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
-    // removed. Same divergence as completeContactPreference, on the ?cya=true path
-    // back from check your answers.
+    // TODO(legacy-mpop): remove else branch once legacy MPOP is gone
+    // (same divergence as completeContactPreference).
     if (!LEGACY_MPOP) {
-      if (opts.preference === undefined) {
-        throw new Error(
-          "manage-checkins-ui requires a preference to be selected when changing contact preference from the summary",
-        );
-      }
       await this.completeContactPreference(crn, {
-        preference: opts.preference,
+        preference: preference as Preference,
         contact: opts.contact,
       });
     } else {

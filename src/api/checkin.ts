@@ -47,7 +47,9 @@ export const listOffenderCheckins = async (
     return body.content ?? [];
   });
 
-// Teardown only: removes every question assigned to a CRN's upcoming check in.
+// Removes every question assigned to a CRN's upcoming check in. Used both as
+// teardown and as a precondition, because the Add question button disappears at
+// MAX_CUSTOM_QUESTIONS.
 export const deleteAssignedQuestions = async (
   crn: string,
   token: string,

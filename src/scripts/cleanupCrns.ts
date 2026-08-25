@@ -25,6 +25,12 @@ const deactivateAll = async (crns: string[]): Promise<void> => {
       if (offender?.status === "VERIFIED" && offender.uuid) {
         await deactivateOffender(offender.uuid, token);
         console.log(`Deactivated offender ${crn}`);
+      } else if (!offender) {
+        console.log(`Skipped ${crn}: not registered with the API`);
+      } else {
+        console.log(
+          `Skipped ${crn}: status ${offender.status}, not VERIFIED - likely a setup that failed part way`,
+        );
       }
     } catch (error) {
       console.log(`Failed to deactivate ${crn}: ${(error as Error).message}`);

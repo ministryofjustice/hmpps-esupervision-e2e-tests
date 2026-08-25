@@ -13,11 +13,15 @@ import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { ManageCheckinsUiPages } from "../../support/pages/manage-checkins-ui/manageCheckinsUiPages";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
 
-// The questions, stop and date tests run against whichever UI the run targets.
-// The contact details test does not - that page is MOCI only.
+// Despite the folder, only the contact details test is MOCI-only; questions, stop,
+// and date run against whichever service is targeted (move them out if this file
+// is ever narrowed to MOCI).
 //
-// Owns its offender: the questions test clears assigned questions as a
-// precondition, which would fight any other spec sharing it.
+// Questions and stop tests skip assertExpectedService (they reach pages directly),
+// so a flag/LEGACY_MPOP mismatch shows as a selector timeout, not a clear error.
+//
+// Owns its offender: the questions test clears assigned questions first, which
+// would conflict with any other spec sharing it.
 let offender: NewOffender;
 
 test.beforeAll(async ({ browser }) => {
@@ -28,6 +32,7 @@ test.describe("Validation errors", () => {
   test("shows validation errors when changing contact details", async ({
     page,
   }, testInfo) => {
+    // TODO(legacy-mpop): remove this skip once legacy MPOP is gone.
     test.skip(
       LEGACY_MPOP,
       "MOCI only: MPOP has no manage-page edit contact details flow",
@@ -43,6 +48,8 @@ test.describe("Validation errors", () => {
     await managePage.clickChangeContactDetails();
     await manageCheckinsPages.contactDetails.changeEmailAddressButton().click();
 
+    // Clear both fields - clearing only email would depend on this offender having no mobile.
+    await manageCheckinsPages.editContactDetails.mobileNumberField().fill("");
     await manageCheckinsPages.editContactDetails.emailAddressField().fill("");
     await manageCheckinsPages.editContactDetails.save();
     await expect(
@@ -66,13 +73,14 @@ test.describe("Validation errors", () => {
       .emailAddressField()
       .fill("not-an-email");
     await manageCheckinsPages.editContactDetails.save();
+    // Exact app wording - ends with "name@example.com", no full stop (unlike the mobile error).
+    const emailFormat =
+      "Enter an email address in the correct format, like name@example.com";
     await expect(
       manageCheckinsPages.editContactDetails.errorSummary(),
-    ).toContainText("Enter an email address in the correct format.");
+    ).toContainText(emailFormat);
     await expect(
-      manageCheckinsPages.editContactDetails.fieldError(
-        "Enter an email address in the correct format.",
-      ),
+      manageCheckinsPages.editContactDetails.fieldError(emailFormat),
     ).toBeVisible();
   });
 
@@ -81,8 +89,7 @@ test.describe("Validation errors", () => {
   }, testInfo) => {
     await attachCreatedCrn(testInfo, offender.crn);
 
-    // At MAX_CUSTOM_QUESTIONS the Add question button is removed, so clear first.
-    // Idempotent, and established here rather than inherited from another test.
+    // Clear questions first - at MAX_CUSTOM_QUESTIONS the Add question button disappears.
     await deleteAssignedQuestions(offender.crn, await getToken());
 
     const manage = new ManageCheckInsJourney(page);
@@ -90,8 +97,7 @@ test.describe("Validation errors", () => {
     const mpopPages = new MpopPages(page);
 
     const manageQ = await manage.openManage(offender.crn);
-    // Questions are only editable while the next check in is in the future -
-    // asserting it names the cause instead of timing out on the click.
+    // Questions are only editable if the next check in is in the future.
     await expect(
       manageQ.changeQuestionsLink(),
       "Shared offender needs a future check in for questions to be editable",
@@ -140,8 +146,10 @@ test.describe("Validation errors", () => {
     ).toBeVisible();
   });
 
-  // Uses TEST_MPOP_CRN, not this spec's offender: it only reaches the setup date
-  // page and submits nothing, so the CRN is left as it was found.
+  // Uses TEST_MPOP_CRN, not this spec's offender - the wizard is abandoned before
+  // completing setup, so no check in state changes. Verified that an abandoned
+  // wizard leaves no resumable draft: eligibility-outcomes, which shares this CRN,
+  // starts a fresh wizard run straight after this test.
   test("rejects a first check in date that is in the past or malformed", async ({
     page,
   }) => {
@@ -163,8 +171,7 @@ test.describe("Validation errors", () => {
     await expect(dateFrequency.fieldError(pastDate)).toBeVisible();
     await dateFrequency.assertOnPage();
 
-    // 31 February is well formed but not a real date; both checks report the same
-    // message.
+    // 31 February looks well-formed but isn't a real date - same error either way.
     const badFormat =
       "Enter a date in the correct format, for example 17/5/2024";
     await dateFrequency.changePage("31/2/2026");

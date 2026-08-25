@@ -1,24 +1,20 @@
 import { expect, Page, test } from "@playwright/test";
-import {
-  ContactDetails,
-  Preference,
-} from "../../pages/mpop/contactPreferencePage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
-import {
-  assertExpectedService,
-  assertManageCheckinsPage,
-} from "../../utils/legacyMpop";
+import { assertExpectedService } from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
+  CHECKIN_SETTINGS_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
+import { Preference, ContactDetails } from "../../../data/models";
+import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 
 export interface RestartValues {
   date: string;
@@ -67,10 +63,14 @@ export default class ManageCheckInsJourney {
     });
   }
 
+  /**
+   * MOCI only - MPOP has no manage-page change contact details flow. Callers must
+   * skip under LEGACY_MPOP
+   */
   async changeContactDetails(
     crn: string,
     opts: {
-      preference?: Preference;
+      preference: Preference;
       contact?: ContactDetails;
     },
   ): Promise<void> {
@@ -83,13 +83,6 @@ export default class ManageCheckInsJourney {
       await manage.clickChangeContactDetails();
       await assertExpectedService(this.page, "Change contact details");
 
-      // MOCI only - MPOP has no equivalent page, case banner, or edit page here.
-      // Callers should skip this test under LEGACY_MPOP instead of branching.
-      if (opts.preference === undefined) {
-        throw new Error(
-          "changeContactDetails requires a preference to be selected",
-        );
-      }
       await assertCaseBanner(this.page, crn);
       const contactDetails = this.manageCheckinsPages.contactDetails;
       await expect(contactDetails.preferenceGroup()).toBeVisible();
@@ -125,6 +118,13 @@ export default class ManageCheckInsJourney {
 
       await contactDetails.selectPreference(opts.preference);
       await contactDetails.save();
+
+      // The caller navigates away next. A click resolves when it is dispatched, not
+      // when the POST lands, so wait for the form to go before leaving the page.
+      await expect(
+        contactDetails.saveChangesButton(),
+        "Saving contact details should leave the page, not re-render it with errors",
+      ).toBeHidden();
     });
   }
 
@@ -139,11 +139,14 @@ export default class ManageCheckInsJourney {
         "Change check in settings link should be present for an active check in",
       ).toBeVisible();
       await manage.clickChangeCheckinSettings();
+      await assertExpectedService(this.page, "Change check in settings");
       await this.pages.changeCheckinSettings.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, CHECKIN_SETTINGS_TITLE);
       await this.pages.changeCheckinSettings.changePage(
         values.date,
         values.frequency,
       );
+      await this.pages.manage.assertOnPage();
     });
   }
 

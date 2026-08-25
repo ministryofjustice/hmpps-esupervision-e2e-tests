@@ -18,12 +18,9 @@ import {
   HOW_TO_WRITE_QUESTIONS_TITLE,
   questionPreviewTitle,
 } from "../../../data/manage-checkins-ui/pageTitles";
-import {
-  assertExpectedService,
-  assertManageCheckinsPage,
-  LEGACY_MPOP,
-} from "../../utils/legacyMpop";
 import { assertCaseBanner } from "../../utils/caseBanner";
+import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
