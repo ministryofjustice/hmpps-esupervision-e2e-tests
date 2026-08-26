@@ -51,4 +51,18 @@ test("practitioner changes contact details from the manage page", async ({
     "Saved mobile number should be on the record after reloading the page",
   ).toContainText(UPDATED_CONTACT.mobile);
   await expect(pages.contactDetails.textMessageRadio()).toBeChecked();
+
+  await journey.changeContactDetails(offender.crn, {
+    preference: Preference.EMAIL,
+    contact: { email: UPDATED_CONTACT.email },
+  });
+
+  const manageAgain = await journey.openManage(offender.crn);
+  await manageAgain.clickChangeContactDetails();
+
+  await expect(
+    pages.contactDetails.emailAddressValue(),
+    "Saved email address should be on the record after reloading the page",
+  ).toContainText(UPDATED_CONTACT.email);
+  await expect(pages.contactDetails.emailRadio()).toBeChecked();
 });

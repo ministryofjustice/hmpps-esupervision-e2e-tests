@@ -29,6 +29,11 @@ export default class ContactDetailsPage {
     return this.page.locator('[data-qa="mobileNumberValue"]');
   }
 
+  /** The email address currently held on the record, as this page renders it. */
+  emailAddressValue(): Locator {
+    return this.page.locator('[data-qa="emailAddressValue"]');
+  }
+
   changeMobileNumberButton(): Locator {
     return this.page.getByRole("button", { name: "Change mobile number" });
   }

@@ -101,6 +101,13 @@ test("practitioner sets up online check ins by entering a missing contact detail
       UPDATED_CONTACT.email,
     );
   });
+
+  await test.step("Change photo: uploaded -> taken", async () => {
+    await journey.changePhotoFromSummary(summary, PhotoOptions.TAKE);
+    await expect(
+      summary.summaryValueLocator("photo").locator("img"),
+    ).toBeVisible();
+  });
 });
 
 test("practitioner confirms, then replaces, the contact detail already held", async ({

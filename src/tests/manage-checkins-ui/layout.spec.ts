@@ -41,6 +41,12 @@ test.describe("manage online check ins UI layout", () => {
     ).toBeVisible();
   });
 
+  test("account menu has a sign out link", async () => {
+    const header = pages.header;
+    await header.accountMenuToggle().click();
+    await expect(header.signOutLink()).toHaveAttribute("href", "/sign-out");
+  });
+
   // The banner's link comes from this service's own FEEDBACK_BANNER_LINK, so this
   // catches a misconfigured deployment.
   test("feedback banner links to the feedback survey", async () => {

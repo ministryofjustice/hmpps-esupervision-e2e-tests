@@ -300,4 +300,13 @@ export default class SetupOnlineCheckinsJourney {
     await this.pages.dateFrequency.changePage(opts.date, opts.frequency);
     await summary.assertOnPage();
   }
+
+  async changePhotoFromSummary(
+    summary: CheckInSummaryPage,
+    photo: PhotoOptions,
+  ): Promise<void> {
+    await summary.clickChange("photo");
+    await this.completePhotoSteps(photo);
+    await summary.assertOnPage();
+  }
 }

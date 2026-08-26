@@ -18,4 +18,9 @@ export default class Header {
       "button.probation-common-header__user-menu-toggle",
     );
   }
+
+  /** Only visible once accountMenuToggle() has been clicked open. */
+  signOutLink(): Locator {
+    return this.header().getByRole("link", { name: "Sign out" });
+  }
 }

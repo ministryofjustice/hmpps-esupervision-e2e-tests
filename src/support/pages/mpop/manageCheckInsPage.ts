@@ -1,5 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
+import { escapeRegExp } from "../../utils/url";
 
 export default class ManageCheckInsPage extends MPopBasePage {
   constructor(page: Page) {
@@ -34,8 +35,15 @@ export default class ManageCheckInsPage extends MPopBasePage {
     await this.changeCheckinSettingsLink().click();
   }
 
-  questionsAddedBanner(): Locator {
-    return this.page.getByText(/added additional questions/);
+  // Scoped to this person's first name (the only name the banner shows) so it
+  // can't match a banner for a different case. ’ is the banner's curly
+  // apostrophe in "<name>'s next online check in".
+  questionsAddedBanner(firstName: string): Locator {
+    return this.page.getByText(
+      new RegExp(
+        `added additional questions to ${escapeRegExp(firstName)}’s next online check in`,
+      ),
+    );
   }
 
   // "Next check in" inside the upcoming check in card. The same data-qa also
