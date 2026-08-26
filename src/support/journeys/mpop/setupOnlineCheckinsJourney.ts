@@ -213,7 +213,9 @@ export default class SetupOnlineCheckinsJourney {
     rationale: string;
   }): Promise<DateFrequencyPage> {
     await test.step("Complete eligibility to the check in date page", async () => {
-      await this.pages.eligibility.assertOnPage();
+      // Extra time: this heading needs a name lookup right after the offender
+      // was created, and CI has no retries.
+      await this.pages.eligibility.assertOnPage(20000);
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
       await this.pages.eligible.assertOnPage();
