@@ -3,7 +3,6 @@ import MPopBasePage from "../base/mpopBasePage";
 import UpdateContactDetailsPage from "./updateContactDetailsPage";
 import { Preference, ContactDetails } from "../../../data/models";
 
-
 export default class ContactPreferencePage extends MPopBasePage {
   constructor(page: Page, restart = false) {
     super(page, restart ? "Contact details" : "Contact preferences");

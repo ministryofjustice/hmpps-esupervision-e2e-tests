@@ -1,7 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { errorSummary, fieldError } from "../base/errors";
 
-
 export default class EditContactDetailsPage {
   constructor(private readonly page: Page) {}
 

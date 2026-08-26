@@ -5,7 +5,6 @@ import FeedbackBanner from "./feedbackBanner";
 import ContactPreferencePage from "./contactPreferencePage";
 import ContactDetailsPage from "./contactDetailsPage";
 import EditContactDetailsPage from "./editContactDetailsPage";
-import CaseBanner from "./caseBanner";
 
 export class ManageCheckinsUiPages {
   readonly header: Header;
@@ -14,7 +13,6 @@ export class ManageCheckinsUiPages {
   readonly contactPreference: ContactPreferencePage;
   readonly contactDetails: ContactDetailsPage;
   readonly editContactDetails: EditContactDetailsPage;
-  readonly caseBanner: CaseBanner;
 
   constructor(page: Page) {
     this.header = new Header(page);
@@ -23,6 +21,5 @@ export class ManageCheckinsUiPages {
     this.contactPreference = new ContactPreferencePage(page);
     this.contactDetails = new ContactDetailsPage(page);
     this.editContactDetails = new EditContactDetailsPage(page);
-    this.caseBanner = new CaseBanner(page);
   }
 }

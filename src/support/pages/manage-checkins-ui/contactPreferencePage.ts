@@ -1,7 +1,6 @@
 import { Page, Locator } from "@playwright/test";
 import { Preference } from "../../../data/models";
 
-
 // Shared with ContactDetailsPage, which renders the same preference radios on the
 // manage page.
 export function preferenceGroup(page: Page): Locator {
