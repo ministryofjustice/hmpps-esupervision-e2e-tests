@@ -6,9 +6,9 @@ import { deleteAssignedQuestions } from "../../api/checkin";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
 import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineCheckinsJourney";
+import DeliusOffenderJourney from "../../support/journeys/ndelius/deliusOffenderJourney";
 import { FrequencyOptions } from "../../support/pages/mpop/dateFrequencyPage";
 import { firstCheckinDateString } from "../../support/utils/date";
-import { env } from "../../config/env";
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { ManageCheckinsUiPages } from "../../support/pages/manage-checkins-ui/manageCheckinsUiPages";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
@@ -144,16 +144,18 @@ test.describe("Validation errors", () => {
     ).toBeVisible();
   });
 
-  // Uses TEST_MPOP_CRN, not this spec's offender - the wizard is abandoned before
-  // completing setup, so no check in state changes. Verified that an abandoned
-  // wizard leaves no resumable draft, so it's safe to share this CRN with
-  // eligibility-outcomes.
+  // Own offender, not this spec's shared one
   test("rejects a first check in date that is in the past or malformed", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    const dateOffender = await new DeliusOffenderJourney(
+      page,
+    ).createTestOffender();
+    await attachCreatedCrn(testInfo, dateOffender.crn);
+
     const journey = new SetupOnlineCheckinsJourney(page);
     await journey.login();
-    await journey.startSetup(env.mpopTestCrn());
+    await journey.startSetup(dateOffender.crn);
     const dateFrequency = await journey.completeSetupToDateFrequency({
       eligibilityIds: [9],
       rationale: "E2E test rationale",

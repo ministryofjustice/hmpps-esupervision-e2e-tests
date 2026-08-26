@@ -12,13 +12,11 @@ cp .env.example .env     # then fill in the values
 
 ## Configuration
 
-URLs and credentials come from `.env` at the project root. See `.env.example`
-for the full list. `LEGACY_MPOP` is read straight from the environment rather than
-through `src/config/env.ts`, because it selects which service the whole run targets
-rather than a URL or credential.
+URLs and credentials come from `.env` at the project root — see `.env.example`
+for the full list.
 
-With access to the eSupervision-E2E-tests 1Password vault you can skip `.env`
-and resolve secrets at runtime:
+If you have access to the eSupervision-E2E-tests 1Password vault, you can skip
+`.env` and resolve secrets at runtime instead:
 
 ```bash
 eval $(op signin)
@@ -28,7 +26,7 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- n
 ## Run
 
 ```bash
-npm run test                          # everything except dashboard
+npm run test                      # everything except dashboard
 npm run test:mpop                 # practitioner journeys
 npm run test:manage-checkins-ui   # manage online check ins UI
 npm run test:e2e                  # create offender -> set up -> complete a check in
@@ -50,106 +48,86 @@ Append `:headed` to most test scripts (e.g. `test:e2e:headed`) to watch them run
 
 ## Manage Online Check Ins vs legacy MPOP
 
-Check in journeys are moving from MPOP to the Manage Online Check Ins UI behind
-feature flags. Practitioners still start in MPOP, which either renders the check
-in pages itself or redirects the journey to the new service.
+Check in journeys are moving from MPOP to the new Manage Online Check Ins (MOCI)
+UI, behind feature flags. Practitioners still start in MPOP, which either renders
+the check in pages itself or redirects to MOCI depending on the flags.
 
-The suite supports two states:
+A single test run only ever targets one of these two services: normal runs
+(CI, PR runs) leave `LEGACY_MPOP` unset and target MOCI; a manual legacy
+regression pass sets `LEGACY_MPOP=true` and targets MPOP instead.
 
-- **Normal** — migration flags ON. Journeys land in Manage Online Check Ins.
-  Used by CI and PR runs.
-- **Legacy regression** — flags OFF in Flipt **and** `LEGACY_MPOP=true`.
+To run the legacy regression pass:
 
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- \
   env LEGACY_MPOP=true npm run test
 ```
 
-One run targets one service. Mixed states fail fast with an actionable message
-rather than testing the wrong service.
+`LEGACY_MPOP` is read directly from the environment (not via `src/config/env.ts`),
+because it picks which service the whole run targets, not just a URL or
+credential. If the flags and `LEGACY_MPOP` ever disagree, the run fails fast with
+an actionable error instead of quietly testing the wrong service.
 
 ### Retiring legacy MPOP
 
-Every legacy-only line carries `TODO(legacy-mpop)`. `grep -rn "TODO(legacy-mpop)" src .env.example`
-is the complete work list. In outline:
+Every legacy-only line is tagged `TODO(legacy-mpop)`, each with inline
+instructions for what to remove:
 
-1. Delete `src/support/utils/legacyMpop.ts` and all `assertExpectedService(...)` call
-   sites (8 in the journeys).
-2. Delete each `if (!LEGACY_MPOP) { ... } else { ... }` else branch and unindent:
-   `setupOnlineCheckinsJourney` (x2, at the contact preference and change-from-summary
-   steps), `customQuestionsJourney.save`. Also delete the bare `if (!LEGACY_MPOP &&
-   preference === undefined)` guard in `setupOnlineCheckinsJourney` (no else branch -
-   just remove the `!LEGACY_MPOP &&` condition and make `preference` required).
-3. Delete the `LEGACY_MPOP` test skips in `setup-online-checkins`,
-   `change-contact-details` and `error-validation`, and the separate
-   `if (LEGACY_MPOP) return;` guard in `change-contact-details`'s `beforeAll`;
-   those tests then always run.
-4. Delete `MpopPages.contactPreference` (the field, not the class).
-5. Delete `LEGACY_MPOP` from `.env.example` and the section above, and
-   `originPattern` from `src/support/utils/url.ts`.
-6. Remove the early return in `src/support/assertions/manage-checkins-ui/manageCheckinsAssertions.ts`.
+```bash
+grep -rn "TODO(legacy-mpop)" src .env.example
+```
 
-**Do not delete** `src/support/pages/mpop/contactPreferencePage.ts` (including
-`setContactDetails`), `src/support/pages/mpop/updateContactDetailsPage.ts`,
-`src/support/assertions/manage-checkins-ui/manageCheckinsAssertions.ts`,
-`src/data/models.ts`, or the rest of `src/support/pages/mpop/`. Despite the folder
-name, most of those page objects drive the migrated MOCI pages - MOCI reuses the
-same headings and `data-qa` hooks. In particular, `MpopPages.restartContactPreference`
-drives the MOCI restart page's inline Change actions via the same
-`ContactPreferencePage`/`UpdateContactDetailsPage` classes, so those two files and
-`setContactDetails` are not MPOP-only. Only the `contactPreference` field in step 4
-is.
+**Keep**, despite the `mpop` folder name — MOCI reuses the same page headings
+and `data-qa` hooks, so most of `src/support/pages/mpop/` still drives MOCI
+pages after the migration.
 
 ## ENV: dev vs test
 
-All suites read the same `.env`.
-
-`ENV` only affects offender create/delete, which goes through
-`hmpps-probation-integration-e2e-tests` and resolves the Delius host from it —
-hence `ENV=test` on those scripts. App journeys read their URLs directly and
-ignore `ENV`.
+All suites read the same `.env`. The `ENV` variable only affects offender
+create/delete (via `hmpps-probation-integration-e2e-tests`, which resolves the
+Delius host from it — hence `ENV=test` on those scripts). App journeys read
+their URLs directly and ignore `ENV`.
 
 ## Liveness and the fake camera
 
-The real AWS Face Liveness check is never run. Chromium is launched with a fake
+The real AWS Face Liveness check never runs. Chromium launches with a fake
 camera (`src/media/mock-camera-capture.y4m`, wired up in `playwright.config.ts`),
 so no webcam is needed locally or in CI.
 
-Two suites cover the step differently:
+Two suites cover the liveness step differently:
 
 - **checkin** — records with the fake camera, gets NO_MATCH, then takes
   "Submit video anyway".
-- **e2e** — skips liveness by going straight to `/liveness/view` and taking
-  "Submit anyway".
+- **e2e** — skips liveness entirely, going straight to `/liveness/view` and
+  taking "Submit anyway".
 
 ## Test data
 
-- **e2e** — creates its own offender per run.
-- **checkin** — creates its own offender, then drives a check in via API.
-- **mpop** — most specs create their own offender, because they
-  mutate it and sharing would make specs order dependent. Two use pre-existing
-  CRNs: `eligibility-outcomes` reads `TEST_MPOP_CRN` without submitting, and
-  `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before
-  running.
-- **manage-checkins-ui** — `change-contact-details` and `error-validation` create
-  their own offender; `layout` needs none. Only the contact details tests there are
-  MOCI only: `error-validation`'s questions, stop and date tests run against
-  whichever service the run targets, and its date test walks the setup wizard for
-  `TEST_MPOP_CRN` as far as the date page without completing it.
-- **dashboard** — creates nothing. Signs in once via the `dashboard-setup`
-  project and reuses the storage state.
+A full run creates roughly a dozen offenders. Most specs create their own so
+tests can run in any order; the exceptions are noted below.
 
-A full run creates roughly a dozen offenders.
+| Suite               | Offender                                                             |
+| -------------------- | --------------------------------------------------------------------- |
+| `e2e`                | Creates its own, per run.                                             |
+| `checkin`            | Creates its own, then drives a check in via API.                     |
+| `mpop`               | Every spec creates its own — a shared CRN's setup state can't be relied on to stay put between runs. Exception: `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before running. |
+| `manage-checkins-ui` | `change-contact-details` and `error-validation` create their own; `layout` needs none. |
+| `dashboard`          | Creates nothing — signs in once via the `dashboard-setup` project and reuses the storage state. |
+
+Note on `manage-checkins-ui`: only its contact-details tests are MOCI-only.
+`error-validation`'s questions/stop/date tests run against whichever service
+the flags select, and its date test walks the setup wizard as far as the date
+page without completing it.
 
 ## Cleanup
 
 Every created CRN is recorded in `created-crns.txt` (gitignored). Cleanup runs
-automatically at the end of a run via the reporter in
+automatically at the end of a run, via the reporter in
 `src/support/utils/crnCleanupReporter.ts`.
 
-A CRN is deleted only when every test that used it passed, so an unrelated
-failure does not block cleanup. Anything that fails to delete stays in the file
-for the next run.
+A CRN is deleted only if every test that used it passed, so an unrelated
+failure elsewhere doesn't block cleanup. Anything that fails to delete stays in
+the file for the next run to retry.
 
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns
@@ -165,4 +143,4 @@ CRNS=X123456,X654321 npm run cleanup:crns   # target specific CRNs
   and Delius credentials.
 
 Each runs a single `playwright test` invocation and uploads JUnit and HTML
-reports. There is no separate teardown step — cleanup happens in the reporter.
+reports. There's no separate teardown step — cleanup happens in the reporter.
