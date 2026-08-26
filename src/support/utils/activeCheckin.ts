@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { getToken } from "../../api/auth";
 import { getOffenderByCrn, reactivateOffender } from "../../api/offender";
 import { isoDateString, today } from "./date";
@@ -10,16 +11,19 @@ import { isoDateString, today } from "./date";
  * it otherwise
  */
 export const ensureActiveCheckin = async (crn: string): Promise<string> => {
-  const token = await getToken();
-  // getOffenderByCrn throws if the CRN is not registered, which is the right
-  // failure here: this spec's CRN is expected to exist.
-  const offender = await getOffenderByCrn(crn, token);
-  if (offender.status === "INACTIVE" && offender.uuid) {
-    await reactivateOffender(offender.uuid, token, {
-      firstCheckin: isoDateString(today.plus({ days: 7 })),
-      checkinInterval: "WEEKLY",
-      contactPreference: "EMAIL",
-    });
-  }
+  let token = "";
+  await expect(async () => {
+    token = await getToken();
+    // getOffenderByCrn throws if the CRN is not registered, which is the right
+    // failure here: this spec's CRN is expected to exist.
+    const offender = await getOffenderByCrn(crn, token);
+    if (offender.status === "INACTIVE" && offender.uuid) {
+      await reactivateOffender(offender.uuid, token, {
+        firstCheckin: isoDateString(today.plus({ days: 7 })),
+        checkinInterval: "WEEKLY",
+        contactPreference: "EMAIL",
+      });
+    }
+  }).toPass({ timeout: 20000, intervals: [2000, 5000, 10000] });
   return token;
 };

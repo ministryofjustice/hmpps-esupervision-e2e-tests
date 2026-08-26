@@ -52,21 +52,17 @@ Check in journeys are moving from MPOP to the new Manage Online Check Ins (MOCI)
 UI, behind feature flags. Practitioners still start in MPOP, which either renders
 the check in pages itself or redirects to MOCI depending on the flags.
 
-A single test run only ever targets one of these two services: normal runs
-(CI, PR runs) leave `LEGACY_MPOP` unset and target MOCI; a manual legacy
-regression pass sets `LEGACY_MPOP=true` and targets MPOP instead.
-
-To run the legacy regression pass:
+A run targets one service or the other, picked by `LEGACY_MPOP`:
 
 ```bash
+npm run test                                     # MOCI (default - CI, PR runs)
+
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- \
-  env LEGACY_MPOP=true npm run test
+  env LEGACY_MPOP=true npm run test              # MPOP (manual legacy regression)
 ```
 
-`LEGACY_MPOP` is read directly from the environment (not via `src/config/env.ts`),
-because it picks which service the whole run targets, not just a URL or
-credential. If the flags and `LEGACY_MPOP` ever disagree, the run fails fast with
-an actionable error instead of quietly testing the wrong service.
+If the feature flags and `LEGACY_MPOP` disagree, the run fails fast rather than
+quietly testing the wrong service.
 
 ### Retiring legacy MPOP
 
@@ -110,7 +106,7 @@ tests can run in any order; the exceptions are noted below.
 | -------------------- | --------------------------------------------------------------------- |
 | `e2e`                | Creates its own, per run.                                             |
 | `checkin`            | Creates its own, then drives a check in via API.                     |
-| `mpop`               | Every spec creates its own — a shared CRN's setup state can't be relied on to stay put between runs. Exception: `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before running. |
+| `mpop`               | Most specs create their own — a shared CRN's setup state can't be relied on to stay put between runs. Exceptions: `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before running; `eligibility-outcomes` owns `TEST_MPOP_ELIGIBILITY_CRN` and reuses it directly, since neither of its tests completes setup. |
 | `manage-checkins-ui` | `change-contact-details` and `error-validation` create their own; `layout` needs none. |
 | `dashboard`          | Creates nothing — signs in once via the `dashboard-setup` project and reuses the storage state. |
 
@@ -121,13 +117,19 @@ page without completing it.
 
 ## Cleanup
 
-Every created CRN is recorded in `created-crns.txt` (gitignored). Cleanup runs
-automatically at the end of a run, via the reporter in
-`src/support/utils/crnCleanupReporter.ts`.
+Every created CRN is recorded in `created-crns.txt` (gitignored). A reporter
+(`src/support/utils/crnCleanupReporter.ts`) deletes them automatically at the
+end of a run:
 
-A CRN is deleted only if every test that used it passed, so an unrelated
-failure elsewhere doesn't block cleanup. Anything that fails to delete stays in
-the file for the next run to retry.
+- Deleted if every test that used it passed.
+- Kept if any test that used it failed, so there's evidence to inspect.
+- Deleted anyway if it was created this run but never reached a test result at
+  all (e.g. a `beforeAll` failed right after creating the offender) — nothing
+  to keep it for.
+- Left untouched if it's from an earlier run (already in the file when this
+  one started).
+
+Anything that fails to delete stays in the file for the next run to retry.
 
 ```bash
 op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- npm run cleanup:crns

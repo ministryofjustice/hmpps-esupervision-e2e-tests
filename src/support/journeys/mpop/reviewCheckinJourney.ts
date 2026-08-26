@@ -1,6 +1,5 @@
-import { expect, Locator, Page, test } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import { loginToMpop } from "../../pages/mpop/loginPage";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
@@ -47,12 +46,6 @@ export default class ReviewCheckinJourney {
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
-  }
-
-  async login(): Promise<void> {
-    await test.step("Log in to MPOP as practitioner", async () => {
-      await loginToMpop(this.page);
-    });
   }
 
   async reviewCompletedCheckin(

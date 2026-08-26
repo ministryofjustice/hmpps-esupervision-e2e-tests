@@ -38,7 +38,11 @@ test.describe.serial("Manage custom check in questions", () => {
     await attachCreatedCrn(testInfo, crn);
     const journey = new CustomQuestionsJourney(page);
     await journey.login();
-    await journey.addCustomQuestions(crn, CUSTOM_QUESTIONS);
+    await journey.addCustomQuestions(
+      crn,
+      CUSTOM_QUESTIONS,
+      offender.person.firstName,
+    );
   });
 
   test("practitioner edits, deletes and clears custom question so none remain saved", async ({

@@ -32,14 +32,12 @@ export default class OnlineCheckinJourney {
 
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
-    onOffenderCreated?: (crn: string) => void,
   ): Promise<NewOffender> {
+    // createTestOffender() records the CRN before returning, so it's recoverable
+    // by cleanup even if setup below fails.
     const offender = await new DeliusOffenderJourney(
       this.page,
     ).createTestOffender();
-    // Before setup runs: everything after this point can fail, and the CRN needs to
-    // be recoverable by cleanup if it does.
-    onOffenderCreated?.(offender.crn);
 
     const setup = new SetupOnlineCheckinsJourney(this.page);
     await setup.login();

@@ -131,6 +131,7 @@ export default class CustomQuestionsJourney {
   async addCustomQuestions(
     crn: string,
     questions: CustomQuestion[],
+    firstName: string,
   ): Promise<void> {
     await this.goToAddQuestionsPage(crn);
     await test.step("Preview the default feeling and support questions", () =>
@@ -140,6 +141,7 @@ export default class CustomQuestionsJourney {
     await this.saveAndVerifyQuestions(
       crn,
       questions.map((q) => q.text),
+      firstName,
     );
   }
 
@@ -251,7 +253,9 @@ export default class CustomQuestionsJourney {
     }
   }
 
-  private async save(crn: string): Promise<void> {
+  // firstName is only known (and only asserted) when adding questions - edit/delete
+  // flows don't show this "questions added" banner.
+  private async save(crn: string, firstName?: string): Promise<void> {
     await this.pages.addQuestions.clickSaveQuestions();
     // TODO(legacy-mpop): Delete the else branch and unindent when legacy MPOP is
     // removed. Saving lands on the MOCI manage page but on the MPOP case overview.
@@ -266,6 +270,12 @@ export default class CustomQuestionsJourney {
         ),
       );
       await assertCaseBanner(this.page, crn);
+      if (firstName) {
+        await expect(
+          this.pages.manage.questionsAddedBanner(firstName),
+          `Should confirm questions were added to ${firstName}'s next check in`,
+        ).toBeVisible();
+      }
     } else {
       await expect(
         this.page,
@@ -277,9 +287,10 @@ export default class CustomQuestionsJourney {
   private async saveAndVerifyQuestions(
     crn: string,
     questions: string[],
+    firstName?: string,
   ): Promise<void> {
     await test.step("Save and verify the saved questions", async () => {
-      await this.save(crn);
+      await this.save(crn, firstName);
       const manage = await this.manage.openManage(crn);
       await this.assertQuestionCardsContain(manage, questions);
     });
