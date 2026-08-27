@@ -1,15 +1,7 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
-import UpdateContactDetailsPage, {
-  ContactDetails,
-} from "./updateContactDetailsPage";
-
-export enum Preference {
-  TEXT = 0,
-  EMAIL = 1,
-}
-
-export type { ContactDetails };
+import UpdateContactDetailsPage from "./updateContactDetailsPage";
+import { Preference, ContactDetails } from "../../../data/models";
 
 export default class ContactPreferencePage extends MPopBasePage {
   constructor(page: Page, restart = false) {
@@ -28,7 +20,7 @@ export default class ContactPreferencePage extends MPopBasePage {
     contact?: ContactDetails,
   ): Promise<void> {
     if (contact) {
-      await this.addMissingContactDetails(contact);
+      await this.setContactDetails(contact);
     }
     if (preference !== undefined) {
       await this.clickRadioById("checkInPreferredComs", preference);
@@ -36,33 +28,20 @@ export default class ContactPreferencePage extends MPopBasePage {
     await this.clickContinue();
   }
 
-  private async addMissingContactDetails(
-    contact: ContactDetails,
-  ): Promise<void> {
-    const addMobile =
-      contact.mobile !== undefined &&
-      (await this.isMissing("mobileNumberValue"));
-    const addEmail =
-      contact.email !== undefined &&
-      (await this.isMissing("emailAddressValue"));
-    if (!addMobile && !addEmail) return;
+  // Not legacy-MPOP-only: the restart flow's MOCI page also uses these inline
+  // Change actions (only the main setup journey was migrated to MOCI's separate
+  // confirm/edit pages), so this stays even once legacy MPOP is removed.
+  private async setContactDetails(contact: ContactDetails): Promise<void> {
+    if (contact.mobile === undefined && contact.email === undefined) return;
 
     await this.getQA(
-      addMobile ? "mobileNumberAction" : "emailAddressAction",
+      contact.mobile !== undefined
+        ? "mobileNumberAction"
+        : "emailAddressAction",
     ).click();
 
     const details = new UpdateContactDetailsPage(this.page);
     await details.assertOnPage();
-    await details.completePage({
-      mobile: addMobile ? contact.mobile : undefined,
-      email: addEmail ? contact.email : undefined,
-    });
-  }
-
-  private async isMissing(valueQa: string): Promise<boolean> {
-    const value = this.getQA(valueQa);
-    if ((await value.count()) === 0) return true;
-    const text = (await value.textContent())?.trim() ?? "";
-    return text === "" || /^No\b/i.test(text);
+    await details.completePage(contact);
   }
 }

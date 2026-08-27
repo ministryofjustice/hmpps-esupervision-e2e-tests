@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
+import { errorSummary, fieldError } from "./errors";
 
 export default abstract class MPopBasePage {
   constructor(
@@ -69,5 +70,13 @@ export default abstract class MPopBasePage {
   async fillText(qa: string, note: string) {
     await this.getQA(qa).getByRole("textbox").clear();
     await this.getQA(qa).getByRole("textbox").fill(note);
+  }
+
+  errorSummary(): Locator {
+    return errorSummary(this.page);
+  }
+
+  fieldError(message: string): Locator {
+    return fieldError(this.page, message);
   }
 }

@@ -48,10 +48,6 @@ export default class CheckInSummaryPage extends MPopBasePage {
       .locator(".govuk-summary-list__value");
   }
 
-  async summaryValue(field: SummaryField): Promise<string> {
-    return (await this.summaryValueLocator(field).innerText()).trim();
-  }
-
   async clickChange(field: SummaryField): Promise<void> {
     await this.getQA(CHANGE_LINK_QA[field]).click();
   }

@@ -33,12 +33,11 @@ export const env = {
   deliusUsername: (): string => required("DELIUS_USERNAME"),
   deliusPassword: (): string => required("DELIUS_PASSWORD"),
   practitionerName: (): string => required("PRACTITIONER_NAME"),
-  testCrn: (): string => required("TEST_CRN"),
   testPerson: (): TestPersonConfig => ({
     firstName: required("TEST_PERSON_FIRST_NAME"),
     lastName: required("TEST_PERSON_LAST_NAME"),
     dob: required("TEST_PERSON_DOB"),
   }),
-  mpopTestCrn: (): string => required("TEST_MPOP_CRN"),
   mpopStopRestartCrn: (): string => required("TEST_MPOP_STOP_RESTART_CRN"),
+  mpopEligibilityCrn: (): string => required("TEST_MPOP_ELIGIBILITY_CRN"),
 };

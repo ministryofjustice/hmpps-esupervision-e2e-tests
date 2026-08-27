@@ -23,14 +23,13 @@ jobs:
       AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
 
       # test data
-      TEST_CRN: ${{secrets.TEST_CRN }}
       TEST_PERSON_FIRST_NAME: ${{secrets.TEST_PERSON_FIRST_NAME }}
       TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
       TEST_PERSON_DOB: ${{secrets.TEST_PERSON_DOB }}
       DELIUS_USERNAME: ${{secrets.DELIUS_USERNAME }}
       DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
-      TEST_MPOP_CRN: ${{secrets.TEST_MPOP_CRN }}
       TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
+      TEST_MPOP_ELIGIBILITY_CRN: ${{secrets.TEST_MPOP_ELIGIBILITY_CRN }}
       PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
     steps:
       - uses: actions/checkout@v7

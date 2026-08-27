@@ -38,6 +38,9 @@ export class MpopPages {
   readonly partiallyEligible: OutcomePage;
   readonly spoApproval: SpoApprovalPage;
   readonly dateFrequency: DateFrequencyPage;
+  // TODO(legacy-mpop): Delete this field when legacy MPOP is removed - only the
+  // legacy branches in setupOnlineCheckinsJourney use it. restartContactPreference
+  // below drives the MOCI restart page and stays.
   readonly contactPreference: ContactPreferencePage;
   readonly photoOptions: PhotoOptionsPage;
   readonly uploadPhoto: UploadPhotoPage;
@@ -46,6 +49,7 @@ export class MpopPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
+  readonly changeCheckinSettings: DateFrequencyPage;
 
   readonly howToWriteQuestions: HowToWriteQuestionsPage;
   readonly addQuestions: AddQuestionsPage;
@@ -72,6 +76,7 @@ export class MpopPages {
     this.partiallyEligible = new OutcomePage(page, PARTIALLY_ELIGIBLE_HEADING);
     this.spoApproval = new SpoApprovalPage(page);
     this.dateFrequency = new DateFrequencyPage(page);
+    // TODO(legacy-mpop): Delete with the field above.
     this.contactPreference = new ContactPreferencePage(page);
     this.photoOptions = new PhotoOptionsPage(page);
     this.uploadPhoto = new UploadPhotoPage(page);
@@ -80,6 +85,7 @@ export class MpopPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+    this.changeCheckinSettings = new DateFrequencyPage(page, "manage");
 
     this.howToWriteQuestions = new HowToWriteQuestionsPage(page);
     this.addQuestions = new AddQuestionsPage(page);
@@ -92,7 +98,7 @@ export class MpopPages {
     this.reviewNotes = new ReviewNotesPage(page);
     this.reviewedCheckin = new ReviewedCheckinPage(page);
 
-    this.restartDateFrequency = new DateFrequencyPage(page, true);
+    this.restartDateFrequency = new DateFrequencyPage(page, "restart");
     this.restartContactPreference = new ContactPreferencePage(page, true);
     this.restartSummary = new CheckInSummaryPage(page, true);
     this.restartConfirmation = new CheckInConfirmationPage(page, true);

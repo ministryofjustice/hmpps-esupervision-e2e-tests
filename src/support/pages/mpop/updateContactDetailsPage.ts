@@ -1,21 +1,16 @@
 import { Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
+import { ContactDetails } from "../../../data/models";
 
-export interface ContactDetails {
-  phone?: string;
-  mobile?: string;
-  email?: string;
-}
-
+// Not legacy-MPOP-only: also reached from the restart flow's MOCI page (see
+// ContactPreferencePage.setContactDetails), so this stays even once legacy MPOP
+// is removed.
 export default class UpdateContactDetailsPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Edit contact details for");
   }
 
   async completePage(contacts: ContactDetails): Promise<void> {
-    if (contacts.phone !== undefined) {
-      await this.fillText("phoneNumber", contacts.phone);
-    }
     if (contacts.mobile !== undefined) {
       await this.fillText("mobileNumber", contacts.mobile);
     }

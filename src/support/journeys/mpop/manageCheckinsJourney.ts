@@ -1,13 +1,18 @@
 import { expect, Page, test } from "@playwright/test";
-import {
-  ContactDetails,
-  Preference,
-} from "../../pages/mpop/contactPreferencePage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
-import { env } from "../../../config/env";
+import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
+import { assertExpectedService } from "../../utils/legacyMpop";
+import {
+  CHECKIN_SETTINGS_TITLE,
+  CONTACT_PREFERENCE_TITLE,
+  EDIT_CONTACT_DETAILS_TITLE,
+  STOP_CHECKINS_TITLE,
+} from "../../../data/manage-checkins-ui/pageTitles";
+import { Preference, ContactDetails } from "../../../data/models";
+import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 
 export interface RestartValues {
   date: string;
@@ -18,10 +23,13 @@ export interface RestartValues {
 
 export default class ManageCheckInsJourney {
   private readonly pages: MpopPages;
+  private readonly manageCheckinsPages: ManageCheckinsUiPages;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
+    this.manageCheckinsPages = new ManageCheckinsUiPages(page);
   }
+
   async login(): Promise<void> {
     await test.step("Log in to MPOP as practitioner", async () => {
       await loginToMpop(this.page);
@@ -33,6 +41,9 @@ export default class ManageCheckInsJourney {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.assertOnPage();
       await this.pages.overview.clickViewAllOnlineCheckinDetails();
+      // The manage page is itself behind a flag, so assert before anything reached
+      // from it.
+      await assertExpectedService(this.page, "Manage check ins page");
       await this.pages.manage.assertOnPage();
     });
     return this.pages.manage;
@@ -42,12 +53,90 @@ export default class ManageCheckInsJourney {
     await test.step(`Stop online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickStopCheckIns();
-      // enableESUPCheckinNewStop redirects to manage online checkins UI
-      await expect(this.page).toHaveURL(
-        new RegExp(`^${env.manageCheckinsUiUrl()}`),
-      );
+      await assertExpectedService(this.page, "Stop check ins");
+
       await this.pages.stop.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
       await this.pages.stop.completePage(reason);
+    });
+  }
+
+  async changeContactDetails(
+    crn: string,
+    opts: {
+      preference: Preference;
+      contact?: ContactDetails;
+    },
+  ): Promise<void> {
+    await test.step(`Change contact details for ${crn}`, async () => {
+      const manage = await this.openManage(crn);
+      await expect(
+        manage.changeContactDetailsLink(),
+        "Change contact details link should be present for an active check in",
+      ).toBeVisible();
+      await manage.clickChangeContactDetails();
+      await assertExpectedService(this.page, "Change contact details");
+
+      const contactDetails = this.manageCheckinsPages.contactDetails;
+      await expect(contactDetails.preferenceGroup()).toBeVisible();
+      await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
+
+      const value =
+        opts.preference === Preference.EMAIL
+          ? opts.contact?.email
+          : opts.contact?.mobile;
+      if (value !== undefined) {
+        const changeButton =
+          opts.preference === Preference.EMAIL
+            ? contactDetails.changeEmailAddressButton()
+            : contactDetails.changeMobileNumberButton();
+        await changeButton.click();
+        const editContactDetails = this.manageCheckinsPages.editContactDetails;
+        const field =
+          opts.preference === Preference.EMAIL
+            ? editContactDetails.emailAddressField()
+            : editContactDetails.mobileNumberField();
+        await assertManageCheckinsPage(
+          this.page,
+          crn,
+          EDIT_CONTACT_DETAILS_TITLE,
+        );
+        await field.fill(value);
+        await editContactDetails.save();
+        await expect(contactDetails.preferenceGroup()).toBeVisible();
+      }
+
+      await contactDetails.selectPreference(opts.preference);
+      await contactDetails.save();
+
+      // The caller navigates away next. A click resolves when it is dispatched, not
+      // when the POST lands, so wait for the form to go before leaving the page.
+      await expect(
+        contactDetails.saveChangesButton(),
+        "Saving contact details should leave the page, not re-render it with errors",
+      ).toBeHidden();
+    });
+  }
+
+  async changeCheckInSettings(
+    crn: string,
+    values: { date?: string; frequency?: FrequencyOptions },
+  ): Promise<void> {
+    await test.step(`Change check in settings for ${crn}`, async () => {
+      const manage = await this.openManage(crn);
+      await expect(
+        manage.changeCheckinSettingsLink(),
+        "Change check in settings link should be present for an active check in",
+      ).toBeVisible();
+      await manage.clickChangeCheckinSettings();
+      await assertExpectedService(this.page, "Change check in settings");
+      await this.pages.changeCheckinSettings.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, CHECKIN_SETTINGS_TITLE);
+      await this.pages.changeCheckinSettings.changePage(
+        values.date,
+        values.frequency,
+      );
+      await this.pages.manage.assertOnPage();
     });
   }
 
@@ -55,6 +144,7 @@ export default class ManageCheckInsJourney {
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
+      await assertExpectedService(this.page, "Restart check ins");
       await this.pages.restartDateFrequency.assertOnPage();
       await this.pages.restartDateFrequency.completePage(
         values.date,

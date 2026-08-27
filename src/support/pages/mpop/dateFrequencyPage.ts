@@ -8,12 +8,17 @@ export enum FrequencyOptions {
   EVERY_8_WEEKS = 3,
 }
 
+type DateFrequencyContext = "setup" | "restart" | "manage";
+
+const HEADINGS: Record<DateFrequencyContext, string> = {
+  setup: "Set up online check ins",
+  restart: "Online check in settings",
+  manage: "Change online check in settings",
+};
+
 export default class DateFrequencyPage extends MPopBasePage {
-  constructor(page: Page, restart = false) {
-    super(
-      page,
-      restart ? "Online check in settings" : "Set up online check ins",
-    );
+  constructor(page: Page, context: DateFrequencyContext = "setup") {
+    super(page, HEADINGS[context]);
   }
 
   async completePage(date: string, frequency: FrequencyOptions): Promise<void> {

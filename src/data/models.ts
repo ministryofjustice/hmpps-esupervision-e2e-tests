@@ -79,3 +79,14 @@ export interface CompletedCheckinDetails {
   assistance: AssistanceSelection[];
   additional: AdditionalAnswer[];
 }
+
+export enum Preference {
+  TEXT = 0,
+  EMAIL = 1,
+}
+
+// Shared by MOCI and MPOP contact preference flows.
+export interface ContactDetails {
+  mobile?: string;
+  email?: string;
+}

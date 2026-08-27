@@ -46,3 +46,18 @@ export const listOffenderCheckins = async (
     const body = (await response.json()) as { content?: CheckinSummary[] };
     return body.content ?? [];
   });
+
+// Removes every question assigned to a CRN's upcoming check in. Used both as
+// teardown and as a precondition, because the Add question button disappears at
+// MAX_CUSTOM_QUESTIONS.
+export const deleteAssignedQuestions = async (
+  crn: string,
+  token: string,
+): Promise<void> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.delete(`/v2/questions/assignment`, {
+      headers: authHeader(token),
+      params: { crn },
+    });
+    await assertOk(response, `Delete assigned questions for ${crn}`);
+  });

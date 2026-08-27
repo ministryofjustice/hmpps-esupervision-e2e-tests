@@ -13,6 +13,14 @@ interface TestCleanupState {
 
 export default class CrnCleanupReporter implements Reporter {
   private readonly testStates = new Map<string, TestCleanupState>();
+  private preExisting = new Set<string>();
+
+  onBegin(): void {
+    // Snapshot the backlog already in the file so onEnd's orphan sweep only
+    // touches CRNs recorded during this run, not historical leftovers - those
+    // are for manual `npm run cleanup:crns` review, not an automatic sweep.
+    this.preExisting = new Set(readCreatedCrns());
+  }
 
   onTestEnd(test: TestCase, result: TestResult): void {
     const previous = this.testStates.get(test.id);
@@ -39,7 +47,20 @@ export default class CrnCleanupReporter implements Reporter {
         }
       }
     }
-    const toDelete = [...created].filter((crn) => !retained.has(crn));
+
+    // recordCreatedCrn writes to created-crns.txt as soon as an offender exists, so
+    // a CRN whose creating hook/test never reached an attachCreatedCrn call (e.g. a
+    // beforeAll that failed right after creating it) still lands here even though
+    // it's absent from `created`. There's no test result to check, so there's
+    // nothing to retain it for - safe to delete alongside the rest. Excludes
+    // preExisting so historical backlog from earlier runs is left for manual review.
+    const orphaned = readCreatedCrns().filter(
+      (crn) => !created.has(crn) && !this.preExisting.has(crn),
+    );
+
+    const toDelete = [...created]
+      .filter((crn) => !retained.has(crn))
+      .concat(orphaned);
     if (!toDelete.length) {
       console.log(`CRN cleanup: nothing to delete, ${retained.size} retained`);
       return;

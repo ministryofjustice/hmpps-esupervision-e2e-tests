@@ -1,15 +1,14 @@
 import { Page } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
 import { TEST_CONTACT } from "../../../data/mpop/testData";
-import { Preference } from "../../pages/mpop/contactPreferencePage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
-import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
 import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
   CustomQuestion,
+  Preference,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
@@ -20,6 +19,7 @@ import ReviewCheckinJourney, {
   ReviewDecision,
 } from "../mpop/reviewCheckinJourney";
 import CustomQuestionsJourney from "../mpop/customQuestionsJourney";
+import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   private readonly customQuestions: CustomQuestionsJourney;
@@ -33,16 +33,22 @@ export default class OnlineCheckinJourney {
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
   ): Promise<NewOffender> {
+    // createTestOffender() records the CRN before returning, so it's recoverable
+    // by cleanup even if setup below fails.
     const offender = await new DeliusOffenderJourney(
       this.page,
     ).createTestOffender();
+
     const setup = new SetupOnlineCheckinsJourney(this.page);
     await setup.login();
     await setup.startSetup(offender.crn);
-    const summary = await setup.completeSetupToSummary({
+    const summary = await setup.completeSetupToSummary(offender.crn, {
       date: firstCheckin,
       frequency: FrequencyOptions.EVERY_WEEK,
       preference: Preference.EMAIL,
+      // TODO(legacy-mpop): Drop the mobile when legacy MPOP is removed. MPOP saves
+      // both details inline; MOCI can hold both too, but in its setup summary it
+      // shows only the preferred contact, so the mobile here is unused on that path.
       contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
       photo: PhotoOptions.UPLOAD,
       eligibilityIds: [9],

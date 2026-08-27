@@ -9,9 +9,11 @@ export default class SignInJourney {
     this.pages = new ManageCheckinsUiPages(page);
   }
 
-  async login(): Promise<ManageCheckinsUiPages> {
+  async login(path: string): Promise<ManageCheckinsUiPages> {
+    const target = `${env.manageCheckinsUiUrl().replace(/\/$/, "")}${path}`;
+
     await test.step("Sign in to the manage online check ins UI", async () => {
-      await this.page.goto(env.manageCheckinsUiUrl());
+      await this.page.goto(target);
       await expect(this.page).toHaveTitle(/HMPPS Digital Services - Sign in/);
       const username = env.deliusUsername();
       const password = env.deliusPassword();
