@@ -63,8 +63,7 @@ export default class ContactPreferencePage {
 
   /**
    * The confirm page's radios. Their data-qa is checkInConfirmPreferredComs, where
-   * the preference page's is checkInPreferredComs - the only reliable way to tell
-   * the two apart, because the app gives them the same page title.
+   * the preference page's is checkInPreferredComs.
    */
   confirmRadiosGroup(): Locator {
     return this.page.locator('[data-qa="checkInConfirmPreferredComs"]');

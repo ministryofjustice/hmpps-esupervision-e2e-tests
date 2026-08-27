@@ -5,8 +5,6 @@ import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
 import { assertExpectedService } from "../../utils/legacyMpop";
-import { assertCaseBanner } from "../../utils/caseBanner";
-import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   CHECKIN_SETTINGS_TITLE,
   CONTACT_PREFERENCE_TITLE,
@@ -63,10 +61,6 @@ export default class ManageCheckInsJourney {
     });
   }
 
-  /**
-   * MOCI only - MPOP has no manage-page change contact details flow. Callers must
-   * skip under LEGACY_MPOP
-   */
   async changeContactDetails(
     crn: string,
     opts: {
@@ -83,13 +77,9 @@ export default class ManageCheckInsJourney {
       await manage.clickChangeContactDetails();
       await assertExpectedService(this.page, "Change contact details");
 
-      await assertCaseBanner(this.page, crn);
       const contactDetails = this.manageCheckinsPages.contactDetails;
       await expect(contactDetails.preferenceGroup()).toBeVisible();
-      await assertManageOnlineCheckinsUiTitle(
-        this.page,
-        CONTACT_PREFERENCE_TITLE,
-      );
+      await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
 
       const value =
         opts.preference === Preference.EMAIL
@@ -106,11 +96,11 @@ export default class ManageCheckInsJourney {
           opts.preference === Preference.EMAIL
             ? editContactDetails.emailAddressField()
             : editContactDetails.mobileNumberField();
-        await assertManageOnlineCheckinsUiTitle(
+        await assertManageCheckinsPage(
           this.page,
+          crn,
           EDIT_CONTACT_DETAILS_TITLE,
         );
-        await assertCaseBanner(this.page, crn);
         await field.fill(value);
         await editContactDetails.save();
         await expect(contactDetails.preferenceGroup()).toBeVisible();

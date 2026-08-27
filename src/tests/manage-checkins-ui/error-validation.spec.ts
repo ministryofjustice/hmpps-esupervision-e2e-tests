@@ -13,10 +13,6 @@ import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import { ManageCheckinsUiPages } from "../../support/pages/manage-checkins-ui/manageCheckinsUiPages";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
 
-// Despite the folder, only the contact details test is MOCI-only; questions, stop,
-// and date run against whichever service is targeted (move them out if this file
-// is ever narrowed to MOCI).
-//
 // Questions and stop tests skip assertExpectedService (they reach pages directly),
 // so a flag/LEGACY_MPOP mismatch shows as a selector timeout, not a clear error.
 //
@@ -29,57 +25,49 @@ test.beforeAll(async ({ browser }) => {
 });
 
 test.describe("Validation errors", () => {
-  test("shows validation errors when changing contact details", async ({
-    page,
-  }, testInfo) => {
-    // TODO(legacy-mpop): remove this skip once legacy MPOP is gone.
-    test.skip(
-      LEGACY_MPOP,
-      "MOCI only: MPOP has no manage-page edit contact details flow",
-    );
+  test.describe("Change contact details", () => {
+    // Kept deliberately minimal - the manage-page contact details flow is
+    // expected to change again soon, so this covers only the core rule
+    // (required field tracks the offender's saved preference) rather than
+    // every format/persistence permutation.
+    test("only the field matching the offender's saved preference is required", async ({
+      page,
+    }, testInfo) => {
+      // TODO(legacy-mpop): Delete this skip when legacy MPOP is removed - the test
+      // then always runs. MPOP's edit page validates the mobile and email fields
+      // together regardless of preference, so this rule is MOCI only.
+      test.skip(
+        LEGACY_MPOP,
+        "MOCI only: MPOP validates mobile and email together, not per preference",
+      );
+      await attachCreatedCrn(testInfo, offender.crn);
 
-    await attachCreatedCrn(testInfo, offender.crn);
+      const manage = new ManageCheckInsJourney(page);
+      await manage.login();
+      const manageCheckinsPages = new ManageCheckinsUiPages(page);
 
-    const manage = new ManageCheckInsJourney(page);
-    await manage.login();
-    const manageCheckinsPages = new ManageCheckinsUiPages(page);
+      const managePage = await manage.openManage(offender.crn);
+      await managePage.clickChangeContactDetails();
+      // Shared offender's preference is email - clearing the other detail
+      // (mobile) should produce no error on its own.
+      await manageCheckinsPages.contactDetails
+        .changeEmailAddressButton()
+        .click();
+      const editContactDetails = manageCheckinsPages.editContactDetails;
+      await editContactDetails.mobileNumberField().fill("");
+      await editContactDetails.emailAddressField().fill("");
+      await editContactDetails.save();
 
-    const managePage = await manage.openManage(offender.crn);
-    await managePage.clickChangeContactDetails();
-    await manageCheckinsPages.contactDetails.changeEmailAddressButton().click();
-
-    // Clear both fields - clearing only email would depend on this offender having no mobile.
-    await manageCheckinsPages.editContactDetails.mobileNumberField().fill("");
-    await manageCheckinsPages.editContactDetails.emailAddressField().fill("");
-    await manageCheckinsPages.editContactDetails.save();
-    await expect(
-      manageCheckinsPages.editContactDetails.errorSummary(),
-    ).toContainText("Enter a mobile number");
-    await expect(
-      manageCheckinsPages.editContactDetails.errorSummary(),
-    ).toContainText("Enter an email address");
-    await expect(
-      manageCheckinsPages.editContactDetails.fieldError(
-        "Enter a mobile number",
-      ),
-    ).toBeVisible();
-    await expect(
-      manageCheckinsPages.editContactDetails.fieldError(
+      await expect(editContactDetails.errorSummary()).toContainText(
         "Enter an email address",
-      ),
-    ).toBeVisible();
-
-    await manageCheckinsPages.editContactDetails
-      .emailAddressField()
-      .fill("not-an-email");
-    await manageCheckinsPages.editContactDetails.save();
-    const emailFormat = "Enter an email address in the correct format.";
-    await expect(
-      manageCheckinsPages.editContactDetails.errorSummary(),
-    ).toContainText(emailFormat);
-    await expect(
-      manageCheckinsPages.editContactDetails.fieldError(emailFormat),
-    ).toBeVisible();
+      );
+      await expect(editContactDetails.errorSummary()).not.toContainText(
+        "mobile number",
+      );
+      await expect(
+        editContactDetails.fieldError("Enter an email address"),
+      ).toBeVisible();
+    });
   });
 
   test("shows a validation error when adding a custom question with no question text", async ({
@@ -144,39 +132,71 @@ test.describe("Validation errors", () => {
     ).toBeVisible();
   });
 
-  // Own offender, not this spec's shared one
-  test("rejects a first check in date that is in the past or malformed", async ({
-    page,
-  }, testInfo) => {
-    const dateOffender = await new DeliusOffenderJourney(
+  test.describe("Setup wizard - date and frequency", () => {
+    // Own offender per test, not this spec's shared one: these reach the setup
+    // wizard directly and don't need an active check in already set up.
+    test("rejects a first check in date that is in the past or malformed", async ({
       page,
-    ).createTestOffender();
-    await attachCreatedCrn(testInfo, dateOffender.crn);
+    }, testInfo) => {
+      const dateOffender = await new DeliusOffenderJourney(
+        page,
+      ).createTestOffender();
+      await attachCreatedCrn(testInfo, dateOffender.crn);
 
-    const journey = new SetupOnlineCheckinsJourney(page);
-    await journey.login();
-    await journey.startSetup(dateOffender.crn);
-    const dateFrequency = await journey.completeSetupToDateFrequency({
-      eligibilityIds: [9],
-      rationale: "E2E test rationale",
+      const journey = new SetupOnlineCheckinsJourney(page);
+      await journey.login();
+      await journey.startSetup(dateOffender.crn);
+      const dateFrequency = await journey.completeSetupToDateFrequency({
+        eligibilityIds: [9],
+        rationale: "E2E test rationale",
+      });
+
+      const pastDate =
+        "The first online check in date must be today or in the future";
+      await dateFrequency.changePage(
+        firstCheckinDateString(-7),
+        FrequencyOptions.EVERY_WEEK,
+      );
+      await expect(dateFrequency.errorSummary()).toContainText(pastDate);
+      await expect(dateFrequency.fieldError(pastDate)).toBeVisible();
+      await dateFrequency.assertOnPage();
+
+      // 31 February looks well-formed but isn't a real date - same error either way.
+      const badFormat =
+        "Enter a date in the correct format, for example 17/5/2024";
+      await dateFrequency.changePage("31/2/2026");
+      await expect(dateFrequency.errorSummary()).toContainText(badFormat);
+      await expect(dateFrequency.fieldError(badFormat)).toBeVisible();
+      await dateFrequency.assertOnPage();
     });
 
-    const pastDate =
-      "The first online check in date must be today or in the future";
-    await dateFrequency.changePage(
-      firstCheckinDateString(-7),
-      FrequencyOptions.EVERY_WEEK,
-    );
-    await expect(dateFrequency.errorSummary()).toContainText(pastDate);
-    await expect(dateFrequency.fieldError(pastDate)).toBeVisible();
-    await dateFrequency.assertOnPage();
+    test("shows validation errors when the check in date and frequency are left blank", async ({
+      page,
+    }, testInfo) => {
+      const dateOffender = await new DeliusOffenderJourney(
+        page,
+      ).createTestOffender();
+      await attachCreatedCrn(testInfo, dateOffender.crn);
 
-    // 31 February looks well-formed but isn't a real date - same error either way.
-    const badFormat =
-      "Enter a date in the correct format, for example 17/5/2024";
-    await dateFrequency.changePage("31/2/2026");
-    await expect(dateFrequency.errorSummary()).toContainText(badFormat);
-    await expect(dateFrequency.fieldError(badFormat)).toBeVisible();
-    await dateFrequency.assertOnPage();
+      const journey = new SetupOnlineCheckinsJourney(page);
+      await journey.login();
+      await journey.startSetup(dateOffender.crn);
+      const dateFrequency = await journey.completeSetupToDateFrequency({
+        eligibilityIds: [9],
+        rationale: "E2E test rationale",
+      });
+
+      // Neither field has been filled yet on this fresh page.
+      const noDate =
+        "Enter the date you would like the person to complete their first check in";
+      const noFrequency =
+        "Select how often you would like the person to check in";
+      await dateFrequency.changePage("");
+      await expect(dateFrequency.errorSummary()).toContainText(noDate);
+      await expect(dateFrequency.errorSummary()).toContainText(noFrequency);
+      await expect(dateFrequency.fieldError(noDate)).toBeVisible();
+      await expect(dateFrequency.fieldError(noFrequency)).toBeVisible();
+      await dateFrequency.assertOnPage();
+    });
   });
 });

@@ -15,6 +15,7 @@ import { assertManageOnlineCheckinsUiTitle } from "../../utils/pageTitle";
 import {
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
+  confirmContactDetailTitle,
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
@@ -57,9 +58,6 @@ export default class SetupOnlineCheckinsJourney {
 
   /**
    * Asserts we're on the "confirm this email/mobile?" page (MOCI only).
-   *
-   * TODO(confirm-page-title): this page shares its title with the preference
-   * page, so we check the caption/radios instead. Fix once APP corrects the title.
    */
   private async assertOnConfirmContactPage(
     crn: string,
@@ -69,8 +67,11 @@ export default class SetupOnlineCheckinsJourney {
     const detail =
       preference === Preference.EMAIL ? "email address" : "mobile number";
 
-    // Title alone doesn't prove we're here - it's shared with the preference page (see TODO above).
-    await assertManageCheckinsPage(this.page, crn, CONTACT_PREFERENCE_TITLE);
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      confirmContactDetailTitle(detail),
+    );
     // Match from the start only - the caption also contains "This information is saved in NDelius".
     await expect(
       confirm.confirmCaption(),
@@ -83,10 +84,9 @@ export default class SetupOnlineCheckinsJourney {
       `Should show the ${detail} held in NDelius`,
     ).toHaveText(preference === Preference.EMAIL ? /\S+@\S+/ : /\d{5,}/);
 
-    // These radios have a different data-qa than the preference page's - that's what confirms we're here.
     await expect(
       confirm.confirmRadiosGroup(),
-      "Should be on the confirm page, not the preference page it shares a title with",
+      "Should show the confirm page's radios",
     ).toBeVisible();
     await expect(
       confirm.confirmChangeRadio(),
@@ -182,11 +182,18 @@ export default class SetupOnlineCheckinsJourney {
 
   async startSetup(crn: string): Promise<void> {
     await test.step(`Open setup online check ins for ${crn}`, async () => {
-      await this.pages.overview.goTo(crn);
-      await this.pages.overview.assertOnPage();
-      await this.pages.overview.clickSetupOnlineCheckIns();
-      // MPOP either shows the wizard itself or redirects to MOCI - this assertion covers both.
-      await assertExpectedService(this.page, "Setup online check ins");
+      // The service intermittently shows its generic error page right after the
+      // offender is created (eligibility page's name lookup isn't ready yet) -
+      // retry the whole navigation, not just wait longer, since the error page
+      // itself never turns into the eligibility page.
+      await expect(async () => {
+        await this.pages.overview.goTo(crn);
+        await this.pages.overview.assertOnPage();
+        await this.pages.overview.clickSetupOnlineCheckIns();
+        // MPOP either shows the wizard itself or redirects to MOCI - this assertion covers both.
+        await assertExpectedService(this.page, "Setup online check ins");
+        await this.pages.eligibility.assertOnPage(5000);
+      }).toPass({ timeout: 30000, intervals: [2000, 5000, 10000] });
     });
   }
 
@@ -213,9 +220,9 @@ export default class SetupOnlineCheckinsJourney {
     rationale: string;
   }): Promise<DateFrequencyPage> {
     await test.step("Complete eligibility to the check in date page", async () => {
-      // Extra time: this heading needs a name lookup right after the offender
-      // was created, and CI has no retries.
-      await this.pages.eligibility.assertOnPage(20000);
+      // startSetup() already retried until this page rendered, so this is just
+      // the normal on-page assertion, not extra flakiness handling.
+      await this.pages.eligibility.assertOnPage();
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
       await this.pages.eligible.assertOnPage();

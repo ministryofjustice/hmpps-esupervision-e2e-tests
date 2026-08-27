@@ -25,6 +25,10 @@ export const CONTACT_PREFERENCE_TITLE =
 
 export const EDIT_CONTACT_DETAILS_TITLE = "Edit contact details for the person";
 
+export const confirmContactDetailTitle = (
+  detail: "email address" | "mobile number",
+): string => `Confirm the person's ${detail}`;
+
 const EDIT_QUESTION_TITLES: Record<string, string> = {
   "been going recently": "How has [insert text] been going recently?",
   "been feeling": "How have things been feeling [insert text] recently?",
