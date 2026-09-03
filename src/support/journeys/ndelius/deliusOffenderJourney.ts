@@ -7,7 +7,10 @@ import { internalTransfer } from "@ministryofjustice/hmpps-probation-integration
 import { TEST_TEAM, TEST_STAFF } from "../../../data/delius/testData";
 import { NewOffender } from "../../../data/delius/types";
 import { recordCreatedCrn } from "../../utils/createdCrns";
-import { dismissModals } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
+import {
+  dismissModals,
+  findOffenderByName,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
 import { selectOption } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/inputs.mjs";
 
 export default class DeliusOffenderJourney {
@@ -16,23 +19,33 @@ export default class DeliusOffenderJourney {
   async createTestOffender(): Promise<NewOffender> {
     const person = deliusPerson();
     await loginToDelius(this.page);
-    const crn = await createOffender(this.page, {
+    let crn: string | undefined = await createOffender(this.page, {
       person,
       providerName: TEST_TEAM.provider,
     });
+    if (!crn) {
+      // createOffender (vendored) swallows any error whose page title isn't
+      // exactly "Error Page" and returns undefined - the offender may still
+      // have been created despite the CRN readback failing. Fall back to a
+      // name search rather than retrying createOffender itself, which would
+      // create a duplicate record if the first attempt actually succeeded.
+      crn = await this.recoverCrnByName(person);
+    }
     if (!crn) {
       throw new Error("Delius did not return a CRN for the new offender");
     }
     recordCreatedCrn(crn);
 
-    // NDelius intermittently throws error during allocation (e.g. dropdown not populated); a retry clears it.
+    // NDelius is intermittently slow to render the transfer page (title stays
+    // empty past the assertion's timeout); a retry with a longer overall
+    // window clears it.
     // toPass re-runs the whole transfer until it succeeds or timeout is hit
     await expect(async () => {
       await internalTransfer(this.page, {
         crn,
         allocation: { team: TEST_TEAM, staff: TEST_STAFF },
       });
-    }).toPass({ timeout: 20000, intervals: [2000, 5000, 10000] });
+    }).toPass({ timeout: 45000, intervals: [3000, 5000, 10000, 15000] });
     await createCommunityEvent(this.page, { crn });
     return {
       crn,
@@ -42,6 +55,26 @@ export default class DeliusOffenderJourney {
         dob: person.dob,
       },
     };
+  }
+
+  private async recoverCrnByName(person: {
+    firstName: string;
+    lastName: string;
+  }): Promise<string | undefined> {
+    try {
+      let crn: string | undefined;
+      await expect(async () => {
+        await findOffenderByName(this.page, person.firstName, person.lastName);
+        const row = this.page.locator("#offendersTable tbody tr").first();
+        await expect(row).toBeVisible({ timeout: 5000 });
+        const text = await row.locator("td").first().textContent();
+        expect(text?.trim()).toBeTruthy();
+        crn = text?.trim();
+      }).toPass({ timeout: 15000, intervals: [2000, 5000] });
+      return crn;
+    } catch {
+      return undefined;
+    }
   }
 
   async deleteTestOffenders(crns: string[]): Promise<string[]> {
