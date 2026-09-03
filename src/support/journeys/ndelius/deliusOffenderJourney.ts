@@ -9,7 +9,7 @@ import { NewOffender } from "../../../data/delius/types";
 import { recordCreatedCrn } from "../../utils/createdCrns";
 import {
   dismissModals,
-  findOffenderByName,
+  findFirstOffender,
 } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
 import { selectOption } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/inputs.mjs";
 
@@ -57,22 +57,28 @@ export default class DeliusOffenderJourney {
     };
   }
 
-  private async recoverCrnByName(person: {
-    firstName: string;
-    lastName: string;
-  }): Promise<string | undefined> {
+  private async recoverCrnByName(
+    person: ReturnType<typeof deliusPerson>,
+  ): Promise<string | undefined> {
     try {
       let crn: string | undefined;
       await expect(async () => {
-        await findOffenderByName(this.page, person.firstName, person.lastName);
-        const row = this.page.locator("#offendersTable tbody tr").first();
-        await expect(row).toBeVisible({ timeout: 5000 });
-        const text = await row.locator("td").first().textContent();
-        expect(text?.trim()).toBeTruthy();
-        crn = text?.trim();
+        // findFirstOffender also filters by sex and provider, unlike a plain
+        // name search - narrows the chance of recovering an unrelated
+        // offender's CRN if another record happens to share this name.
+        const found = await findFirstOffender(
+          this.page,
+          person,
+          TEST_TEAM.provider,
+        );
+        expect(found).toBeTruthy();
+        crn = found ?? undefined;
       }).toPass({ timeout: 15000, intervals: [2000, 5000] });
       return crn;
-    } catch {
+    } catch (error) {
+      console.log(
+        `recoverCrnByName: failed to find ${person.firstName} ${person.lastName}: ${(error as Error).message}`,
+      );
       return undefined;
     }
   }
