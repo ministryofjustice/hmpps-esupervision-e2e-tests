@@ -33,8 +33,8 @@ export default class DeliusOffenderJourney {
     }
     recordCreatedCrn(crn);
 
-    // NDelius intermittently throws error during allocation (e.g. dropdown not populated); a retry clears it.
-    // toPass re-runs the whole transfer until it succeeds or timeout is hit
+    // Failure here is an unpopulated allocation dropdown, which happens before the
+    // transfer is submitted - so retrying the whole thing can't double-transfer.
     await expect(async () => {
       await internalTransfer(this.page, {
         crn,
