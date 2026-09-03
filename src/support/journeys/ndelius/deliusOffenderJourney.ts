@@ -24,11 +24,8 @@ export default class DeliusOffenderJourney {
       providerName: TEST_TEAM.provider,
     });
     if (!crn) {
-      // createOffender (vendored) swallows any error whose page title isn't
-      // exactly "Error Page" and returns undefined - the offender may still
-      // have been created despite the CRN readback failing. Fall back to a
-      // name search rather than retrying createOffender itself, which would
-      // create a duplicate record if the first attempt actually succeeded.
+      // createOffender may have succeeded despite returning no CRN,
+      // so recover by name instead of retrying (which could create a duplicate).
       crn = await this.recoverCrnByName(person);
     }
     if (!crn) {
@@ -36,16 +33,14 @@ export default class DeliusOffenderJourney {
     }
     recordCreatedCrn(crn);
 
-    // NDelius is intermittently slow to render the transfer page (title stays
-    // empty past the assertion's timeout); a retry with a longer overall
-    // window clears it.
+    // NDelius intermittently throws error during allocation (e.g. dropdown not populated); a retry clears it.
     // toPass re-runs the whole transfer until it succeeds or timeout is hit
     await expect(async () => {
       await internalTransfer(this.page, {
         crn,
         allocation: { team: TEST_TEAM, staff: TEST_STAFF },
       });
-    }).toPass({ timeout: 45000, intervals: [3000, 5000, 10000, 15000] });
+    }).toPass({ timeout: 20000, intervals: [2000, 5000, 10000] });
     await createCommunityEvent(this.page, { crn });
     return {
       crn,
