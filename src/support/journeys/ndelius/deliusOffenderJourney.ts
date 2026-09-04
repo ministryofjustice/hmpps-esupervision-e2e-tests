@@ -7,26 +7,47 @@ import { internalTransfer } from "@ministryofjustice/hmpps-probation-integration
 import { TEST_TEAM, TEST_STAFF } from "../../../data/delius/testData";
 import { NewOffender } from "../../../data/delius/types";
 import { recordCreatedCrn } from "../../utils/createdCrns";
-import { dismissModals } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
+import {
+  dismissModals,
+  findFirstOffender,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
 import { selectOption } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/inputs.mjs";
+import { DeliusDateFormatter } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/date-time.mjs";
+import NationalSearchPage from "../../pages/ndelius/nationalSearchPage";
+import OffenderRecordPage from "../../pages/ndelius/offenderRecordPage";
 
 export default class DeliusOffenderJourney {
-  constructor(private readonly page: Page) {}
+  private readonly nationalSearchPage: NationalSearchPage;
+  private readonly offenderRecordPage: OffenderRecordPage;
+
+  constructor(private readonly page: Page) {
+    this.nationalSearchPage = new NationalSearchPage(page);
+    this.offenderRecordPage = new OffenderRecordPage(page);
+  }
 
   async createTestOffender(): Promise<NewOffender> {
     const person = deliusPerson();
     await loginToDelius(this.page);
-    const crn = await createOffender(this.page, {
+    let crn: string | undefined = await createOffender(this.page, {
       person,
       providerName: TEST_TEAM.provider,
     });
     if (!crn) {
-      throw new Error("Delius did not return a CRN for the new offender");
+      // createOffender may have succeeded despite returning no CRN,
+      // so recover by name instead of retrying (which could create a duplicate).
+      crn = await this.recoverCrnByName(person);
+    }
+    if (!crn) {
+      // Creation may still have gone through even though nothing got recorded for
+      // cleanup - print identifying details so the record can be found and removed manually.
+      throw new Error(
+        `Delius did not return a CRN for the new offender - if it was created anyway, find it manually with: ${person.firstName} ${person.lastName}, DoB ${DeliusDateFormatter(person.dob)}, sex ${person.sex}, provider ${TEST_TEAM.provider}`,
+      );
     }
     recordCreatedCrn(crn);
 
-    // NDelius intermittently throws error during allocation (e.g. dropdown not populated); a retry clears it.
-    // toPass re-runs the whole transfer until it succeeds or timeout is hit
+    // Failure here is an unpopulated allocation dropdown, which happens before the
+    // transfer is submitted - so retrying the whole thing can't double-transfer.
     await expect(async () => {
       await internalTransfer(this.page, {
         crn,
@@ -42,6 +63,39 @@ export default class DeliusOffenderJourney {
         dob: person.dob,
       },
     };
+  }
+
+  private async recoverCrnByName(
+    person: ReturnType<typeof deliusPerson>,
+  ): Promise<string | undefined> {
+    try {
+      let crn: string | undefined;
+      await expect(async () => {
+        // findFirstOffender also filters by sex and provider, unlike a plain
+        // name search - narrows the chance of recovering an unrelated
+        // offender's CRN if another record happens to share this name.
+        const hasResults = await findFirstOffender(
+          this.page,
+          person,
+          TEST_TEAM.provider,
+        );
+        expect(hasResults).toBeTruthy();
+        // Name/sex/provider alone can still collide with another record, so
+        // match on DOB too rather than trusting the first row - this CRN
+        // feeds into deleteTestOffenders later on.
+        const matchedCrn = await this.nationalSearchPage.findCrnByDob(
+          DeliusDateFormatter(person.dob),
+        );
+        expect(matchedCrn).toBeTruthy();
+        crn = matchedCrn;
+      }).toPass({ timeout: 15000, intervals: [2000, 5000] });
+      return crn;
+    } catch (error) {
+      console.log(
+        `recoverCrnByName: failed to find ${person.firstName} ${person.lastName}: ${(error as Error).message}`,
+      );
+      return undefined;
+    }
   }
 
   async deleteTestOffenders(crns: string[]): Promise<string[]> {
@@ -67,24 +121,21 @@ export default class DeliusOffenderJourney {
   }
 
   async openOffenderForDeletion(crn: string): Promise<boolean> {
-    await this.page
-      .locator("a", {
-        hasText: "National search",
-      })
-      .click();
+    await this.nationalSearchPage.link().click();
     await expect(this.page).toHaveTitle(/National Search/);
     await this.page.waitForLoadState("networkidle");
-    await selectOption(this.page, "#otherIdentifier", "[Not Selected]");
+    await selectOption(
+      this.page,
+      this.nationalSearchPage.otherIdentifierSelector,
+      "[Not Selected]",
+    );
     await expect(async () => {
-      await this.page.fill("#crn\\:inputText", crn);
-      await expect(this.page.locator("#crn\\:inputText")).toHaveValue(crn);
+      await this.nationalSearchPage.crnInput().fill(crn);
+      await expect(this.nationalSearchPage.crnInput()).toHaveValue(crn);
     }).toPass({ timeout: 10000 });
-    await this.page.click("#searchButton");
+    await this.nationalSearchPage.searchButton().click();
 
-    const viewLink = this.page
-      .locator("tr", { hasText: crn })
-      .locator("a", { hasText: "View" })
-      .first();
+    const viewLink = this.nationalSearchPage.viewLinkForCrn(crn);
 
     const found = await viewLink
       .waitFor({ state: "visible", timeout: 15000 })
@@ -99,15 +150,15 @@ export default class DeliusOffenderJourney {
   }
 
   async deleteCurrentOffender(): Promise<void> {
-    await this.page.getByRole("link", { name: "Event List" }).click();
+    await this.offenderRecordPage.eventListLink().click();
     await this.page.waitForLoadState("networkidle");
-    const eventDelete = this.page.getByRole("link", { name: "delete" });
+    const eventDelete = this.offenderRecordPage.deleteEventLink();
     if ((await eventDelete.count()) > 0) {
       await eventDelete.first().click();
-      await this.page.getByRole("button", { name: "Confirm" }).click();
+      await this.offenderRecordPage.confirmButton().click();
     }
-    await this.page.getByRole("link", { name: "Personal Details" }).click();
-    await this.page.getByRole("button", { name: "Delete" }).click();
-    await this.page.getByRole("button", { name: "Confirm" }).click();
+    await this.offenderRecordPage.personalDetailsLink().click();
+    await this.offenderRecordPage.deleteButton().click();
+    await this.offenderRecordPage.confirmButton().click();
   }
 }
