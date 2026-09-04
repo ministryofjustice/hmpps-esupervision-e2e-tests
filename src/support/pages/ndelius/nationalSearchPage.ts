@@ -30,20 +30,27 @@ export default class NationalSearchPage {
     return this.page.locator("#offendersTable");
   }
 
-  firstResultRow(): Locator {
-    return this.resultsTable().locator("tbody tr:first-child");
+  resultRows(): Locator {
+    return this.resultsTable().locator("tbody tr");
   }
 
-  // The CRN cell has a hidden sort-key span that corrupts a plain
-  // textContent() read, so use innerText() instead - it reflects rendered
-  // text and excludes hidden content regardless of how it's hidden.
-  async firstResultCrn(): Promise<string | undefined> {
-    const text = await this.firstResultRow().locator("td").nth(0).innerText();
-    return text.trim() || undefined;
-  }
-
-  async firstResultDob(): Promise<string | undefined> {
-    const text = await this.firstResultRow().locator("td").nth(2).textContent();
-    return text?.trim() ?? undefined;
+  // Matches by DOB across all rows, not just the first - avoids returning an
+  // unrelated offender's CRN when several rows share a name/sex/provider.
+  async findCrnByDob(dob: string): Promise<string | undefined> {
+    const rows = this.resultRows();
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      const rowDob = (await row.locator("td").nth(2).innerText()).trim();
+      if (rowDob !== dob) {
+        continue;
+      }
+      // The CRN cell has a hidden sort-key span that corrupts a plain
+      // textContent() read, so use innerText() instead - it reflects rendered
+      // text and excludes hidden content regardless of how it's hidden.
+      const crn = (await row.locator("td").nth(0).innerText()).trim();
+      return crn || undefined;
+    }
+    return undefined;
   }
 }

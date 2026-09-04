@@ -74,22 +74,20 @@ export default class DeliusOffenderJourney {
         // findFirstOffender also filters by sex and provider, unlike a plain
         // name search - narrows the chance of recovering an unrelated
         // offender's CRN if another record happens to share this name.
-        const found = await findFirstOffender(
+        const hasResults = await findFirstOffender(
           this.page,
           person,
           TEST_TEAM.provider,
         );
-        expect(found).toBeTruthy();
-        const cleanCrn = await this.nationalSearchPage.firstResultCrn();
-        // Name/sex/provider alone can still collide with an unrelated record
-        // (confirmed against dev - a same-named record with a different CRN
-        // topped the results), and this CRN feeds recordCreatedCrn ->
-        // deleteTestOffenders, so wrongly trusting it means deleting someone
-        // else's record. Cross-check DoB on the matched row before accepting it.
-        const dobCell = await this.nationalSearchPage.firstResultDob();
-        expect(dobCell).toBe(DeliusDateFormatter(person.dob));
-        expect(cleanCrn).toBeTruthy();
-        crn = cleanCrn;
+        expect(hasResults).toBeTruthy();
+        // Name/sex/provider alone can still collide with another record, so
+        // match on DOB too rather than trusting the first row - this CRN
+        // feeds into deleteTestOffenders later on.
+        const matchedCrn = await this.nationalSearchPage.findCrnByDob(
+          DeliusDateFormatter(person.dob),
+        );
+        expect(matchedCrn).toBeTruthy();
+        crn = matchedCrn;
       }).toPass({ timeout: 15000, intervals: [2000, 5000] });
       return crn;
     } catch (error) {
