@@ -36,9 +36,12 @@ export default class NationalSearchPage {
 
   // Matches by DOB across all rows, not just the first - avoids returning an
   // unrelated offender's CRN when several rows share a name/sex/provider.
+  // Returns undefined instead of guessing if zero or more than one row
+  // matches the DOB - an ambiguous match is not safe to trust.
   async findCrnByDob(dob: string): Promise<string | undefined> {
     const rows = this.resultRows();
     const count = await rows.count();
+    const matches: string[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
       const rowDob = (await row.locator("td").nth(2).innerText()).trim();
@@ -49,8 +52,10 @@ export default class NationalSearchPage {
       // textContent() read, so use innerText() instead - it reflects rendered
       // text and excludes hidden content regardless of how it's hidden.
       const crn = (await row.locator("td").nth(0).innerText()).trim();
-      return crn || undefined;
+      if (crn) {
+        matches.push(crn);
+      }
     }
-    return undefined;
+    return matches.length === 1 ? matches[0] : undefined;
   }
 }
