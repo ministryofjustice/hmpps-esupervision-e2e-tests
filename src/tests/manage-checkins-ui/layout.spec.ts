@@ -6,6 +6,8 @@ import {
   FEEDBACK_SURVEY_HREF,
   FOOTER_LINKS,
 } from "../../data/manage-checkins-ui/layoutConstants";
+import { env } from "../../config/env";
+import { urlPattern } from "../../support/utils/url";
 
 // Deliberately narrow: the header and footer belong to
 // hmpps-probation-frontend-components, so only what this service owns or
@@ -66,5 +68,39 @@ test.describe("manage online check ins UI layout", () => {
         pages.footer.footerLink(name),
         `${name} footer link has wrong URL`,
       ).toHaveAttribute("href", href);
+  });
+
+  test("Alerts nav link badge shows the practitioner's alert count", async () => {
+    // The signed-in auto test user always has alerts: test setup creates and
+    // transfers CRNs, which generates them.
+    const badge = pages.primaryNavigation.alertsBadge();
+    await expect(badge).toHaveText(/^(\d{1,2}|99\+)$/);
+  });
+
+  test("Cases nav link takes the practitioner to their case list in MPOP", async ({
+    page: ownPage,
+  }) => {
+    const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
+    await ownPages.primaryNavigation.navLink("Cases").click();
+    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
+    await expect(ownPage).toHaveTitle(/^Cases - Manage people on probation/);
+  });
+
+  test("Search nav link takes the practitioner to MPOP's search page", async ({
+    page: ownPage,
+  }) => {
+    const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
+    await ownPages.primaryNavigation.navLink("Search").click();
+    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/search"));
+    await expect(ownPage).toHaveTitle(/^Search - Manage people on probation/);
+  });
+
+  test("Alerts nav link takes the practitioner to their alerts in MPOP", async ({
+    page: ownPage,
+  }) => {
+    const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
+    await ownPages.primaryNavigation.navLink("Alerts").click();
+    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/alerts"));
+    await expect(ownPage).toHaveTitle(/^Alerts - Manage people on probation/);
   });
 });
