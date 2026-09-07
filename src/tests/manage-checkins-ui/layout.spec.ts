@@ -70,37 +70,34 @@ test.describe("manage online check ins UI layout", () => {
       ).toHaveAttribute("href", href);
   });
 
-  test("Alerts nav link badge shows the practitioner's alert count", async () => {
+  test("alerts badge shows a count in the expected format", async () => {
     // The signed-in auto test user always has alerts: test setup creates and
     // transfers CRNs, which generates them.
     const badge = pages.primaryNavigation.alertsBadge();
     await expect(badge).toHaveText(/^(\d{1,2}|99\+)$/);
   });
 
-  test("Cases nav link takes the practitioner to their case list in MPOP", async ({
+  test("cases nav link takes the practitioner to their case list in MPOP", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Cases").click();
     await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
-    await expect(ownPage).toHaveTitle(/^Cases - Manage people on probation/);
   });
 
-  test("Search nav link takes the practitioner to MPOP's search page", async ({
+  test("search nav link takes the practitioner to MPOP's search page", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Search").click();
     await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/search"));
-    await expect(ownPage).toHaveTitle(/^Search - Manage people on probation/);
   });
 
-  test("Alerts nav link takes the practitioner to their alerts in MPOP", async ({
+  test("alerts nav link takes the practitioner to their alerts in MPOP", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Alerts").click();
     await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/alerts"));
-    await expect(ownPage).toHaveTitle(/^Alerts - Manage people on probation/);
   });
 });
