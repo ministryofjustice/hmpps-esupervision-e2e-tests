@@ -90,3 +90,8 @@ export interface ContactDetails {
   mobile?: string;
   email?: string;
 }
+
+export interface MissedCheckinReview {
+  note: string;
+  sensitive?: boolean;
+}

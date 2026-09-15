@@ -3,6 +3,7 @@ import { MpopPages } from "../../pages/mpop/mpopPages";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
+  MissedCheckinReview,
 } from "../../../data/models";
 import {
   label,
@@ -11,12 +12,18 @@ import {
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
 import {
+  MISSED_CHECK_IN_TITLE,
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
+  REVIEWED_MISSED_CHECK_IN_TITLE,
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { assertExpectedService } from "../../utils/legacyMpop";
-import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import {
+  assertManageCheckinsPage,
+  assertMissedCheckinReviewed,
+} from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import ManageCheckInsJourney from "./manageCheckinsJourney";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -43,9 +50,37 @@ export interface Annotation {
 
 export default class ReviewCheckinJourney {
   private readonly pages: MpopPages;
+  private readonly manage: ManageCheckInsJourney;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
+    this.manage = new ManageCheckInsJourney(page);
+  }
+
+  async login(): Promise<void> {
+    return this.manage.login();
+  }
+
+  async reviewMissedCheckin(
+    crn: string,
+    review: MissedCheckinReview,
+  ): Promise<void> {
+    await this.openCheckinContact(crn, async () => {
+      await this.pages.missedCheckin.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, MISSED_CHECK_IN_TITLE);
+    });
+    await this.pages.missedCheckin.completePage(review);
+
+    // Re-open to check the saved record, not the submitted form.
+    await this.openCheckinContact(crn, async () => {
+      await this.pages.reviewedMissedCheckin.assertOnPage();
+      await assertManageCheckinsPage(
+        this.page,
+        crn,
+        REVIEWED_MISSED_CHECK_IN_TITLE,
+      );
+    });
+    await assertMissedCheckinReviewed(this.page, review);
   }
 
   async reviewCompletedCheckin(
@@ -61,9 +96,10 @@ export default class ReviewCheckinJourney {
     } = decision;
 
     // Review the check in: Identity page, then the review notes page
-    await this.openCheckinContact(crn);
-    await this.pages.reviewIdentity.assertOnPage();
-    await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
+    await this.openCheckinContact(crn, async () => {
+      await this.pages.reviewIdentity.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
+    });
     if (decision.assertValidation) {
       await this.assertIdentityDecisionRequired();
     }
@@ -88,9 +124,10 @@ export default class ReviewCheckinJourney {
     });
 
     // Re-open the check in and verify the review was saved
-    await this.openCheckinContact(crn);
-    await this.pages.reviewedCheckin.assertOnPage();
-    await assertManageCheckinsPage(this.page, crn, REVIEWED_CHECK_IN_TITLE);
+    await this.openCheckinContact(crn, async () => {
+      await this.pages.reviewedCheckin.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, REVIEWED_CHECK_IN_TITLE);
+    });
     await this.assertReviewIdentityTag(identity);
     await this.assertReviewSummaryShows(note);
     if (details) {
@@ -137,13 +174,15 @@ export default class ReviewCheckinJourney {
     annotation: Annotation = {},
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
-    await this.openCheckinContact(crn);
-    await this.pages.reviewedCheckin.assertOnPage();
+    await this.openCheckinContact(crn, () =>
+      this.pages.reviewedCheckin.assertOnPage(),
+    );
     await this.pages.reviewedCheckin.addNote(note, sensitive);
 
     // Re-open and verify the note was saved
-    await this.openCheckinContact(crn);
-    await this.pages.reviewedCheckin.assertOnPage();
+    await this.openCheckinContact(crn, () =>
+      this.pages.reviewedCheckin.assertOnPage(),
+    );
     await this.assertReviewSummaryShows(note);
   }
 
@@ -246,7 +285,12 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(crn: string): Promise<void> {
+  // confirmLanded runs inside the retry, so a failed transition restarts from
+  // the overview instead of timing out.
+  private async openCheckinContact(
+    crn: string,
+    confirmLanded?: () => Promise<void>,
+  ): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
@@ -254,8 +298,11 @@ export default class ReviewCheckinJourney {
       await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
         timeout: 5000,
       });
+      await this.pages.activityLog.openCheckinReview();
+      await assertExpectedService(this.page, "Review journey");
+      if (confirmLanded) {
+        await confirmLanded();
+      }
     }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
-    await this.pages.activityLog.openCheckinReview();
-    await assertExpectedService(this.page, "Review journey");
   }
 }

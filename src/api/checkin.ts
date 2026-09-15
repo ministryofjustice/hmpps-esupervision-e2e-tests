@@ -26,9 +26,10 @@ export interface CheckinSummary {
 export type CheckinUseCase =
   "AWAITING_CHECKIN" | "NEEDS_ATTENTION" | "REVIEWED";
 
+// offenderUuid is optional so callers can list checkins across all offenders.
 export const listOffenderCheckins = async (
   practitioner: string,
-  offenderUuid: string,
+  offenderUuid: string | undefined,
   token: string,
   useCase?: CheckinUseCase,
 ): Promise<CheckinSummary[]> =>
@@ -37,12 +38,15 @@ export const listOffenderCheckins = async (
       headers: authHeader(token),
       params: {
         practitioner,
-        offenderId: offenderUuid,
         direction: "DESC",
+        ...(offenderUuid ? { offenderId: offenderUuid } : {}),
         ...(useCase ? { useCase } : {}),
       },
     });
-    await assertOk(response, `List checkins for offender ${offenderUuid}`);
+    await assertOk(
+      response,
+      `List checkins for offender ${offenderUuid ?? "(all)"}`,
+    );
     const body = (await response.json()) as { content?: CheckinSummary[] };
     return body.content ?? [];
   });
