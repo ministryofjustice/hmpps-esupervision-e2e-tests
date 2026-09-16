@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { expect, Locator, Page, test } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import {
   AdditionalAnswer,
@@ -17,6 +17,7 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { assertExpectedService } from "../../utils/legacyMpop";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import { assertReturnedToMpopActivityLog } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -85,6 +86,9 @@ export default class ReviewCheckinJourney {
       note,
       riskManagement,
       sensitive,
+    });
+    await test.step("Filing the review hands off to MPOP", async () => {
+      await assertReturnedToMpopActivityLog(this.page, crn);
     });
 
     // Re-open the check in and verify the review was saved

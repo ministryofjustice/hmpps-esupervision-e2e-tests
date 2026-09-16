@@ -19,6 +19,7 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import { assertHrefIsMpop } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 interface ContactPreferenceValues {
   preference: Preference;
@@ -255,9 +256,25 @@ export default class SetupOnlineCheckinsJourney {
     });
   }
 
-  async submitSetup(summary: CheckInSummaryPage): Promise<void> {
+  async submitSetup(summary: CheckInSummaryPage, crn: string): Promise<void> {
     await summary.submitSetUp();
-    await new CheckInConfirmationPage(this.page).assertOnPage();
+    const confirmation = new CheckInConfirmationPage(this.page);
+    await confirmation.assertOnPage();
+
+    // Checked by href, not followed - this page cannot be revisited, so following
+    // one would lose the other.
+    await test.step("Confirmation links hand off to MPOP", async () => {
+      await assertHrefIsMpop(
+        confirmation.overviewLink(),
+        "View the person's record",
+        `/case/${crn}`,
+      );
+      await assertHrefIsMpop(
+        confirmation.allCasesLink(),
+        "Return to all cases",
+        "/case",
+      );
+    });
   }
 
   async changeContactPreferenceFromSummary(

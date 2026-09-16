@@ -13,6 +13,7 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import { assertHrefIsMpop } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 export interface RestartValues {
   date: string;
@@ -57,6 +58,23 @@ export default class ManageCheckInsJourney {
 
       await this.pages.stop.assertOnPage();
       await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
+
+      // Checked here rather than in a spec of their own, so they cost no extra
+      // person. Named as a step so the coverage shows up in the report.
+      await test.step("Back and Cancel hand off to MPOP", async () => {
+        const backToManage = `/case/${crn}/appointments/check-in/manage/`;
+        await assertHrefIsMpop(
+          this.pages.stop.backLink(),
+          "Back",
+          backToManage,
+        );
+        await assertHrefIsMpop(
+          this.pages.stop.cancelLink(),
+          "Cancel",
+          backToManage,
+        );
+      });
+
       await this.pages.stop.completePage(reason);
     });
   }
