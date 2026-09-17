@@ -19,9 +19,10 @@ import { assertExpectedService } from "../../utils/legacyMpop";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import {
   assertHrefIsMpop,
-  assertLandsInMpop,
   assertReturnedToMpopActivityLog,
+  MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import { followToMpop } from "../../utils/mpopHandoff";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -73,7 +74,7 @@ export default class ReviewCheckinJourney {
     await assertHrefIsMpop(
       this.pages.reviewIdentity.backLink(),
       "Back on the review identity page",
-      `/case/${crn}/activity-log`,
+      MPOP_PATH.activityLog(crn),
     );
     if (decision.assertValidation) {
       await this.assertIdentityDecisionRequired();
@@ -112,13 +113,16 @@ export default class ReviewCheckinJourney {
     }
     await this.assertIdentityImages(identity);
 
-    // Follows Back and checks it lands on the activity log in MPOP.
+    // Follows Back and checks it lands on the activity log in MPOP. Kept inline
+    // here rather than in its own test - unlike manage/custom-questions, there's
+    // no separate link-only spec for the review journey, and this check is cheap
+    // alongside the review flow already under test.
     await test.step("Back returns to the activity log in MPOP", async () => {
-      await assertLandsInMpop(
+      await followToMpop(
         this.page,
         this.pages.reviewedCheckin.backLink(),
         "Back on the reviewed check in page",
-        `/case/${crn}/activity-log`,
+        MPOP_PATH.activityLog(crn),
         () => this.pages.activityLog.assertOnPage(),
       );
     });

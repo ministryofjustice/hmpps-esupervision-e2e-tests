@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { env } from "../../../config/env";
 import { LEGACY_MPOP } from "../../utils/legacyMpop";
-import { urlPattern } from "../../utils/url";
+import { absoluteUrl, urlPattern } from "../../utils/url";
 
 /**
  * Checks on links that take a practitioner back to MPOP.
@@ -16,6 +16,15 @@ import { urlPattern } from "../../utils/url";
  * no hand off to check.
  */
 
+/** Every path in MPOP that this service hands practitioners off to. Declared
+ *  once so a destination isn't repeated as a literal at each call site. */
+export const MPOP_PATH = {
+  overview: (crn: string) => `/case/${crn}`,
+  allCases: "/case",
+  activityLog: (crn: string) => `/case/${crn}/activity-log`,
+  manage: (crn: string) => `/case/${crn}/appointments/check-in/manage/`,
+} as const;
+
 /** The link points at MPOP. Only works for the ones built from MPOP's URL. */
 export const assertHrefIsMpop = async (
   link: Locator,
@@ -25,7 +34,7 @@ export const assertHrefIsMpop = async (
   if (LEGACY_MPOP) return;
   await expect(link, `${name} should point at MPOP`).toHaveAttribute(
     "href",
-    urlPattern(env.mpopUrl(), path),
+    absoluteUrl(env.mpopUrl(), path),
   );
 };
 
@@ -41,26 +50,6 @@ export const assertHrefIs = async (
   );
 };
 
-/**
- * Follows the link and checks it ends up in MPOP. Matches the start of the path.
- * `landedOn` asserts the page MPOP rendered there.
- */
-export const assertLandsInMpop = async (
-  page: Page,
-  link: Locator,
-  name: string,
-  path: string,
-  landedOn?: () => Promise<void>,
-): Promise<void> => {
-  if (LEGACY_MPOP) return;
-  await expect(link, `${name} should be on the page`).toBeVisible();
-  await link.click();
-  await expect(page, `${name} should land in MPOP at ${path}`).toHaveURL(
-    urlPattern(env.mpopUrl(), path),
-  );
-  await landedOn?.();
-};
-
 /** Filing a review is a redirect, not a link, so check the URL it lands on. */
 export const assertReturnedToMpopActivityLog = async (
   page: Page,
@@ -70,5 +59,5 @@ export const assertReturnedToMpopActivityLog = async (
   await expect(
     page,
     `Filing the review should return to ${crn}'s activity log in MPOP`,
-  ).toHaveURL(urlPattern(env.mpopUrl(), `/case/${crn}/activity-log`));
+  ).toHaveURL(urlPattern(env.mpopUrl(), MPOP_PATH.activityLog(crn)));
 };

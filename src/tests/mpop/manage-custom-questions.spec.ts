@@ -65,4 +65,14 @@ test.describe.serial("Manage custom check in questions", () => {
 
     await journey.clearCustomQuestions(crn, remaining);
   });
+
+  test("questions intro page links back to MPOP", async ({
+    page,
+  }, testInfo) => {
+    const crn = offender.crn;
+    await attachCreatedCrn(testInfo, crn);
+    const journey = new CustomQuestionsJourney(page);
+    await journey.login();
+    await journey.assertQuestionsIntroLinks(crn);
+  });
 });

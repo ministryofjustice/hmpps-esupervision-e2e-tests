@@ -4,8 +4,9 @@ import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineC
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import {
   assertHrefIs,
-  assertLandsInMpop,
+  MPOP_PATH,
 } from "../../support/assertions/manage-checkins-ui/mpopHandoffAssertions";
+import { followToMpop } from "../../support/utils/mpopHandoff";
 
 // Sole owner of TEST_MPOP_ELIGIBILITY_CRN. No test here completes setup, so
 // restarting it on the same CRN is safe - serial only to stop the tests racing
@@ -42,7 +43,7 @@ test("eligibility answer leads to the PARTIALLY ELIGIBLE outcome", async ({
   await assertHrefIs(
     pages.partiallyEligible.cancelLink(),
     "Cancel and go back to the person's overview",
-    `/case/${crn}`,
+    MPOP_PATH.overview(crn),
   );
 });
 
@@ -51,11 +52,30 @@ test("Cancel on the eligibility page returns to the person's record in MPOP", as
   page,
 }) => {
   const { pages, crn } = await startEligibility(page);
-  await assertLandsInMpop(
+  await followToMpop(
     page,
     pages.eligibility.cancelLink(),
     "Cancel and go back",
-    `/case/${crn}`,
+    MPOP_PATH.overview(crn),
     () => pages.overview.assertOnPage(),
+  );
+});
+
+test("eligibility and eligible pages' Cancel links point back to the person's overview", async ({
+  page,
+}) => {
+  const { pages, crn } = await startEligibility(page);
+  await assertHrefIs(
+    pages.eligibility.cancelLink(),
+    "Cancel and go back",
+    MPOP_PATH.overview(crn),
+  );
+
+  await pages.eligibility.completePage([9]);
+  await pages.eligible.assertOnPage();
+  await assertHrefIs(
+    pages.eligible.cancelLink(),
+    "Cancel and go back to the person's overview",
+    MPOP_PATH.overview(crn),
   );
 });

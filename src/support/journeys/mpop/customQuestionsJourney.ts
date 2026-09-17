@@ -21,7 +21,10 @@ import {
 import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
-import { assertHrefIsMpop } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import {
+  assertHrefIsMpop,
+  MPOP_PATH,
+} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 import { urlPattern } from "../../utils/url";
 
 export default class CustomQuestionsJourney {
@@ -66,19 +69,6 @@ export default class CustomQuestionsJourney {
       crn,
       HOW_TO_WRITE_QUESTIONS_TITLE,
     );
-    // Checks the Back and Cancel link hrefs point at MPOP.
-    await test.step("Back and Cancel hand off to MPOP", async () => {
-      await assertHrefIsMpop(
-        this.pages.howToWriteQuestions.backLink(),
-        "Back",
-        `/case/${crn}/appointments/check-in/manage/`,
-      );
-      await assertHrefIsMpop(
-        this.pages.howToWriteQuestions.cancelLink(),
-        "Cancel and go to the person's overview",
-        `/case/${crn}`,
-      );
-    });
 
     await this.pages.howToWriteQuestions.clickAddQuestions();
     await this.pages.addQuestions.assertOnPage();
@@ -93,6 +83,28 @@ export default class CustomQuestionsJourney {
     const { manage, nextCheckinDate } =
       await this.openManageForFutureCheckin(crn);
     await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
+  }
+
+  /** Checks the Back and Cancel link hrefs on the "how to write questions" intro
+   *  page point at MPOP. */
+  async assertQuestionsIntroLinks(crn: string): Promise<void> {
+    await test.step("Back and Cancel hand off to MPOP", async () => {
+      const { manage } = await this.openManageForFutureCheckin(crn);
+      await manage.clickChangeQuestions();
+      await assertExpectedService(this.page, "Questions journey");
+      await this.pages.howToWriteQuestions.assertOnPage();
+
+      await assertHrefIsMpop(
+        this.pages.howToWriteQuestions.backLink(),
+        "Back",
+        MPOP_PATH.manage(crn),
+      );
+      await assertHrefIsMpop(
+        this.pages.howToWriteQuestions.cancelLink(),
+        "Cancel and go to the person's overview",
+        MPOP_PATH.overview(crn),
+      );
+    });
   }
 
   private async previewFeelingQuestion(crn: string): Promise<void> {

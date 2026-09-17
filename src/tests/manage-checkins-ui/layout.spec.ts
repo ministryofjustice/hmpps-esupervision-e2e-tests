@@ -7,7 +7,11 @@ import {
   FOOTER_LINKS,
 } from "../../data/manage-checkins-ui/layoutConstants";
 import { env } from "../../config/env";
-import { originPattern, urlPattern } from "../../support/utils/url";
+import {
+  absoluteUrl,
+  originPattern,
+  urlPattern,
+} from "../../support/utils/url";
 
 // Deliberately narrow: the header and footer belong to
 // hmpps-probation-frontend-components, so only what this service owns or
@@ -125,9 +129,8 @@ test.describe("manage online check ins UI layout", () => {
     page: ownPage,
   }) => {
     await new SignInJourney(ownPage).login(UNROUTED_PATH);
-    const base = env.manageCheckinsUiUrl().replace(/\/$/, "");
 
-    await ownPage.goto(`${base}/`);
+    await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/"));
     await expect(
       ownPage,
       "this service's homepage URL should redirect to MPOP",
@@ -139,7 +142,7 @@ test.describe("manage online check ins UI layout", () => {
       "MPOP should render a page after the homepage redirect",
     ).toBeVisible();
 
-    await ownPage.goto(`${base}/case`);
+    await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/case"));
     await expect(
       ownPage,
       "the case list should redirect to MPOP's case list",

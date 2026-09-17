@@ -54,7 +54,7 @@ export default class OnlineCheckinJourney {
       eligibilityIds: [9],
       rationale: "E2E test rationale",
     });
-    await setup.submitSetup(summary, offender.crn);
+    await setup.submitSetup(summary);
     return offender;
   }
 

@@ -20,10 +20,10 @@ import {
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import {
-  assertHrefIs,
   assertHrefIsMpop,
-  assertLandsInMpop,
+  MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import { followToMpop } from "../../utils/mpopHandoff";
 
 interface ContactPreferenceValues {
   preference: Preference;
@@ -210,13 +210,6 @@ export default class SetupOnlineCheckinsJourney {
         await assertExpectedService(this.page, "Setup online check ins");
         await this.pages.eligibility.assertOnPage(5000);
       }).toPass({ timeout: 30000, intervals: [2000, 5000, 10000] });
-
-      // Checks the eligibility page's Cancel link href.
-      await assertHrefIs(
-        this.pages.eligibility.cancelLink(),
-        "Cancel and go back",
-        `/case/${crn}`,
-      );
     });
   }
 
@@ -249,11 +242,6 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
       await this.pages.eligible.assertOnPage();
-      await assertHrefIs(
-        this.pages.eligible.cancelLink(),
-        "Cancel and go back to the person's overview",
-        `/case/${this.currentCrn()}`,
-      );
       await this.pages.eligible.completePage(0);
 
       await this.pages.spoApproval.assertOnPage();
@@ -283,7 +271,8 @@ export default class SetupOnlineCheckinsJourney {
     });
   }
 
-  async submitSetup(summary: CheckInSummaryPage, crn: string): Promise<void> {
+  async submitSetup(summary: CheckInSummaryPage): Promise<void> {
+    const crn = this.currentCrn();
     await summary.submitSetUp();
     const confirmation = new CheckInConfirmationPage(this.page);
     await confirmation.assertOnPage();
@@ -293,18 +282,18 @@ export default class SetupOnlineCheckinsJourney {
       await assertHrefIsMpop(
         confirmation.overviewLink(),
         "View the person's record",
-        `/case/${crn}`,
+        MPOP_PATH.overview(crn),
       );
       await assertHrefIsMpop(
         confirmation.allCasesLink(),
         "Return to all cases",
-        "/case",
+        MPOP_PATH.allCases,
       );
-      await assertLandsInMpop(
+      await followToMpop(
         this.page,
         confirmation.overviewLink(),
         "View the person's record",
-        `/case/${crn}`,
+        MPOP_PATH.overview(crn),
         () => this.pages.overview.assertOnPage(),
       );
     });

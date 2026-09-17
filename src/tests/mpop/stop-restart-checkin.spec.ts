@@ -1,6 +1,7 @@
 import test, { expect } from "@playwright/test";
 import { env } from "../../config/env";
 import ManageCheckInsJourney from "../../support/journeys/mpop/manageCheckinsJourney";
+import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import {
   displayedCheckinDatePattern,
   firstCheckinDateString,
@@ -10,7 +11,9 @@ import { getOffenderByCrn } from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 import { Preference } from "../../data/models";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
-import { urlPattern } from "../../support/utils/url";
+import { followToMpop } from "../../support/utils/mpopHandoff";
+import { absoluteUrl, urlPattern } from "../../support/utils/url";
+import { MPOP_PATH } from "../../support/assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 // Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
 // the precondition for restart -> VERIFIED, which leaves the CRN as it started.
@@ -33,22 +36,23 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     await expect
       .poll(async () => (await getOffenderByCrn(crn, token)).status)
       .toBe("INACTIVE");
+  });
 
-    // Opens the stop page for a stopped offender and checks it redirects to MPOP.
-    // TODO(legacy-mpop): drop the guard - legacy MPOP renders the page instead.
-    if (!LEGACY_MPOP) {
-      await test.step("Stop page for a stopped offender redirects to MPOP", async () => {
-        const { uuid } = await getOffenderByCrn(crn, token);
-        const base = env.manageCheckinsUiUrl().replace(/\/$/, "");
-        await page.goto(
-          `${base}/case/${crn}/appointments/check-in/manage/${uuid}/stop-checkin`,
-        );
-        await expect(
-          page,
-          "Stop page should redirect a stopped offender to their record in MPOP",
-        ).toHaveURL(urlPattern(env.mpopUrl(), `/case/${crn}`));
-      });
-    }
+  // TODO(legacy-mpop): drop the skip - legacy MPOP renders the page instead.
+  test("Stop page for a stopped offender redirects to MPOP", async ({
+    page,
+  }) => {
+    test.skip(LEGACY_MPOP, "Legacy MPOP renders the stop page itself");
+
+    const { uuid } = await getOffenderByCrn(crn, token);
+    const base = absoluteUrl(env.manageCheckinsUiUrl());
+    await page.goto(
+      `${base}/case/${crn}/appointments/check-in/manage/${uuid}/stop-checkin`,
+    );
+    await expect(
+      page,
+      "Stop page should redirect a stopped offender to their record in MPOP",
+    ).toHaveURL(urlPattern(env.mpopUrl(), MPOP_PATH.overview(crn)));
   });
 
   test("practitioner restarts online check ins for the stopped offender -> offender returns to VERIFIED", async ({
@@ -76,8 +80,30 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       manage.settingsFrequency(),
       "Restart should save the frequency that was selected",
     ).toContainText("Every 8 weeks");
+  });
 
-    // Clicks Back on the manage page and checks it returns to MPOP.
-    await journey.returnToOverview(crn);
+  // Link-only test, doesn't submit anything, so it runs last and leaves the CRN
+  // as restart left it.
+  test("manage and stop check ins pages link back to MPOP", async ({
+    page,
+  }) => {
+    const journey = new ManageCheckInsJourney(page);
+    const pages = new MpopPages(page);
+    await journey.login();
+
+    await journey.openManage(crn);
+    await journey.assertManageBackLink(crn);
+
+    await journey.openStopCheckIns(crn);
+    await journey.assertStopPageLinks(crn);
+
+    const manage = await journey.openManage(crn);
+    await followToMpop(
+      page,
+      manage.backLink(),
+      "Back on the manage check ins page",
+      MPOP_PATH.overview(crn),
+      () => pages.overview.assertOnPage(),
+    );
   });
 });
