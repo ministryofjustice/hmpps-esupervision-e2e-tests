@@ -23,6 +23,7 @@ import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/ma
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
 import {
   assertHrefIsMpop,
+  assertHrefStartsWithMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 import { urlPattern } from "../../utils/url";
@@ -94,7 +95,7 @@ export default class CustomQuestionsJourney {
       await assertExpectedService(this.page, "Questions journey");
       await this.pages.howToWriteQuestions.assertOnPage();
 
-      await assertHrefIsMpop(
+      await assertHrefStartsWithMpop(
         this.pages.howToWriteQuestions.backLink(),
         "Back",
         MPOP_PATH.manage(crn),

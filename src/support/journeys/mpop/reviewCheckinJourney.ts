@@ -112,9 +112,16 @@ export default class ReviewCheckinJourney {
       await this.assertCheckinDetails(this.pages.reviewedCheckin, details);
     }
     await this.assertIdentityImages(identity);
+  }
 
-    // Follows Back and checks it lands on the activity log in MPOP.
+  /**
+   * Opens a reviewed check in, follows Back and checks it lands on the activity
+   * log in MPOP.
+   */
+  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
     await test.step("Back returns to the activity log in MPOP", async () => {
+      await this.openCheckinContact(crn);
+      await this.pages.reviewedCheckin.assertOnPage();
       await followToMpop(
         this.page,
         this.pages.reviewedCheckin.backLink(),

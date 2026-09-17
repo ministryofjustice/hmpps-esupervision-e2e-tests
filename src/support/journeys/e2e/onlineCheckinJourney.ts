@@ -55,6 +55,9 @@ export default class OnlineCheckinJourney {
       rationale: "E2E test rationale",
     });
     await setup.submitSetup(summary);
+    // The confirmation page only exists right after submitting, so the link is
+    // followed here.
+    await setup.assertConfirmationLinksLandInMpop();
     return offender;
   }
 
@@ -106,6 +109,10 @@ export default class OnlineCheckinJourney {
     details?: CompletedCheckinDetails,
   ): Promise<void> {
     await this.review.reviewCompletedCheckin(crn, decision, details);
+  }
+
+  async assertReviewedCheckinBackLink(crn: string): Promise<void> {
+    await this.review.assertReviewedCheckinBackLinkLandsInMpop(crn);
   }
 
   async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {

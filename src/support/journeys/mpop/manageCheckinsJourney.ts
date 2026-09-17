@@ -16,7 +16,7 @@ import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import {
   assertHrefIs,
-  assertHrefIsMpop,
+  assertHrefStartsWithMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
@@ -89,7 +89,11 @@ export default class ManageCheckInsJourney {
     const backToManage = MPOP_PATH.manage(crn);
 
     await test.step("Back returns to the manage page via MPOP", async () => {
-      await assertHrefIsMpop(this.pages.stop.backLink(), "Back", backToManage);
+      await assertHrefStartsWithMpop(
+        this.pages.stop.backLink(),
+        "Back",
+        backToManage,
+      );
       await this.pages.stop.backLink().click();
       await assertExpectedService(this.page, "Back from stop check ins");
       await this.pages.manage.assertOnPage();
@@ -97,7 +101,7 @@ export default class ManageCheckInsJourney {
     });
 
     await test.step("Cancel returns to the manage page via MPOP", async () => {
-      await assertHrefIsMpop(
+      await assertHrefStartsWithMpop(
         this.pages.stop.cancelLink(),
         "Cancel",
         backToManage,
@@ -212,20 +216,29 @@ export default class ManageCheckInsJourney {
       await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
 
+      // Checks the all cases link's href. Following the overview link is
+      // assertRestartConfirmationLinksLandInMpop's job, so this leaves the
+      // browser on the confirmation page.
       await test.step("Restart confirmation links hand off to MPOP", async () => {
         await assertHrefIs(
           this.pages.restartConfirmation.allCasesLink(),
           "Go to all cases",
           "/case/",
         );
-        await followToMpop(
-          this.page,
-          this.pages.restartConfirmation.overviewLink(),
-          "Return to the person's overview",
-          MPOP_PATH.overview(crn),
-          () => this.pages.overview.assertOnPage(),
-        );
       });
+    });
+  }
+
+  /** Follows the restart confirmation's overview link and checks it lands in MPOP. */
+  async assertRestartConfirmationLinksLandInMpop(crn: string): Promise<void> {
+    await test.step("Restart confirmation overview link lands in MPOP", async () => {
+      await followToMpop(
+        this.page,
+        this.pages.restartConfirmation.overviewLink(),
+        "Return to the person's overview",
+        MPOP_PATH.overview(crn),
+        () => this.pages.overview.assertOnPage(),
+      );
     });
   }
 }

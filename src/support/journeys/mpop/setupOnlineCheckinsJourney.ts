@@ -277,7 +277,8 @@ export default class SetupOnlineCheckinsJourney {
     const confirmation = new CheckInConfirmationPage(this.page);
     await confirmation.assertOnPage();
 
-    // Checks both link hrefs, then follows the record link to MPOP.
+    // Checks both link hrefs. Following them is assertConfirmationLinksLandInMpop's
+    // job, so this leaves the browser on the confirmation page.
     await test.step("Confirmation links hand off to MPOP", async () => {
       await assertHrefIsMpop(
         confirmation.overviewLink(),
@@ -289,6 +290,14 @@ export default class SetupOnlineCheckinsJourney {
         "Return to all cases",
         MPOP_PATH.allCases,
       );
+    });
+  }
+
+  /** Follows the confirmation page's record link and checks it lands in MPOP. */
+  async assertConfirmationLinksLandInMpop(): Promise<void> {
+    const crn = this.currentCrn();
+    const confirmation = new CheckInConfirmationPage(this.page);
+    await test.step("Confirmation record link lands in MPOP", async () => {
       await followToMpop(
         this.page,
         confirmation.overviewLink(),

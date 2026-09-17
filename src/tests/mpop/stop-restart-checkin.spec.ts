@@ -66,6 +66,9 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       frequency: FrequencyOptions.EVERY_8_WEEKS,
       preference: Preference.EMAIL,
     });
+    // The confirmation page only exists right after restart, so the link is
+    // followed here rather than in the link-only test below.
+    await journey.assertRestartConfirmationLinksLandInMpop(crn);
     await expect
       .poll(async () => (await getOffenderByCrn(crn, token)).status)
       .toBe("VERIFIED");

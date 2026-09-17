@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { env } from "../../../config/env";
 import { LEGACY_MPOP } from "../../utils/legacyMpop";
-import { urlPattern } from "../../utils/url";
+import { absoluteUrl, urlPattern } from "../../utils/url";
 
 /**
  * Checks on links that take a practitioner back to MPOP.
@@ -20,12 +20,13 @@ import { urlPattern } from "../../utils/url";
  *  once so a destination isn't repeated as a literal at each call site. */
 export const MPOP_PATH = {
   overview: (crn: string) => `/case/${crn}`,
-  allCases: "/case",
+  allCases: "/case/",
   activityLog: (crn: string) => `/case/${crn}/activity-log`,
   manage: (crn: string) => `/case/${crn}/appointments/check-in/manage/`,
 } as const;
 
-/** The link points at MPOP. Only works for the ones built from MPOP's URL. */
+/** The link points at exactly this path in MPOP. Only works for the ones built
+ *  from MPOP's URL. */
 export const assertHrefIsMpop = async (
   link: Locator,
   name: string,
@@ -34,8 +35,26 @@ export const assertHrefIsMpop = async (
   if (LEGACY_MPOP) return;
   await expect(link, `${name} should point at MPOP`).toHaveAttribute(
     "href",
-    urlPattern(env.mpopUrl(), path),
+    absoluteUrl(env.mpopUrl(), path),
   );
+};
+
+/**
+ * The link points into MPOP at or below this path. For routes whose href carries
+ * an id the test does not know - only MPOP_PATH.manage, where the check in UUID
+ * is appended. Prefer assertHrefIsMpop everywhere else: a prefix of
+ * `/case/{crn}` also matches every page nested under it.
+ */
+export const assertHrefStartsWithMpop = async (
+  link: Locator,
+  name: string,
+  path: string,
+): Promise<void> => {
+  if (LEGACY_MPOP) return;
+  await expect(
+    link,
+    `${name} should point into MPOP at ${path}`,
+  ).toHaveAttribute("href", urlPattern(env.mpopUrl(), path));
 };
 
 /** Checks the link's href matches a relative path. */

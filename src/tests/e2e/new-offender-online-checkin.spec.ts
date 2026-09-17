@@ -121,6 +121,8 @@ test.describe("Online check in for a new offender", () => {
 
       await journey.reviewCheckin(offender.crn, scenario.review, details);
 
+      await journey.assertReviewedCheckinBackLink(offender.crn);
+
       await journey.annotateCheckin(offender.crn, scenario.annotation);
     });
   }
