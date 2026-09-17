@@ -31,10 +31,11 @@ export default class OnlineCheckinJourney {
   }
 
   /**
-   * `assertMpopHandoff` follows the confirmation page's link out to MPOP. Off by
-   * default: the link is a static href, so one scenario proves the redirect and
-   * the rest would just repeat it. It also leaves the browser on the person's
-   * overview instead of the confirmation page.
+   * `assertMpopHandoff` checks the confirmation page's two links back to MPOP.
+   *
+   * Off by default. The links never vary, so one scenario covers them and the
+   * rest would just repeat the same check. It also ends on the person's overview
+   * rather than the confirmation page.
    */
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
@@ -62,8 +63,8 @@ export default class OnlineCheckinJourney {
       rationale: "E2E test rationale",
     });
     await setup.submitSetup(summary);
-    // The confirmation page only exists right after submitting, so if the link is
-    // being followed at all, it has to happen here.
+    // The confirmation page only exists right after submitting, so if we're
+    // following the link at all, it has to be now.
     if (assertMpopHandoff) {
       await setup.assertConfirmationLinksLandInMpop(offender.crn);
     }
@@ -112,12 +113,16 @@ export default class OnlineCheckinJourney {
     await this.customQuestions.assertChangeQuestionsUnavailable(crn);
   }
 
+  /** `assertMpopHandoff` - see reviewCompletedCheckin for what it turns on. */
   async reviewCheckin(
     crn: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
+    { assertMpopHandoff = false } = {},
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details);
+    await this.review.reviewCompletedCheckin(crn, decision, details, {
+      assertMpopHandoff,
+    });
   }
 
   async assertReviewedCheckinBackLink(crn: string): Promise<void> {

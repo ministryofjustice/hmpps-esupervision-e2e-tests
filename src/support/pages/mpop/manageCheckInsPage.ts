@@ -9,13 +9,16 @@ export default class ManageCheckInsPage extends MPopBasePage {
   }
 
   /**
-   * Back to the person's overview. Both services point it at `/case/{crn}`, but
-   * MOCI renders a back link where legacy MPOP renders a one-item "< Back"
-   * breadcrumb. Branched on the flag rather than matched with one either-or
-   * selector, so it always resolves to a single element.
+   * Back to the person's overview. Both services send you to `/case/{crn}`, but
+   * MOCI renders a back link and legacy MPOP a one-item "< Back" breadcrumb.
+   * Branching on the flag keeps this to a single element either way.
    *
-   * TODO(legacy-mpop): Drop the branch when legacy MPOP is removed - this page is
-   * the only one where the two services differ.
+   * The breadcrumb side isn't tested any more - link tests don't run on legacy.
+   * Left alone because taking it out belongs to retiring legacy MPOP, not to
+   * these tests.
+   *
+   * TODO(legacy-mpop): drop the branch when legacy MPOP goes - this is the only
+   * page where the two differ.
    */
   backLink(): Locator {
     return LEGACY_MPOP

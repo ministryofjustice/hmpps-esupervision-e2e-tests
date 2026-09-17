@@ -3,17 +3,18 @@ import { env } from "../../config/env";
 import SetupOnlineCheckinsJourney from "../../support/journeys/mpop/setupOnlineCheckinsJourney";
 import { MpopPages } from "../../support/pages/mpop/mpopPages";
 import {
-  assertHrefIs,
+  assertRelativeHref,
+  followToMpop,
   MPOP_PATH,
-} from "../../support/assertions/manage-checkins-ui/mpopHandoffAssertions";
-import { followToMpop } from "../../support/utils/mpopHandoff";
+} from "../../support/assertions/manage-checkins-ui/mpopHandoff";
+import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
 
 // Sole owner of TEST_MPOP_ELIGIBILITY_CRN. No test here completes setup, so
 // starting the wizard again on the same CRN is safe - serial so a failure part
 // way through the wizard doesn't leave the next test starting from that state.
 test.describe.configure({ mode: "serial" });
 
-/** Opens the eligibility page and returns the pages with the CRN. */
+/** Signs in, starts setup, and stops on the eligibility questions. */
 const startEligibility = async (
   page: Page,
 ): Promise<{ pages: MpopPages; crn: string }> => {
@@ -40,18 +41,22 @@ test("eligibility answer leads to the PARTIALLY ELIGIBLE outcome", async ({
   const { pages, crn } = await startEligibility(page);
   await pages.eligibility.completePage([0, 2, 4]);
   await pages.partiallyEligible.assertOnPage();
-  await assertHrefIs(
+  await assertRelativeHref(
     pages.partiallyEligible.cancelLink(),
     "Cancel and go back to the person's overview",
     MPOP_PATH.overview(crn),
   );
 });
 
-test("eligibility and eligible pages' Cancel links go back to the person's overview in MPOP", async ({
+test("Cancel on the eligibility questions and eligible pages returns to the person in MPOP", async ({
   page,
 }) => {
+  // Every check here is a link back to MPOP, and none of those run on legacy -
+  // the test would pass having checked nothing.
+  test.skip(LEGACY_MPOP, "Links back to MPOP aren't tested on legacy");
+
   const { pages, crn } = await startEligibility(page);
-  await assertHrefIs(
+  await assertRelativeHref(
     pages.eligibility.cancelLink(),
     "Cancel and go back",
     MPOP_PATH.overview(crn),
@@ -59,15 +64,14 @@ test("eligibility and eligible pages' Cancel links go back to the person's overv
 
   await pages.eligibility.completePage([9]);
   await pages.eligible.assertOnPage();
-  await assertHrefIs(
+  await assertRelativeHref(
     pages.eligible.cancelLink(),
     "Cancel and go back to the person's overview",
     MPOP_PATH.overview(crn),
   );
 
-  // Both pages point at the same relative path, and this service doesn't serve
-  // it - following one proves the redirect out to MPOP happens. On the legacy
-  // path followToMpop is a no-op, leaving the hrefs above as the check.
+  // Both pages point at the same relative path, which this service doesn't
+  // serve - following one is enough to show the redirect out to MPOP works.
   await followToMpop(
     page,
     pages.eligible.cancelLink(),

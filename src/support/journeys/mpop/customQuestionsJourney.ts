@@ -22,9 +22,10 @@ import { assertCaseBanner } from "../../utils/caseBanner";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
 import {
-  assertHrefIsMpop,
+  assertAbsoluteMpopHref,
   MPOP_PATH,
-} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+  noHandOffOnLegacy,
+} from "../../assertions/manage-checkins-ui/mpopHandoff";
 import { offenderUuidFrom, urlPattern } from "../../utils/url";
 
 export default class CustomQuestionsJourney {
@@ -85,23 +86,27 @@ export default class CustomQuestionsJourney {
     await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
   }
 
-  /** Checks the Back and Cancel link hrefs on the "how to write questions" intro
-   *  page point at MPOP. */
+  /** Back and Cancel on the "how to write questions" page both point back into
+   *  MPOP - Back to the manage page, Cancel to the person's overview. */
   async assertQuestionsIntroLinks(crn: string): Promise<void> {
+    // Nothing below runs on legacy, so don't walk the journey to get there.
+    // Bailing through the helper keeps it in the report like every other one.
+    if (noHandOffOnLegacy("Back and Cancel on the questions intro page"))
+      return;
     await test.step("Back and Cancel hand off to MPOP", async () => {
       const { manage } = await this.openManageForFutureCheckin(crn);
       await manage.clickChangeQuestions();
       await assertExpectedService(this.page, "Questions journey");
       await this.pages.howToWriteQuestions.assertOnPage();
 
-      // The exact manage page this journey came from - a prefix of manage/ would
-      // also match this page's own URL, nested under it.
-      await assertHrefIsMpop(
+      // The exact manage page we came from. A prefix of manage/ would also
+      // match this page's own URL, which sits under it.
+      await assertAbsoluteMpopHref(
         this.pages.howToWriteQuestions.backLink(),
         "Back on the questions intro page",
         MPOP_PATH.manageCheckin(crn, offenderUuidFrom(this.page.url())),
       );
-      await assertHrefIsMpop(
+      await assertAbsoluteMpopHref(
         this.pages.howToWriteQuestions.cancelLink(),
         "Cancel and go to the person's overview",
         MPOP_PATH.overview(crn),
@@ -310,6 +315,8 @@ export default class CustomQuestionsJourney {
         this.page,
         "Saving questions should land back on the MPOP case overview",
       ).toHaveURL(urlPattern(env.mpopUrl(), `/case/${crn}`));
+      // Prefix match, so check the page as well - see urlPattern.
+      await this.pages.overview.assertOnPage();
     }
   }
 

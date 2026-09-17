@@ -21,16 +21,26 @@ export default class OverviewPage extends MPopBasePage {
     await this.getQA("activityLogTab").getByRole("link").click();
   }
 
-  /** The card names this link "Manage online check ins" while check ins are
-   *  active and "View all online check in details" once they are stopped. Both
-   *  go to the same manage page. */
+  /** The card calls this link "Manage online check ins" while check ins are
+   *  running, and "View all online check in details" once they're stopped. Same
+   *  page either way.
+   *
+   *  Count checked first, because the either/or name would match twice if the
+   *  card ever showed both - and Playwright's strict mode error wouldn't tell you
+   *  that was the problem. */
   async clickManageOnlineCheckIns(): Promise<void> {
     const link = this.getQA("checkinCard").getByRole("link", {
       name: /Manage online check ins|View all online check in details/,
     });
     await expect(
       link,
-      "Manage online check ins link not found - offender may not be set up",
+      'Check in card should have exactly one "Manage online check ins" / ' +
+        '"View all online check in details" link - none means the offender ' +
+        "isn't set up, more than one means the card has changed",
+    ).toHaveCount(1);
+    await expect(
+      link,
+      "Manage online check ins link should be visible",
     ).toBeVisible();
     await link.click();
   }

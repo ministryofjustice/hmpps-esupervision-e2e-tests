@@ -5,7 +5,6 @@ import ManageCheckInsPage from "../../pages/mpop/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
 import { assertExpectedService } from "../../utils/legacyMpop";
-import { followToMpop } from "../../utils/mpopHandoff";
 import {
   CHECKIN_SETTINGS_TITLE,
   CONTACT_PREFERENCE_TITLE,
@@ -15,10 +14,12 @@ import {
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import {
-  assertHrefIs,
-  assertHrefIsMpop,
+  assertAbsoluteMpopHref,
+  assertRelativeHref,
+  followToMpop,
   MPOP_PATH,
-} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+  noHandOffOnLegacy,
+} from "../../assertions/manage-checkins-ui/mpopHandoff";
 import { offenderUuidFrom } from "../../utils/url";
 
 export interface RestartValues {
@@ -55,16 +56,17 @@ export default class ManageCheckInsJourney {
     return this.pages.manage;
   }
 
-  /** Checks the manage page's Back link href. */
+  /** The manage page's Back link points at the person's overview. MOCI only,
+   *  like every link check here. */
   async assertManageBackLink(crn: string): Promise<void> {
-    await assertHrefIs(
+    await assertRelativeHref(
       this.pages.manage.backLink(),
       "Back on the manage check ins page",
       MPOP_PATH.overview(crn),
     );
   }
 
-  /** Clicks Stop check ins on an already-open manage page and checks the stop page loads. */
+  /** Clicks Stop check ins from the manage page and waits for the stop page. */
   async goToStopCheckIns(crn: string): Promise<void> {
     await this.pages.manage.clickStopCheckIns();
     await assertExpectedService(this.page, "Stop check ins");
@@ -79,17 +81,22 @@ export default class ManageCheckInsJourney {
     });
   }
 
-  /** Checks Back and Cancel on the stop page each return to the manage page via MPOP. Ends on the manage page. */
+  /** Back and Cancel on the stop page both return to the manage page, going out
+   *  through MPOP to get there. Leaves you on the manage page. */
   async assertStopPageLinks(crn: string): Promise<void> {
-    // The exact manage page, uuid and all - a prefix of manage/ would also match
-    // the stop page's own URL, nested under it.
+    // Nothing below runs on legacy - bail here rather than rely on the caller
+    // having skipped, so the clicks can't run without their checks.
+    if (noHandOffOnLegacy("Back and Cancel on the stop check ins page")) return;
+
+    // The exact manage page, uuid and all. A prefix of manage/ would also match
+    // the stop page's own URL, which sits under it.
     const backToManage = MPOP_PATH.manageCheckin(
       crn,
       offenderUuidFrom(this.page.url()),
     );
 
     await test.step("Back returns to the manage page via MPOP", async () => {
-      await assertHrefIsMpop(
+      await assertAbsoluteMpopHref(
         this.pages.stop.backLink(),
         "Back on the stop check ins page",
         backToManage,
@@ -97,11 +104,14 @@ export default class ManageCheckInsJourney {
       await this.pages.stop.backLink().click();
       await assertExpectedService(this.page, "Back from stop check ins");
       await this.pages.manage.assertOnPage();
-      await this.goToStopCheckIns(crn);
     });
 
+    // Back left us on the manage page - go back to the stop page for Cancel.
+    // Outside the steps, so a failure here isn't reported against either link.
+    await this.goToStopCheckIns(crn);
+
     await test.step("Cancel returns to the manage page via MPOP", async () => {
-      await assertHrefIsMpop(
+      await assertAbsoluteMpopHref(
         this.pages.stop.cancelLink(),
         "Cancel on the stop check ins page",
         backToManage,
@@ -216,23 +226,26 @@ export default class ManageCheckInsJourney {
       await this.pages.restartSummary.assertOnPage();
       await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
-
-      // Checks the all cases link's href. Following the overview link is
-      // assertRestartConfirmationLinksLandInMpop's job, so this leaves the
-      // browser on the confirmation page.
-      await test.step("Restart confirmation links hand off to MPOP", async () => {
-        await assertHrefIs(
-          this.pages.restartConfirmation.allCasesLink(),
-          "Go to all cases",
-          MPOP_PATH.allCases,
-        );
-      });
     });
   }
 
-  /** Follows the restart confirmation's overview link and checks it lands in MPOP. */
+  /**
+   * The restart confirmation's two links back to MPOP: check the all cases href,
+   * then follow the overview link.
+   *
+   * Out of restartCheckIns for the same reason as the setup confirmation - a
+   * link change should fail a link test, not whatever else happened to restart
+   * check ins. The page only exists just after restarting, so call this straight
+   * afterwards. It navigates away, so call it last.
+   */
   async assertRestartConfirmationLinksLandInMpop(crn: string): Promise<void> {
-    await test.step("Restart confirmation overview link lands in MPOP", async () => {
+    await test.step("Restart confirmation links hand off to MPOP", async () => {
+      // Check the href first - the click below leaves this page.
+      await assertRelativeHref(
+        this.pages.restartConfirmation.allCasesLink(),
+        "Go to all cases",
+        MPOP_PATH.allCases,
+      );
       await followToMpop(
         this.page,
         this.pages.restartConfirmation.overviewLink(),

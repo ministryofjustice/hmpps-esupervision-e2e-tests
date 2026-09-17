@@ -10,8 +10,9 @@ import { env } from "../../config/env";
 import {
   absoluteUrl,
   originPattern,
-  urlPattern,
+  urlPathPattern,
 } from "../../support/utils/url";
+import { MPOP_PATH } from "../../support/assertions/manage-checkins-ui/mpopHandoff";
 
 // Deliberately narrow: the header and footer belong to
 // hmpps-probation-frontend-components, so only what this service owns or
@@ -81,12 +82,20 @@ test.describe("manage online check ins UI layout", () => {
     await expect(badge).toHaveText(/^(\d{1,2}|99\+)$/);
   });
 
+  // urlPathPattern on all three: a nav link lands on a whole top-level path,
+  // with nothing following it. "/case" is the one with a real clash to avoid
+  // ("/caseload"); the other two just follow the same rule. The "MPOP can change
+  // its own URLs" caveat elsewhere is about paths under a case, not these.
   test("cases nav link takes the practitioner to their case list in MPOP", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Cases").click();
-    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
+    // Same place the confirmation pages link to, so the same constant.
+    // urlPathPattern drops the trailing slash, so it matches "/case" either way.
+    await expect(ownPage).toHaveURL(
+      urlPathPattern(env.mpopUrl(), MPOP_PATH.allCases),
+    );
   });
 
   test("search nav link takes the practitioner to MPOP's search page", async ({
@@ -94,7 +103,7 @@ test.describe("manage online check ins UI layout", () => {
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Search").click();
-    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/search"));
+    await expect(ownPage).toHaveURL(urlPathPattern(env.mpopUrl(), "/search"));
   });
 
   test("alerts nav link takes the practitioner to their alerts in MPOP", async ({
@@ -102,7 +111,7 @@ test.describe("manage online check ins UI layout", () => {
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Alerts").click();
-    await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/alerts"));
+    await expect(ownPage).toHaveURL(urlPathPattern(env.mpopUrl(), "/alerts"));
   });
 
   // Only that the link leaves this service: where MPOP then sends its own Home
@@ -122,25 +131,30 @@ test.describe("manage online check ins UI layout", () => {
     );
   });
 
-  // Checks this service's "/" and case list both redirect out to MPOP.
-  test("this service's homepage URL and case list redirect the practitioner to MPOP", async ({
+  // This service serves neither of these - both should redirect out to MPOP.
+  test("This service's homepage and case list both redirect to MPOP", async ({
     page: ownPage,
   }) => {
     await new SignInJourney(ownPage).login(UNROUTED_PATH);
 
-    // Only where each redirect lands - what MPOP renders there is MPOP's to
-    // assert. The case list is a path prefix, not MPOP_PATH.allCases: this
-    // redirect drops the trailing slash the confirmation pages' href has.
+    // Only where each one lands. What MPOP renders there is MPOP's to test.
     await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/"));
     await expect(
       ownPage,
       "this service's homepage URL should redirect to MPOP",
     ).toHaveURL(originPattern(env.mpopUrl()));
 
-    await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/case"));
+    // MPOP_PATH.allCases rather than a "/case" of its own: this walks the exact
+    // path the restart confirmation links to, which is the half of that link
+    // nothing clicks. urlPathPattern keeps "/caseload" and individual cases from
+    // passing as the case list, while still letting the redirect drop the
+    // trailing slash - the href checks are where that slash has to be exact.
+    await ownPage.goto(
+      absoluteUrl(env.manageCheckinsUiUrl(), MPOP_PATH.allCases),
+    );
     await expect(
       ownPage,
       "the case list should redirect to MPOP's case list",
-    ).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
+    ).toHaveURL(urlPathPattern(env.mpopUrl(), MPOP_PATH.allCases));
   });
 });

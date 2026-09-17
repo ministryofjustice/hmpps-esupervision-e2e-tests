@@ -25,8 +25,9 @@ interface CheckinScenario {
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
-  /** Follow the confirmation and reviewed check in links out to MPOP. Both are
-   *  static hrefs, so one scenario is enough - the other would just repeat it. */
+  /** Check every link back to MPOP this journey passes: the confirmation page's
+   *  links, the review pages' Back links, and where filing a review redirects to.
+   *  One scenario is enough - the links are the same whichever one runs. */
   assertMpopHandoff?: boolean;
 }
 
@@ -124,7 +125,9 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details);
+      await journey.reviewCheckin(offender.crn, scenario.review, details, {
+        assertMpopHandoff: scenario.assertMpopHandoff,
+      });
 
       if (scenario.assertMpopHandoff) {
         await journey.assertReviewedCheckinBackLink(offender.crn);

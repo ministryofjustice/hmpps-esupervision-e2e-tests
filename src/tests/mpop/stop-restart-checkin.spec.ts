@@ -11,9 +11,11 @@ import { getOffenderByCrn } from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 import { Preference } from "../../data/models";
 import { LEGACY_MPOP } from "../../support/utils/legacyMpop";
-import { followToMpop } from "../../support/utils/mpopHandoff";
 import { absoluteUrl, urlPattern } from "../../support/utils/url";
-import { MPOP_PATH } from "../../support/assertions/manage-checkins-ui/mpopHandoffAssertions";
+import {
+  followToMpop,
+  MPOP_PATH,
+} from "../../support/assertions/manage-checkins-ui/mpopHandoff";
 
 // Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
 // the precondition for restart -> VERIFIED, which leaves the CRN as it started.
@@ -38,15 +40,16 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       .toBe("INACTIVE");
   });
 
-  // TODO(legacy-mpop): drop the skip - legacy MPOP renders the page instead.
-  test("Stop page for a stopped offender redirects to MPOP", async ({
+  // TODO(legacy-mpop): drop the skip - legacy MPOP renders this page itself.
+  test("Stop page sends you back to MPOP if check ins are already stopped", async ({
     page,
   }) => {
     test.skip(LEGACY_MPOP, "Legacy MPOP renders the stop page itself");
 
     await new ManageCheckInsJourney(page).login();
     const { uuid } = await getOffenderByCrn(crn, token);
-    // This service mirrors MPOP's check in paths, so MPOP_PATH builds its URLs too.
+    // This service uses the same check in paths as MPOP, so MPOP_PATH builds
+    // its URLs too.
     await page.goto(
       absoluteUrl(
         env.manageCheckinsUiUrl(),
@@ -57,6 +60,10 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       page,
       "Stop page should redirect a stopped offender to their record in MPOP",
     ).toHaveURL(urlPattern(env.mpopUrl(), MPOP_PATH.overview(crn)));
+    // Prefix match above, so check the page as well - same rule followToMpop
+    // uses. Not urlPathPattern: MPOP can add a sub-path to its own overview
+    // whenever it likes, and this test is about leaving, not about that URL.
+    await new MpopPages(page).overview.assertOnPage();
   });
 
   test("practitioner restarts online check ins for the stopped offender -> offender returns to VERIFIED", async ({
@@ -69,8 +76,8 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       frequency: FrequencyOptions.EVERY_8_WEEKS,
       preference: Preference.EMAIL,
     });
-    // The confirmation page only exists right after restart, so the link is
-    // followed here rather than in the link-only test below.
+    // The confirmation page only exists right after a restart, so the links are
+    // checked here rather than in the link test below.
     await journey.assertRestartConfirmationLinksLandInMpop(crn);
     await expect
       .poll(async () => (await getOffenderByCrn(crn, token)).status)
@@ -89,11 +96,15 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     ).toContainText("Every 8 weeks");
   });
 
-  // Link-only test, doesn't submit anything, so it runs last and leaves the CRN
-  // as restart left it.
-  test("manage and stop check ins pages link back to MPOP", async ({
+  // Nothing here submits anything, so it runs last and leaves the CRN as the
+  // restart above left it.
+  test("Back and Cancel on the manage and stop check ins pages return to MPOP", async ({
     page,
   }) => {
+    // Every check in this test is a link back to MPOP, and none of those run on
+    // legacy - without this it would pass having checked nothing.
+    test.skip(LEGACY_MPOP, "Links back to MPOP aren't tested on legacy");
+
     const journey = new ManageCheckInsJourney(page);
     const pages = new MpopPages(page);
     await journey.login();
