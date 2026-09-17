@@ -19,7 +19,11 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
-import { assertHrefIsMpop } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import {
+  assertHrefIs,
+  assertHrefIsMpop,
+  assertLandsInMpop,
+} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 interface ContactPreferenceValues {
   preference: Preference;
@@ -38,10 +42,20 @@ export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
   private readonly manageCheckinsPages: ManageCheckinsUiPages;
   private onFileContact?: string;
+  /** Set by startSetup(). */
+  private crn?: string;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
     this.manageCheckinsPages = new ManageCheckinsUiPages(page);
+  }
+
+  /** The CRN the wizard was opened for. */
+  private currentCrn(): string {
+    if (this.crn === undefined) {
+      throw new Error("startSetup() must run before the CRN is available");
+    }
+    return this.crn;
   }
 
   /**
@@ -182,6 +196,7 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   async startSetup(crn: string): Promise<void> {
+    this.crn = crn;
     await test.step(`Open setup online check ins for ${crn}`, async () => {
       // The service intermittently shows its generic error page right after the
       // offender is created (eligibility page's name lookup isn't ready yet) -
@@ -195,6 +210,13 @@ export default class SetupOnlineCheckinsJourney {
         await assertExpectedService(this.page, "Setup online check ins");
         await this.pages.eligibility.assertOnPage(5000);
       }).toPass({ timeout: 30000, intervals: [2000, 5000, 10000] });
+
+      // Checks the eligibility page's Cancel link href.
+      await assertHrefIs(
+        this.pages.eligibility.cancelLink(),
+        "Cancel and go back",
+        `/case/${crn}`,
+      );
     });
   }
 
@@ -227,6 +249,11 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.eligibility.completePage(setup.eligibilityIds);
 
       await this.pages.eligible.assertOnPage();
+      await assertHrefIs(
+        this.pages.eligible.cancelLink(),
+        "Cancel and go back to the person's overview",
+        `/case/${this.currentCrn()}`,
+      );
       await this.pages.eligible.completePage(0);
 
       await this.pages.spoApproval.assertOnPage();
@@ -261,8 +288,7 @@ export default class SetupOnlineCheckinsJourney {
     const confirmation = new CheckInConfirmationPage(this.page);
     await confirmation.assertOnPage();
 
-    // Checked by href, not followed - this page cannot be revisited, so following
-    // one would lose the other.
+    // Checks both link hrefs, then follows the record link to MPOP.
     await test.step("Confirmation links hand off to MPOP", async () => {
       await assertHrefIsMpop(
         confirmation.overviewLink(),
@@ -273,6 +299,13 @@ export default class SetupOnlineCheckinsJourney {
         confirmation.allCasesLink(),
         "Return to all cases",
         "/case",
+      );
+      await assertLandsInMpop(
+        this.page,
+        confirmation.overviewLink(),
+        "View the person's record",
+        `/case/${crn}`,
+        () => this.pages.overview.assertOnPage(),
       );
     });
   }

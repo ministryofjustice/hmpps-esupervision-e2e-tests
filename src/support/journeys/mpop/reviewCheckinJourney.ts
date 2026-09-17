@@ -17,7 +17,11 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { assertExpectedService } from "../../utils/legacyMpop";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
-import { assertReturnedToMpopActivityLog } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import {
+  assertHrefIsMpop,
+  assertLandsInMpop,
+  assertReturnedToMpopActivityLog,
+} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -65,6 +69,12 @@ export default class ReviewCheckinJourney {
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
     await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
+    // Checks the Back link href points at MPOP's activity log.
+    await assertHrefIsMpop(
+      this.pages.reviewIdentity.backLink(),
+      "Back on the review identity page",
+      `/case/${crn}/activity-log`,
+    );
     if (decision.assertValidation) {
       await this.assertIdentityDecisionRequired();
     }
@@ -101,6 +111,17 @@ export default class ReviewCheckinJourney {
       await this.assertCheckinDetails(this.pages.reviewedCheckin, details);
     }
     await this.assertIdentityImages(identity);
+
+    // Follows Back and checks it lands on the activity log in MPOP.
+    await test.step("Back returns to the activity log in MPOP", async () => {
+      await assertLandsInMpop(
+        this.page,
+        this.pages.reviewedCheckin.backLink(),
+        "Back on the reviewed check in page",
+        `/case/${crn}/activity-log`,
+        () => this.pages.activityLog.assertOnPage(),
+      );
+    });
   }
 
   /** Without an identity decision an unverified check in would be filed as reviewed. */

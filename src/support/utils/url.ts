@@ -8,8 +8,6 @@ const trimTrailingSlash = (base: string): string => base.replace(/\/$/, "");
 export const urlPattern = (base: string, path = ""): RegExp =>
   new RegExp(`^${escapeRegExp(trimTrailingSlash(base))}${escapeRegExp(path)}`);
 
-// TODO(legacy-mpop): Delete originPattern when legacy MPOP is removed - only
-// legacyMpop.ts uses it. escapeRegExp and urlPattern are used by MOCI code and stay.
 /** `^<base>` followed by `/` or end of string - the origin and nothing beyond it. */
 export const originPattern = (base: string): RegExp =>
   new RegExp(`^${escapeRegExp(trimTrailingSlash(base))}(/|$)`);

@@ -13,7 +13,11 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
-import { assertHrefIsMpop } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import {
+  assertHrefIs,
+  assertHrefIsMpop,
+  assertLandsInMpop,
+} from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
 
 export interface RestartValues {
   date: string;
@@ -46,8 +50,27 @@ export default class ManageCheckInsJourney {
       // from it.
       await assertExpectedService(this.page, "Manage check ins page");
       await this.pages.manage.assertOnPage();
+      // Checks the manage page's Back link href.
+      await assertHrefIs(
+        this.pages.manage.backLink(),
+        "Back on the manage check ins page",
+        `/case/${crn}`,
+      );
     });
     return this.pages.manage;
+  }
+
+  /** Clicks Back on the manage page and checks it lands on the overview in MPOP. */
+  async returnToOverview(crn: string): Promise<void> {
+    await test.step(`Back from manage check ins returns to ${crn} in MPOP`, async () => {
+      await assertLandsInMpop(
+        this.page,
+        this.pages.manage.backLink(),
+        "Back on the manage check ins page",
+        `/case/${crn}`,
+        () => this.pages.overview.assertOnPage(),
+      );
+    });
   }
 
   async stopCheckIns(crn: string, reason: string): Promise<void> {
@@ -59,20 +82,33 @@ export default class ManageCheckInsJourney {
       await this.pages.stop.assertOnPage();
       await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
 
-      // Checked here rather than in a spec of their own, so they cost no extra
-      // person. Named as a step so the coverage shows up in the report.
-      await test.step("Back and Cancel hand off to MPOP", async () => {
-        const backToManage = `/case/${crn}/appointments/check-in/manage/`;
+      // Checks Back and Cancel each return to the manage page via MPOP.
+      const backToManage = `/case/${crn}/appointments/check-in/manage/`;
+
+      await test.step("Back returns to the manage page via MPOP", async () => {
         await assertHrefIsMpop(
           this.pages.stop.backLink(),
           "Back",
           backToManage,
         );
+        await this.pages.stop.backLink().click();
+        await assertExpectedService(this.page, "Back from stop check ins");
+        await this.pages.manage.assertOnPage();
+        await this.pages.manage.clickStopCheckIns();
+        await this.pages.stop.assertOnPage();
+      });
+
+      await test.step("Cancel returns to the manage page via MPOP", async () => {
         await assertHrefIsMpop(
           this.pages.stop.cancelLink(),
           "Cancel",
           backToManage,
         );
+        await this.pages.stop.cancelLink().click();
+        await assertExpectedService(this.page, "Cancel from stop check ins");
+        await this.pages.manage.assertOnPage();
+        await this.pages.manage.clickStopCheckIns();
+        await this.pages.stop.assertOnPage();
       });
 
       await this.pages.stop.completePage(reason);
@@ -176,6 +212,22 @@ export default class ManageCheckInsJourney {
       await this.pages.restartSummary.assertOnPage();
       await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
+
+      // Checks the all cases link's href, then follows the overview link to MPOP.
+      await test.step("Restart confirmation links hand off to MPOP", async () => {
+        await assertHrefIs(
+          this.pages.restartConfirmation.allCasesLink(),
+          "Go to all cases",
+          "/case/",
+        );
+        await assertLandsInMpop(
+          this.page,
+          this.pages.restartConfirmation.overviewLink(),
+          "Return to the person's overview",
+          `/case/${crn}`,
+          () => this.pages.overview.assertOnPage(),
+        );
+      });
     });
   }
 }

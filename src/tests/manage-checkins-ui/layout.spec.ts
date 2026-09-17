@@ -7,7 +7,7 @@ import {
   FOOTER_LINKS,
 } from "../../data/manage-checkins-ui/layoutConstants";
 import { env } from "../../config/env";
-import { urlPattern } from "../../support/utils/url";
+import { originPattern, urlPattern } from "../../support/utils/url";
 
 // Deliberately narrow: the header and footer belong to
 // hmpps-probation-frontend-components, so only what this service owns or
@@ -17,6 +17,9 @@ import { urlPattern } from "../../support/utils/url";
 // route needs a case. An unrouted path renders its error page, which extends the
 // same layout, so the real page furniture is there with no case to set up.
 const UNROUTED_PATH = "/no-such-page";
+
+/** Every MPOP page renders one. */
+const MPOP_PAGE_HEADING = '[data-qa="pageHeading"]';
 
 test.describe("manage online check ins UI layout", () => {
   let page: Page;
@@ -99,5 +102,50 @@ test.describe("manage online check ins UI layout", () => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Alerts").click();
     await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/alerts"));
+  });
+
+  // Checks the Home nav link leaves this service for MPOP.
+  test("home nav link takes the practitioner to MPOP's home page", async ({
+    page: ownPage,
+  }) => {
+    const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
+    const home = ownPages.primaryNavigation.navLink("Home");
+    await expect(
+      home,
+      "Home link should be in the primary navigation",
+    ).toBeVisible();
+    await home.click();
+    await expect(ownPage, "Home nav link should leave for MPOP").toHaveURL(
+      originPattern(env.mpopUrl()),
+    );
+  });
+
+  // Checks this service's "/" and case list both redirect out to MPOP.
+  test("this service's homepage URL and case list redirect the practitioner to MPOP", async ({
+    page: ownPage,
+  }) => {
+    await new SignInJourney(ownPage).login(UNROUTED_PATH);
+    const base = env.manageCheckinsUiUrl().replace(/\/$/, "");
+
+    await ownPage.goto(`${base}/`);
+    await expect(
+      ownPage,
+      "this service's homepage URL should redirect to MPOP",
+    ).toHaveURL(originPattern(env.mpopUrl()));
+    // Checks MPOP rendered a page, not just that the URL matched.
+    await expect(
+      ownPage.locator(MPOP_PAGE_HEADING),
+      "MPOP should render a page after the homepage redirect, not an error",
+    ).toBeVisible();
+
+    await ownPage.goto(`${base}/case`);
+    await expect(
+      ownPage,
+      "the case list should redirect to MPOP's case list",
+    ).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
+    await expect(
+      ownPage.locator(MPOP_PAGE_HEADING),
+      "MPOP should render its case list after the redirect, not an error",
+    ).toBeVisible();
   });
 });

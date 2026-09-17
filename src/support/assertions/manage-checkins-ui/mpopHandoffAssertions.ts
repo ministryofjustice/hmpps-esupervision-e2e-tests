@@ -6,14 +6,10 @@ import { urlPattern } from "../../utils/url";
 /**
  * Checks on links that take a practitioner back to MPOP.
  *
- * Some pages link straight to MPOP's URL. Others link to "/case/{crn}", which this
- * service does not serve and redirects out. Only the first kind can be checked by
- * its href.
- *
  * TODO(legacy-mpop): Delete the LEGACY_MPOP early returns below, and the import
- * above, when legacy MPOP is removed. These links are built by Manage Online Check
- * Ins - on the legacy path the practitioner never left MPOP, so there is no hand
- * off to check.
+ * above, when legacy MPOP is removed. These links are built by Manage Online
+ * Check Ins - on the legacy path the practitioner never left MPOP, so there is
+ * no hand off to check.
  */
 
 /** The link points at MPOP. Only works for the ones built from MPOP's URL. */
@@ -29,12 +25,28 @@ export const assertHrefIsMpop = async (
   );
 };
 
-/** Follows the link and checks it ends up in MPOP. Matches the start of the path. */
+/** Checks the link's href matches a relative path. */
+export const assertHrefIs = async (
+  link: Locator,
+  name: string,
+  path: string,
+): Promise<void> => {
+  await expect(link, `${name} should link to ${path}`).toHaveAttribute(
+    "href",
+    path,
+  );
+};
+
+/**
+ * Follows the link and checks it ends up in MPOP. Matches the start of the path.
+ * `landedOn` asserts the page MPOP rendered there.
+ */
 export const assertLandsInMpop = async (
   page: Page,
   link: Locator,
   name: string,
   path: string,
+  landedOn?: () => Promise<void>,
 ): Promise<void> => {
   if (LEGACY_MPOP) return;
   await expect(link, `${name} should be on the page`).toBeVisible();
@@ -42,6 +54,7 @@ export const assertLandsInMpop = async (
   await expect(page, `${name} should land in MPOP at ${path}`).toHaveURL(
     urlPattern(env.mpopUrl(), path),
   );
+  await landedOn?.();
 };
 
 /** Filing a review is a redirect, not a link, so check the URL it lands on. */
