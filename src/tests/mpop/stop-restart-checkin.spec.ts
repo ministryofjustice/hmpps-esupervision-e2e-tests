@@ -46,9 +46,12 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
 
     await new ManageCheckInsJourney(page).login();
     const { uuid } = await getOffenderByCrn(crn, token);
-    const base = absoluteUrl(env.manageCheckinsUiUrl());
+    // This service mirrors MPOP's check in paths, so MPOP_PATH builds its URLs too.
     await page.goto(
-      `${base}/case/${crn}/appointments/check-in/manage/${uuid}/stop-checkin`,
+      absoluteUrl(
+        env.manageCheckinsUiUrl(),
+        `${MPOP_PATH.manage(crn)}${uuid}/stop-checkin`,
+      ),
     );
     await expect(
       page,

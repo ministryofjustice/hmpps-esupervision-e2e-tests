@@ -9,8 +9,8 @@ import {
 import { followToMpop } from "../../support/utils/mpopHandoff";
 
 // Sole owner of TEST_MPOP_ELIGIBILITY_CRN. No test here completes setup, so
-// restarting it on the same CRN is safe - serial only to stop the tests racing
-// the same wizard session.
+// starting the wizard again on the same CRN is safe - serial so a failure part
+// way through the wizard doesn't leave the next test starting from that state.
 test.describe.configure({ mode: "serial" });
 
 /** Opens the eligibility page and returns the pages with the CRN. */
@@ -47,21 +47,7 @@ test("eligibility answer leads to the PARTIALLY ELIGIBLE outcome", async ({
   );
 });
 
-// Follows Cancel and checks it lands on the person's record in MPOP.
-test("Cancel on the eligibility page returns to the person's record in MPOP", async ({
-  page,
-}) => {
-  const { pages, crn } = await startEligibility(page);
-  await followToMpop(
-    page,
-    pages.eligibility.cancelLink(),
-    "Cancel and go back",
-    MPOP_PATH.overview(crn),
-    () => pages.overview.assertOnPage(),
-  );
-});
-
-test("eligibility and eligible pages' Cancel links point back to the person's overview", async ({
+test("eligibility and eligible pages' Cancel links go back to the person's overview in MPOP", async ({
   page,
 }) => {
   const { pages, crn } = await startEligibility(page);
@@ -77,5 +63,17 @@ test("eligibility and eligible pages' Cancel links point back to the person's ov
     pages.eligible.cancelLink(),
     "Cancel and go back to the person's overview",
     MPOP_PATH.overview(crn),
+  );
+
+  // Both pages point at the same relative path, and this service doesn't serve
+  // it - following one proves the redirect out to MPOP really happens. The href
+  // assertions above are what this test still checks on the legacy path, where
+  // followToMpop is a no-op because the practitioner never left MPOP.
+  await followToMpop(
+    page,
+    pages.eligible.cancelLink(),
+    "Cancel and go back to the person's overview",
+    MPOP_PATH.overview(crn),
+    () => pages.overview.assertOnPage(),
   );
 });

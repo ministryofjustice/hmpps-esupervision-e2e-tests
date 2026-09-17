@@ -54,10 +54,10 @@ export default class OnlineCheckinJourney {
       eligibilityIds: [9],
       rationale: "E2E test rationale",
     });
-    await setup.submitSetup(summary);
+    await setup.submitSetup(offender.crn, summary);
     // The confirmation page only exists right after submitting, so the link is
     // followed here.
-    await setup.assertConfirmationLinksLandInMpop();
+    await setup.assertConfirmationLinksLandInMpop(offender.crn);
     return offender;
   }
 

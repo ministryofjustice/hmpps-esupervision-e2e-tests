@@ -23,10 +23,9 @@ import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/ma
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
 import {
   assertHrefIsMpop,
-  assertHrefStartsWithMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
-import { urlPattern } from "../../utils/url";
+import { manageCheckinIdFrom, urlPattern } from "../../utils/url";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -95,10 +94,14 @@ export default class CustomQuestionsJourney {
       await assertExpectedService(this.page, "Questions journey");
       await this.pages.howToWriteQuestions.assertOnPage();
 
-      await assertHrefStartsWithMpop(
+      // Exactly the manage page this journey came from - a prefix of manage/
+      // would also match the questions pages nested under it, and nothing here
+      // follows Back to catch that.
+      const checkinId = manageCheckinIdFrom(this.page.url());
+      await assertHrefIsMpop(
         this.pages.howToWriteQuestions.backLink(),
-        "Back",
-        MPOP_PATH.manage(crn),
+        "Back on the questions intro page",
+        `${MPOP_PATH.manage(crn)}${checkinId}`,
       );
       await assertHrefIsMpop(
         this.pages.howToWriteQuestions.cancelLink(),

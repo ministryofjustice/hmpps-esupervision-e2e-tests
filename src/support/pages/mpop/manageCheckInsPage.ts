@@ -7,6 +7,18 @@ export default class ManageCheckInsPage extends MPopBasePage {
     super(page, "Online check ins");
   }
 
+  /**
+   * Back to the person's overview. Both services point it at `/case/{crn}`, but
+   * only MOCI renders it as a GOV.UK back link.
+   *
+   * TODO(legacy-mpop): Drop the breadcrumb selector when legacy MPOP is removed -
+   * it is how legacy MPOP renders this page's Back (a one-item "< Back"
+   * breadcrumb), and this page is the only one where the two services differ.
+   */
+  backLink(): Locator {
+    return this.page.locator(".govuk-back-link, .govuk-breadcrumbs__link");
+  }
+
   async clickStopCheckIns(): Promise<void> {
     await this.getQA("stop-checkin-btn").click();
   }

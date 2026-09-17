@@ -20,8 +20,13 @@ import { absoluteUrl, urlPattern } from "../../utils/url";
  *  once so a destination isn't repeated as a literal at each call site. */
 export const MPOP_PATH = {
   overview: (crn: string) => `/case/${crn}`,
+  /** The setup confirmation renders this as an absolute MPOP URL; the restart
+   *  confirmation renders the same path as a relative href. Same destination,
+   *  so assert it with assertHrefIsMpop and assertHrefIs respectively. */
   allCases: "/case/",
   activityLog: (crn: string) => `/case/${crn}/activity-log`,
+  /** Ends with a trailing slash: the check in UUID goes on the end, and a test
+   *  only learns it from the URL it is on - see manageCheckinIdFrom. */
   manage: (crn: string) => `/case/${crn}/appointments/check-in/manage/`,
 } as const;
 
@@ -37,24 +42,6 @@ export const assertHrefIsMpop = async (
     "href",
     absoluteUrl(env.mpopUrl(), path),
   );
-};
-
-/**
- * The link points into MPOP at or below this path. For routes whose href carries
- * an id the test does not know - only MPOP_PATH.manage, where the check in UUID
- * is appended. Prefer assertHrefIsMpop everywhere else: a prefix of
- * `/case/{crn}` also matches every page nested under it.
- */
-export const assertHrefStartsWithMpop = async (
-  link: Locator,
-  name: string,
-  path: string,
-): Promise<void> => {
-  if (LEGACY_MPOP) return;
-  await expect(
-    link,
-    `${name} should point into MPOP at ${path}`,
-  ).toHaveAttribute("href", urlPattern(env.mpopUrl(), path));
 };
 
 /** Checks the link's href matches a relative path. */

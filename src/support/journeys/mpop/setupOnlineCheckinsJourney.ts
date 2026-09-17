@@ -42,20 +42,10 @@ export default class SetupOnlineCheckinsJourney {
   private readonly pages: MpopPages;
   private readonly manageCheckinsPages: ManageCheckinsUiPages;
   private onFileContact?: string;
-  /** Set by startSetup(). */
-  private crn?: string;
 
   constructor(private readonly page: Page) {
     this.pages = new MpopPages(page);
     this.manageCheckinsPages = new ManageCheckinsUiPages(page);
-  }
-
-  /** The CRN the wizard was opened for. */
-  private currentCrn(): string {
-    if (this.crn === undefined) {
-      throw new Error("startSetup() must run before the CRN is available");
-    }
-    return this.crn;
   }
 
   /**
@@ -196,7 +186,6 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   async startSetup(crn: string): Promise<void> {
-    this.crn = crn;
     await test.step(`Open setup online check ins for ${crn}`, async () => {
       // The service intermittently shows its generic error page right after the
       // offender is created (eligibility page's name lookup isn't ready yet) -
@@ -271,8 +260,7 @@ export default class SetupOnlineCheckinsJourney {
     });
   }
 
-  async submitSetup(summary: CheckInSummaryPage): Promise<void> {
-    const crn = this.currentCrn();
+  async submitSetup(crn: string, summary: CheckInSummaryPage): Promise<void> {
     await summary.submitSetUp();
     const confirmation = new CheckInConfirmationPage(this.page);
     await confirmation.assertOnPage();
@@ -294,8 +282,7 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /** Follows the confirmation page's record link and checks it lands in MPOP. */
-  async assertConfirmationLinksLandInMpop(): Promise<void> {
-    const crn = this.currentCrn();
+  async assertConfirmationLinksLandInMpop(crn: string): Promise<void> {
     const confirmation = new CheckInConfirmationPage(this.page);
     await test.step("Confirmation record link lands in MPOP", async () => {
       await followToMpop(

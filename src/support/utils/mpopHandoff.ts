@@ -4,8 +4,8 @@ import { LEGACY_MPOP } from "./legacyMpop";
 import { urlPattern } from "./url";
 
 /**
- * Follows the link and checks it ends up in MPOP. Matches the start of the path.
- * `landedOn` asserts the page MPOP rendered there.
+ * Follows the link and checks it ends up in MPOP. The URL match is a prefix, so
+ * `landedOn` is required: it asserts the page MPOP actually rendered there.
  *
  * TODO(legacy-mpop): Delete the LEGACY_MPOP early return below, and the import
  * above, when legacy MPOP is removed - on the legacy path the practitioner
@@ -16,7 +16,7 @@ export async function followToMpop(
   link: Locator,
   name: string,
   path: string,
-  landedOn?: () => Promise<void>,
+  landedOn: () => Promise<void>,
 ): Promise<void> {
   if (LEGACY_MPOP) return;
   await expect(link, `${name} should be on the page`).toBeVisible();
@@ -24,5 +24,5 @@ export async function followToMpop(
   await expect(page, `${name} should land in MPOP at ${path}`).toHaveURL(
     urlPattern(env.mpopUrl(), path),
   );
-  await landedOn?.();
+  await landedOn();
 }

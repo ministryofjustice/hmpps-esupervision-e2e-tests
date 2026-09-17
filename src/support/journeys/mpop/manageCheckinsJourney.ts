@@ -16,9 +16,10 @@ import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
 import {
   assertHrefIs,
-  assertHrefStartsWithMpop,
+  assertHrefIsMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
+import { manageCheckinIdFrom } from "../../utils/url";
 
 export interface RestartValues {
   date: string;
@@ -86,12 +87,14 @@ export default class ManageCheckInsJourney {
     crn: string,
     manage: ManageCheckInsPage,
   ): Promise<void> {
-    const backToManage = MPOP_PATH.manage(crn);
+    // The exact manage page, UUID and all. A prefix of manage/ would also match
+    // the stop page's own URL, which is nested under it.
+    const backToManage = `${MPOP_PATH.manage(crn)}${manageCheckinIdFrom(this.page.url())}`;
 
     await test.step("Back returns to the manage page via MPOP", async () => {
-      await assertHrefStartsWithMpop(
+      await assertHrefIsMpop(
         this.pages.stop.backLink(),
-        "Back",
+        "Back on the stop check ins page",
         backToManage,
       );
       await this.pages.stop.backLink().click();
@@ -101,9 +104,9 @@ export default class ManageCheckInsJourney {
     });
 
     await test.step("Cancel returns to the manage page via MPOP", async () => {
-      await assertHrefStartsWithMpop(
+      await assertHrefIsMpop(
         this.pages.stop.cancelLink(),
-        "Cancel",
+        "Cancel on the stop check ins page",
         backToManage,
       );
       await this.pages.stop.cancelLink().click();
@@ -223,7 +226,7 @@ export default class ManageCheckInsJourney {
         await assertHrefIs(
           this.pages.restartConfirmation.allCasesLink(),
           "Go to all cases",
-          "/case/",
+          MPOP_PATH.allCases,
         );
       });
     });

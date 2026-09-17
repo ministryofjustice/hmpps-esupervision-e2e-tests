@@ -22,9 +22,6 @@ import {
 // same layout, so the real page furniture is there with no case to set up.
 const UNROUTED_PATH = "/no-such-page";
 
-/** Every MPOP page renders one, including its error page. */
-const MPOP_PAGE_HEADING = '[data-qa="pageHeading"]';
-
 test.describe("manage online check ins UI layout", () => {
   let page: Page;
   let pages: ManageCheckinsUiPages;
@@ -108,8 +105,9 @@ test.describe("manage online check ins UI layout", () => {
     await expect(ownPage).toHaveURL(urlPattern(env.mpopUrl(), "/alerts"));
   });
 
-  // Checks the Home nav link leaves this service for MPOP.
-  test("home nav link takes the practitioner to MPOP's home page", async ({
+  // Only that the link leaves this service: where MPOP then sends its own Home
+  // link is MPOP's to test.
+  test("home nav link takes the practitioner out of this service to MPOP", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
@@ -130,26 +128,21 @@ test.describe("manage online check ins UI layout", () => {
   }) => {
     await new SignInJourney(ownPage).login(UNROUTED_PATH);
 
+    // Where each redirect lands is all this test owns. What MPOP then renders is
+    // MPOP's to assert.
+    //
+    // The case list is asserted as a path prefix, not MPOP_PATH.allCases: this
+    // redirect drops the trailing slash that the confirmation pages' href has.
     await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/"));
     await expect(
       ownPage,
       "this service's homepage URL should redirect to MPOP",
     ).toHaveURL(originPattern(env.mpopUrl()));
-    // Checks MPOP rendered a heading, so the redirect reached a page of some
-    // kind. Not which page - MPOP's error page has one too.
-    await expect(
-      ownPage.locator(MPOP_PAGE_HEADING).first(),
-      "MPOP should render a page after the homepage redirect",
-    ).toBeVisible();
 
     await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/case"));
     await expect(
       ownPage,
       "the case list should redirect to MPOP's case list",
     ).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
-    await expect(
-      ownPage.locator(MPOP_PAGE_HEADING).first(),
-      "MPOP should render a page after the case list redirect",
-    ).toBeVisible();
   });
 });
