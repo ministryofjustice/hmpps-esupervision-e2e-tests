@@ -63,19 +63,29 @@ export default class ManageCheckInsJourney {
     );
   }
 
+  /** Clicks Stop check ins on an already-open manage page and checks the stop page loads. */
+  async goToStopCheckIns(
+    crn: string,
+    manage: ManageCheckInsPage,
+  ): Promise<void> {
+    await manage.clickStopCheckIns();
+    await assertExpectedService(this.page, "Stop check ins");
+    await this.pages.stop.assertOnPage();
+    await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
+  }
+
   async openStopCheckIns(crn: string): Promise<void> {
     await test.step(`Open stop check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
-      await manage.clickStopCheckIns();
-      await assertExpectedService(this.page, "Stop check ins");
-
-      await this.pages.stop.assertOnPage();
-      await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
+      await this.goToStopCheckIns(crn, manage);
     });
   }
 
-  /** Checks Back and Cancel on the stop page each return to the manage page via MPOP. */
-  async assertStopPageLinks(crn: string): Promise<void> {
+  /** Checks Back and Cancel on the stop page each return to the manage page via MPOP. Ends on the manage page. */
+  async assertStopPageLinks(
+    crn: string,
+    manage: ManageCheckInsPage,
+  ): Promise<void> {
     const backToManage = MPOP_PATH.manage(crn);
 
     await test.step("Back returns to the manage page via MPOP", async () => {
@@ -83,8 +93,7 @@ export default class ManageCheckInsJourney {
       await this.pages.stop.backLink().click();
       await assertExpectedService(this.page, "Back from stop check ins");
       await this.pages.manage.assertOnPage();
-      await this.pages.manage.clickStopCheckIns();
-      await this.pages.stop.assertOnPage();
+      await this.goToStopCheckIns(crn, manage);
     });
 
     await test.step("Cancel returns to the manage page via MPOP", async () => {
@@ -96,8 +105,6 @@ export default class ManageCheckInsJourney {
       await this.pages.stop.cancelLink().click();
       await assertExpectedService(this.page, "Cancel from stop check ins");
       await this.pages.manage.assertOnPage();
-      await this.pages.manage.clickStopCheckIns();
-      await this.pages.stop.assertOnPage();
     });
   }
 

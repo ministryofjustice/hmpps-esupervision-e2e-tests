@@ -44,6 +44,7 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
   }) => {
     test.skip(LEGACY_MPOP, "Legacy MPOP renders the stop page itself");
 
+    await new ManageCheckInsJourney(page).login();
     const { uuid } = await getOffenderByCrn(crn, token);
     const base = absoluteUrl(env.manageCheckinsUiUrl());
     await page.goto(
@@ -91,13 +92,12 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     const pages = new MpopPages(page);
     await journey.login();
 
-    await journey.openManage(crn);
+    const manage = await journey.openManage(crn);
     await journey.assertManageBackLink(crn);
 
-    await journey.openStopCheckIns(crn);
-    await journey.assertStopPageLinks(crn);
+    await journey.goToStopCheckIns(crn, manage);
+    await journey.assertStopPageLinks(crn, manage);
 
-    const manage = await journey.openManage(crn);
     await followToMpop(
       page,
       manage.backLink(),

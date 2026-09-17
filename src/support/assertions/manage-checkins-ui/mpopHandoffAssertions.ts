@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { env } from "../../../config/env";
 import { LEGACY_MPOP } from "../../utils/legacyMpop";
-import { absoluteUrl, urlPattern } from "../../utils/url";
+import { urlPattern } from "../../utils/url";
 
 /**
  * Checks on links that take a practitioner back to MPOP.
@@ -34,7 +34,7 @@ export const assertHrefIsMpop = async (
   if (LEGACY_MPOP) return;
   await expect(link, `${name} should point at MPOP`).toHaveAttribute(
     "href",
-    absoluteUrl(env.mpopUrl(), path),
+    urlPattern(env.mpopUrl(), path),
   );
 };
 
