@@ -135,7 +135,7 @@ test.describe("manage online check ins UI layout", () => {
     // Checks MPOP rendered a heading, so the redirect reached a page of some
     // kind. Not which page - MPOP's error page has one too.
     await expect(
-      ownPage.locator(MPOP_PAGE_HEADING),
+      ownPage.locator(MPOP_PAGE_HEADING).first(),
       "MPOP should render a page after the homepage redirect",
     ).toBeVisible();
 
@@ -145,7 +145,7 @@ test.describe("manage online check ins UI layout", () => {
       "the case list should redirect to MPOP's case list",
     ).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
     await expect(
-      ownPage.locator(MPOP_PAGE_HEADING),
+      ownPage.locator(MPOP_PAGE_HEADING).first(),
       "MPOP should render a page after the case list redirect",
     ).toBeVisible();
   });
