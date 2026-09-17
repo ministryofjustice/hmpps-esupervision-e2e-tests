@@ -113,10 +113,7 @@ export default class ReviewCheckinJourney {
     }
     await this.assertIdentityImages(identity);
 
-    // Follows Back and checks it lands on the activity log in MPOP. Kept inline
-    // here rather than in its own test - unlike manage/custom-questions, there's
-    // no separate link-only spec for the review journey, and this check is cheap
-    // alongside the review flow already under test.
+    // Follows Back and checks it lands on the activity log in MPOP.
     await test.step("Back returns to the activity log in MPOP", async () => {
       await followToMpop(
         this.page,

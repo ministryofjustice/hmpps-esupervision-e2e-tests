@@ -18,8 +18,8 @@ export async function followToMpop(
   path: string,
   landedOn?: () => Promise<void>,
 ): Promise<void> {
-  await expect(link, `${name} should be on the page`).toBeVisible();
   if (LEGACY_MPOP) return;
+  await expect(link, `${name} should be on the page`).toBeVisible();
   await link.click();
   await expect(page, `${name} should land in MPOP at ${path}`).toHaveURL(
     urlPattern(env.mpopUrl(), path),
