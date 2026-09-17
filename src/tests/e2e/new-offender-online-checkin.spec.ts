@@ -25,6 +25,9 @@ interface CheckinScenario {
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
+  /** Follow the confirmation and reviewed check in links out to MPOP. Both are
+   *  static hrefs, so one scenario is enough - the other would just repeat it. */
+  assertMpopHandoff?: boolean;
 }
 
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
@@ -34,6 +37,7 @@ const scenarios: CheckinScenario[] = [
   {
     name: "checkin created by the scheduler - first checkin today, MATCH review",
     firstCheckinDaysAhead: 0,
+    assertMpopHandoff: true,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
@@ -99,6 +103,7 @@ test.describe("Online check in for a new offender", () => {
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
+        { assertMpopHandoff: scenario.assertMpopHandoff },
       );
       await attachCreatedCrn(testInfo, offender.crn);
       if (scenario.expectNoChangeQuestions) {
@@ -121,7 +126,9 @@ test.describe("Online check in for a new offender", () => {
 
       await journey.reviewCheckin(offender.crn, scenario.review, details);
 
-      await journey.assertReviewedCheckinBackLink(offender.crn);
+      if (scenario.assertMpopHandoff) {
+        await journey.assertReviewedCheckinBackLink(offender.crn);
+      }
 
       await journey.annotateCheckin(offender.crn, scenario.annotation);
     });

@@ -50,7 +50,7 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     await page.goto(
       absoluteUrl(
         env.manageCheckinsUiUrl(),
-        `${MPOP_PATH.manage(crn)}${uuid}/stop-checkin`,
+        `${MPOP_PATH.manageCheckin(crn, uuid)}/stop-checkin`,
       ),
     );
     await expect(

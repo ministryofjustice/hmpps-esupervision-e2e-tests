@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import DateFrequencyPage, {
   FrequencyOptions,
@@ -6,7 +6,6 @@ import DateFrequencyPage, {
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import test from "@playwright/test";
 import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";

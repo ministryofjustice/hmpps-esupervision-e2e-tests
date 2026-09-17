@@ -19,7 +19,7 @@ import {
   assertHrefIsMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
-import { manageCheckinIdFrom } from "../../utils/url";
+import { offenderUuidFrom } from "../../utils/url";
 
 export interface RestartValues {
   date: string;
@@ -81,9 +81,12 @@ export default class ManageCheckInsJourney {
 
   /** Checks Back and Cancel on the stop page each return to the manage page via MPOP. Ends on the manage page. */
   async assertStopPageLinks(crn: string): Promise<void> {
-    // The exact manage page, UUID and all - a prefix of manage/ would also match
+    // The exact manage page, uuid and all - a prefix of manage/ would also match
     // the stop page's own URL, nested under it.
-    const backToManage = `${MPOP_PATH.manage(crn)}${manageCheckinIdFrom(this.page.url())}`;
+    const backToManage = MPOP_PATH.manageCheckin(
+      crn,
+      offenderUuidFrom(this.page.url()),
+    );
 
     await test.step("Back returns to the manage page via MPOP", async () => {
       await assertHrefIsMpop(
@@ -164,7 +167,8 @@ export default class ManageCheckInsJourney {
       await contactDetails.selectPreference(opts.preference);
       await contactDetails.save();
 
-      // Waits for the save button to disappear before returning.
+      // The caller navigates away next. A click resolves when it is dispatched,
+      // not when the POST lands, so wait for the form to go before leaving.
       await expect(
         contactDetails.saveChangesButton(),
         "Saving contact details should leave the page, not re-render it with errors",

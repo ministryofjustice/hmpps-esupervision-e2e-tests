@@ -25,7 +25,7 @@ import {
   assertHrefIsMpop,
   MPOP_PATH,
 } from "../../assertions/manage-checkins-ui/mpopHandoffAssertions";
-import { manageCheckinIdFrom, urlPattern } from "../../utils/url";
+import { offenderUuidFrom, urlPattern } from "../../utils/url";
 
 export default class CustomQuestionsJourney {
   private readonly pages: MpopPages;
@@ -96,11 +96,10 @@ export default class CustomQuestionsJourney {
 
       // The exact manage page this journey came from - a prefix of manage/ would
       // also match this page's own URL, nested under it.
-      const checkinId = manageCheckinIdFrom(this.page.url());
       await assertHrefIsMpop(
         this.pages.howToWriteQuestions.backLink(),
         "Back on the questions intro page",
-        `${MPOP_PATH.manage(crn)}${checkinId}`,
+        MPOP_PATH.manageCheckin(crn, offenderUuidFrom(this.page.url())),
       );
       await assertHrefIsMpop(
         this.pages.howToWriteQuestions.cancelLink(),

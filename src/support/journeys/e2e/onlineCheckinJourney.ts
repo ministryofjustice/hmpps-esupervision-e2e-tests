@@ -30,8 +30,15 @@ export default class OnlineCheckinJourney {
     this.review = new ReviewCheckinJourney(page);
   }
 
+  /**
+   * `assertMpopHandoff` follows the confirmation page's link out to MPOP. Off by
+   * default: the link is a static href, so one scenario proves the redirect and
+   * the rest would just repeat it. It also leaves the browser on the person's
+   * overview instead of the confirmation page.
+   */
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
+    { assertMpopHandoff = false } = {},
   ): Promise<NewOffender> {
     // createTestOffender() records the CRN before returning, so it's recoverable
     // by cleanup even if setup below fails.
@@ -55,9 +62,11 @@ export default class OnlineCheckinJourney {
       rationale: "E2E test rationale",
     });
     await setup.submitSetup(summary);
-    // The confirmation page only exists right after submitting, so the link is
-    // followed here.
-    await setup.assertConfirmationLinksLandInMpop(offender.crn);
+    // The confirmation page only exists right after submitting, so if the link is
+    // being followed at all, it has to happen here.
+    if (assertMpopHandoff) {
+      await setup.assertConfirmationLinksLandInMpop(offender.crn);
+    }
     return offender;
   }
 
