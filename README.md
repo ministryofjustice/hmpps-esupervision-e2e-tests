@@ -32,6 +32,7 @@ npm run test:manage-checkins-ui   # manage online check ins UI
 npm run test:e2e                  # create offender -> set up -> complete a check in
 npm run test:welsh                # e2e check in in Welsh (Cymraeg)
 npm run test:fallback-video       # liveness video fallback: NO_MATCH, submit anyway
+npm run test:missed-checkin       # missed check in: expiry job, then practitioner review
 npm run test:static               # static pages
 npm run test:dashboard            # data dashboard
 ```
@@ -97,18 +98,33 @@ Two suites cover the liveness step differently:
 - **e2e** — skips liveness entirely, going straight to `/liveness/view` and
   taking "Submit anyway".
 
+## Missed check ins and the expiry job
+
+A check in nobody completes only becomes EXPIRED when the `checkin-expiry` job
+runs, and only then does the practitioner get the "Online check in missed" review
+page. `missed-checkin-expiry` doesn't wait for the schedule: it creates a check in
+old enough to expire, triggers the job, and polls until the API says EXPIRED.
+
+Dev only - the API's manual job triggers are off everywhere else - so it has its
+own project and workflow rather than running in the pack. That makes three
+workflows: the pack, the dashboard suite and this one. Each says when it runs.
+
+**The job is environment-wide.** It expires every check in in the environment
+whose due date is old enough, so a run started by hand also clears anyone else's
+overdue ones on shared dev.
+
 ## Test data
 
 A full run creates roughly a dozen offenders. Most specs create their own so
 tests can run in any order; the exceptions are noted below.
 
-| Suite               | Offender                                                             |
-| -------------------- | --------------------------------------------------------------------- |
-| `e2e`                | Creates its own, per run.                                             |
-| `checkin`            | Creates its own, then drives a check in via API.                     |
+| Suite                | Offender                                                                                                                                                                                                                                                                                                                               |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `e2e`                | Creates its own, per run.                                                                                                                                                                                                                                                                                                              |
+| `checkin`            | Creates its own, then drives a check in via API.                                                                                                                                                                                                                                                                                       |
 | `mpop`               | Most specs create their own — a shared CRN's setup state can't be relied on to stay put between runs. Exceptions: `stop-restart-checkin` owns `TEST_MPOP_STOP_RESTART_CRN` and restores it before running; `eligibility-outcomes` owns `TEST_MPOP_ELIGIBILITY_CRN` and reuses it directly, since neither of its tests completes setup. |
-| `manage-checkins-ui` | `change-contact-details` and `error-validation` create their own; `layout` needs none. |
-| `dashboard`          | Creates nothing — signs in once via the `dashboard-setup` project and reuses the storage state. |
+| `manage-checkins-ui` | `change-contact-details` and `error-validation` create their own; `layout` needs none.                                                                                                                                                                                                                                                 |
+| `dashboard`          | Creates nothing — signs in once via the `dashboard-setup` project and reuses the storage state.                                                                                                                                                                                                                                        |
 
 Note on `manage-checkins-ui`: only its contact-details tests are MOCI-only.
 `error-validation`'s questions/stop/date tests run against whichever service

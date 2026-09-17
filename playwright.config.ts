@@ -40,10 +40,24 @@ export default defineConfig({
     {
       name: "checkin:dev",
       testDir: "./src/tests",
-      testIgnore: "**/dashboard/**",
+      // missed-checkin runs in its own project and workflow - see below.
+      testIgnore: ["**/dashboard/**", "**/missed-checkin-expiry.spec.ts"],
       // Specs share a single Delius account and pre-existing CRNs (TEST_MPOP_CRN,
       // TEST_MPOP_STOP_RESTART_CRN), so they must not run concurrently. Pinned
       // here rather than left to the --workers flag.
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.PROBATION_CHECK_IN_URL,
+        ...(headed ? { viewport: null } : {}),
+      },
+    },
+    {
+      // Its own project because it can only run where a test is allowed to
+      // trigger the expiry job, which is dev. Its workflow says when and why.
+      name: "missed-checkin",
+      testDir: "./src/tests/e2e",
+      testMatch: /missed-checkin-expiry\.spec\.ts/,
       workers: 1,
       use: {
         ...devices["Desktop Chrome"],

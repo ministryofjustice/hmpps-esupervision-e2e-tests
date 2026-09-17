@@ -15,13 +15,36 @@ export const createEsupervisionCheckin = async (
     return (await response.json()).uuid;
   });
 
-export interface CheckinSummary {
+export type CheckinStatus =
+  "CREATED" | "SUBMITTED" | "REVIEWED" | "EXPIRED" | "CANCELLED";
+
+/** The fields every check in has, whichever endpoint it came from. */
+interface CheckinBase {
   uuid: string;
   crn: string;
-  status: string;
+  status: CheckinStatus;
   dueDate: string;
+}
+
+export interface CheckinSummary extends CheckinBase {
   createdBy: string;
 }
+
+export interface Checkin extends CheckinBase {
+  reviewedAt: string | null;
+}
+
+export const getCheckin = async (
+  uuid: string,
+  token: string,
+): Promise<Checkin> =>
+  withApiContext<Checkin>(async (ctx) => {
+    const response = await ctx.get(`/v2/offender_checkins/${uuid}`, {
+      headers: authHeader(token),
+    });
+    await assertOk(response, `Get checkin ${uuid}`);
+    return (await response.json()) as Checkin;
+  });
 
 export type CheckinUseCase =
   "AWAITING_CHECKIN" | "NEEDS_ATTENTION" | "REVIEWED";

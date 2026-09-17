@@ -11,6 +11,8 @@ import {
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/mpop/reviewIdentityPage";
 import {
+  MISSED_CHECK_IN_TITLE,
+  MISSED_REVIEWED_CHECK_IN_TITLE,
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
@@ -45,6 +47,25 @@ export interface ReviewDecision {
 export interface Annotation {
   note?: string;
   sensitive?: boolean;
+}
+
+export interface MissedAnnotationBase {
+  note: string;
+  /** Text from earlier notes that should still be on the page afterwards. */
+  retains: string[];
+}
+
+export interface MissedAnnotation extends MissedAnnotationBase {
+  sensitive: boolean;
+}
+
+/** No sensitive field - once the check in is sensitive, the page stops asking. */
+export type SensitiveMissedAnnotation = MissedAnnotationBase;
+
+export interface MissedReviewDecision {
+  /** Why the person missed it - the only thing this review records. */
+  reason: string;
+  sensitive: boolean;
 }
 
 export default class ReviewCheckinJourney {
@@ -178,6 +199,106 @@ export default class ReviewCheckinJourney {
       notes.notesField(),
       "Should stay on the review notes page after a failed submit",
     ).toBeVisible();
+  }
+
+  /**
+   * Reviews a missed check in: records why it was missed, since there are no
+   * answers to go through. The check in stays EXPIRED and gains a review date -
+   * it doesn't become REVIEWED.
+   */
+  async reviewMissedCheckin(
+    crn: string,
+    { reason, sensitive }: MissedReviewDecision,
+  ): Promise<void> {
+    await this.openCheckinContact(crn);
+    await this.pages.missedCheckin.assertOnPage();
+    await assertManageCheckinsPage(this.page, crn, MISSED_CHECK_IN_TITLE);
+    await this.pages.missedCheckin.completePage({ reason, sensitive });
+
+    // Open it again and check the review was saved.
+    await this.openCheckinContact(crn);
+    await this.pages.missedReviewedCheckin.assertOnPage();
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      MISSED_REVIEWED_CHECK_IN_TITLE,
+    );
+    await this.assertMissedReviewSummaryShows(reason);
+    await this.assertSensitiveTag(sensitive);
+  }
+
+  /** Adds a note to a reviewed missed check in, answering the sensitive
+   *  question along the way. */
+  async annotateMissedCheckin(
+    crn: string,
+    { note, sensitive, retains }: MissedAnnotation,
+  ): Promise<void> {
+    await this.openMissedReviewedCheckin(crn);
+    await this.assertSensitiveQuestionAsked(true);
+    await this.pages.missedReviewedCheckin.addNote({ note, sensitive });
+
+    await this.openMissedReviewedCheckin(crn);
+    await this.assertUpdateSaved(note, retains);
+    // Answering yes marks the whole check in as sensitive, so check the tag
+    // appears.
+    await this.assertSensitiveTag(sensitive);
+  }
+
+  /** Adds a note to a check in that's already sensitive - so the sensitive
+   *  question shouldn't be asked again. */
+  async annotateSensitiveMissedCheckin(
+    crn: string,
+    { note, retains }: SensitiveMissedAnnotation,
+  ): Promise<void> {
+    await this.openMissedReviewedCheckin(crn);
+    await this.assertSensitiveTag(true);
+    await this.assertSensitiveQuestionAsked(false);
+    await this.pages.missedReviewedCheckin.addNoteWithSensitiveHidden(note);
+
+    await this.openMissedReviewedCheckin(crn);
+    await this.assertUpdateSaved(note, retains);
+    await this.assertSensitiveTag(true);
+  }
+
+  private async openMissedReviewedCheckin(crn: string): Promise<void> {
+    await this.openCheckinContact(crn);
+    await this.pages.missedReviewedCheckin.assertOnPage();
+  }
+
+  /** The new note is on the page and the earlier ones are still there. */
+  private async assertUpdateSaved(
+    note: string,
+    retains: string[],
+  ): Promise<void> {
+    await this.assertMissedReviewSummaryShows(note);
+    for (const earlier of retains) {
+      await this.assertMissedReviewSummaryShows(earlier);
+    }
+  }
+
+  // Not being asked is worth checking too - once the check in is sensitive,
+  // the question should be gone.
+  private async assertSensitiveQuestionAsked(asked: boolean): Promise<void> {
+    await this.assertShown(
+      "Sensitive question",
+      this.pages.missedReviewedCheckin.sensitiveQuestion(),
+      asked,
+    );
+  }
+
+  private async assertMissedReviewSummaryShows(text: string): Promise<void> {
+    await expect(
+      this.pages.missedReviewedCheckin.reviewSummary(),
+      `Missed and reviewed page should show "${text.trim()}"`,
+    ).toContainText(text.trim());
+  }
+
+  private async assertSensitiveTag(sensitive: boolean): Promise<void> {
+    await this.assertShown(
+      "Sensitive tag",
+      this.pages.missedReviewedCheckin.sensitiveTag(),
+      sensitive,
+    );
   }
 
   async annotateReviewedCheckin(
