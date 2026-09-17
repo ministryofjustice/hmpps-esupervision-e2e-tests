@@ -21,9 +21,12 @@ export default class OverviewPage extends MPopBasePage {
     await this.getQA("activityLogTab").getByRole("link").click();
   }
 
-  async clickViewAllOnlineCheckinDetails(): Promise<void> {
+  /** The card names this link "Manage online check ins" while check ins are
+   *  active and "View all online check in details" once they are stopped. Both
+   *  go to the same manage page. */
+  async clickManageOnlineCheckIns(): Promise<void> {
     const link = this.getQA("checkinCard").getByRole("link", {
-      name: "Manage online check ins",
+      name: /Manage online check ins|View all online check in details/,
     });
     await expect(
       link,

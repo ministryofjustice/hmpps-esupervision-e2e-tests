@@ -46,7 +46,7 @@ export default class ManageCheckInsJourney {
     await test.step(`Open online check ins for ${crn}`, async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.assertOnPage();
-      await this.pages.overview.clickViewAllOnlineCheckinDetails();
+      await this.pages.overview.clickManageOnlineCheckIns();
       // Checks the manage page loaded from the expected service.
       await assertExpectedService(this.page, "Manage check ins page");
       await this.pages.manage.assertOnPage();
