@@ -6,6 +6,10 @@ import { urlPattern } from "../../utils/url";
 /**
  * Checks on links that take a practitioner back to MPOP.
  *
+ * Some pages link straight to MPOP's URL, so the hand off is in the href. Others
+ * link to "/case/{crn}", which this service does not serve and redirects out -
+ * only following those proves anything.
+ *
  * TODO(legacy-mpop): Delete the LEGACY_MPOP early returns below, and the import
  * above, when legacy MPOP is removed. These links are built by Manage Online
  * Check Ins - on the legacy path the practitioner never left MPOP, so there is

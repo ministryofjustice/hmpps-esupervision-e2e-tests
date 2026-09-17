@@ -18,7 +18,7 @@ import { originPattern, urlPattern } from "../../support/utils/url";
 // same layout, so the real page furniture is there with no case to set up.
 const UNROUTED_PATH = "/no-such-page";
 
-/** Every MPOP page renders one. */
+/** Every MPOP page renders one, including its error page. */
 const MPOP_PAGE_HEADING = '[data-qa="pageHeading"]';
 
 test.describe("manage online check ins UI layout", () => {
@@ -132,10 +132,11 @@ test.describe("manage online check ins UI layout", () => {
       ownPage,
       "this service's homepage URL should redirect to MPOP",
     ).toHaveURL(originPattern(env.mpopUrl()));
-    // Checks MPOP rendered a page, not just that the URL matched.
+    // Checks MPOP rendered a heading, so the redirect reached a page of some
+    // kind. Not which page - MPOP's error page has one too.
     await expect(
       ownPage.locator(MPOP_PAGE_HEADING),
-      "MPOP should render a page after the homepage redirect, not an error",
+      "MPOP should render a page after the homepage redirect",
     ).toBeVisible();
 
     await ownPage.goto(`${base}/case`);
@@ -145,7 +146,7 @@ test.describe("manage online check ins UI layout", () => {
     ).toHaveURL(urlPattern(env.mpopUrl(), "/case"));
     await expect(
       ownPage.locator(MPOP_PAGE_HEADING),
-      "MPOP should render its case list after the redirect, not an error",
+      "MPOP should render a page after the case list redirect",
     ).toBeVisible();
   });
 });

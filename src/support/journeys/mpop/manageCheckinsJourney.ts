@@ -82,7 +82,12 @@ export default class ManageCheckInsJourney {
       await this.pages.stop.assertOnPage();
       await assertManageCheckinsPage(this.page, crn, STOP_CHECKINS_TITLE);
 
-      // Checks Back and Cancel each return to the manage page via MPOP.
+      // Checks Back and Cancel each return to the manage page via MPOP. Followed
+      // one at a time, since clicking one leaves the page the other is on.
+      //
+      // Not assertLandsInMpop: the href is MPOP's, but MPOP's manage route is
+      // flagged over to this service, so the trip is MOCI -> MPOP -> back here.
+      // Expecting to stop at MPOP would fail whenever the flag is on.
       const backToManage = `/case/${crn}/appointments/check-in/manage/`;
 
       await test.step("Back returns to the manage page via MPOP", async () => {
