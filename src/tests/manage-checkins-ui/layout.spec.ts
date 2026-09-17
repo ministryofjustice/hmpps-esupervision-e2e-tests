@@ -128,11 +128,9 @@ test.describe("manage online check ins UI layout", () => {
   }) => {
     await new SignInJourney(ownPage).login(UNROUTED_PATH);
 
-    // Where each redirect lands is all this test owns. What MPOP then renders is
-    // MPOP's to assert.
-    //
-    // The case list is asserted as a path prefix, not MPOP_PATH.allCases: this
-    // redirect drops the trailing slash that the confirmation pages' href has.
+    // Only where each redirect lands - what MPOP renders there is MPOP's to
+    // assert. The case list is a path prefix, not MPOP_PATH.allCases: this
+    // redirect drops the trailing slash the confirmation pages' href has.
     await ownPage.goto(absoluteUrl(env.manageCheckinsUiUrl(), "/"));
     await expect(
       ownPage,

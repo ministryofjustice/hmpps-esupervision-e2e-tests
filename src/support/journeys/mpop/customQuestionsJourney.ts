@@ -94,9 +94,8 @@ export default class CustomQuestionsJourney {
       await assertExpectedService(this.page, "Questions journey");
       await this.pages.howToWriteQuestions.assertOnPage();
 
-      // Exactly the manage page this journey came from - a prefix of manage/
-      // would also match the questions pages nested under it, and nothing here
-      // follows Back to catch that.
+      // The exact manage page this journey came from - a prefix of manage/ would
+      // also match this page's own URL, nested under it.
       const checkinId = manageCheckinIdFrom(this.page.url());
       await assertHrefIsMpop(
         this.pages.howToWriteQuestions.backLink(),

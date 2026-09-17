@@ -15,11 +15,9 @@ export const absoluteUrl = (base: string, path = ""): string =>
 export const urlPattern = (base: string, path = ""): RegExp =>
   new RegExp(`^${escapeRegExp(trimTrailingSlash(base))}${escapeRegExp(path)}`);
 
-/**
- * The check in UUID out of a manage URL - `.../check-in/manage/{uuid}/...`.
- * Both services mirror this path, so it reads from either one's URL. Lets a test
- * assert a manage href exactly instead of by prefix.
- */
+/** The check in UUID out of a manage URL - `.../check-in/manage/{uuid}/...`. Lets
+ *  a test assert a manage href exactly instead of by prefix. Both services mirror
+ *  this path, so it reads from either one's URL. */
 export const manageCheckinIdFrom = (url: string): string => {
   const id = /\/check-in\/manage\/([^/?#]+)/.exec(url)?.[1];
   if (!id) {

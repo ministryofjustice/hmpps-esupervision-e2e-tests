@@ -66,9 +66,8 @@ test("eligibility and eligible pages' Cancel links go back to the person's overv
   );
 
   // Both pages point at the same relative path, and this service doesn't serve
-  // it - following one proves the redirect out to MPOP really happens. The href
-  // assertions above are what this test still checks on the legacy path, where
-  // followToMpop is a no-op because the practitioner never left MPOP.
+  // it - following one proves the redirect out to MPOP happens. On the legacy
+  // path followToMpop is a no-op, leaving the hrefs above as the check.
   await followToMpop(
     page,
     pages.eligible.cancelLink(),

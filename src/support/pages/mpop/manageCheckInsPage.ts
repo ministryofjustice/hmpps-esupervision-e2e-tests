@@ -1,6 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 import { escapeRegExp } from "../../utils/url";
+import { LEGACY_MPOP } from "../../utils/legacyMpop";
 
 export default class ManageCheckInsPage extends MPopBasePage {
   constructor(page: Page) {
@@ -9,14 +10,17 @@ export default class ManageCheckInsPage extends MPopBasePage {
 
   /**
    * Back to the person's overview. Both services point it at `/case/{crn}`, but
-   * only MOCI renders it as a GOV.UK back link.
+   * MOCI renders a back link where legacy MPOP renders a one-item "< Back"
+   * breadcrumb. Branched on the flag rather than matched with one either-or
+   * selector, so it always resolves to a single element.
    *
-   * TODO(legacy-mpop): Drop the breadcrumb selector when legacy MPOP is removed -
-   * it is how legacy MPOP renders this page's Back (a one-item "< Back"
-   * breadcrumb), and this page is the only one where the two services differ.
+   * TODO(legacy-mpop): Drop the branch when legacy MPOP is removed - this page is
+   * the only one where the two services differ.
    */
   backLink(): Locator {
-    return this.page.locator(".govuk-back-link, .govuk-breadcrumbs__link");
+    return LEGACY_MPOP
+      ? this.getClass("govuk-breadcrumbs__link")
+      : this.getClass("govuk-back-link");
   }
 
   async clickStopCheckIns(): Promise<void> {

@@ -20,13 +20,13 @@ import { absoluteUrl, urlPattern } from "../../utils/url";
  *  once so a destination isn't repeated as a literal at each call site. */
 export const MPOP_PATH = {
   overview: (crn: string) => `/case/${crn}`,
-  /** The setup confirmation renders this as an absolute MPOP URL; the restart
-   *  confirmation renders the same path as a relative href. Same destination,
-   *  so assert it with assertHrefIsMpop and assertHrefIs respectively. */
+  /** Same destination either way, but the setup confirmation renders it as an
+   *  absolute MPOP URL and the restart confirmation as a relative href - so
+   *  assert with assertHrefIsMpop and assertHrefIs respectively. */
   allCases: "/case/",
   activityLog: (crn: string) => `/case/${crn}/activity-log`,
-  /** Ends with a trailing slash: the check in UUID goes on the end, and a test
-   *  only learns it from the URL it is on - see manageCheckinIdFrom. */
+  /** Trailing slash: append the check in UUID, which a test reads off the URL it
+   *  is on - see manageCheckinIdFrom. */
   manage: (crn: string) => `/case/${crn}/appointments/check-in/manage/`,
 } as const;
 

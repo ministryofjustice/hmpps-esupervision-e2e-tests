@@ -101,8 +101,8 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     const manage = await journey.openManage(crn);
     await journey.assertManageBackLink(crn);
 
-    await journey.goToStopCheckIns(crn, manage);
-    await journey.assertStopPageLinks(crn, manage);
+    await journey.goToStopCheckIns(crn);
+    await journey.assertStopPageLinks(crn);
 
     await followToMpop(
       page,
