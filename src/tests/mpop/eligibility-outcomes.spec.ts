@@ -51,8 +51,6 @@ test("eligibility answer leads to the PARTIALLY ELIGIBLE outcome", async ({
 test("Cancel on the eligibility questions and eligible pages returns to the person in MPOP", async ({
   page,
 }) => {
-  // Every check here is a link back to MPOP, and none of those run on legacy -
-  // the test would pass having checked nothing.
   test.skip(LEGACY_MPOP, "Links back to MPOP aren't tested on legacy");
 
   const { pages, crn } = await startEligibility(page);

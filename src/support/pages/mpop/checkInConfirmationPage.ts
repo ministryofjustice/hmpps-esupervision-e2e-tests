@@ -9,7 +9,7 @@ export default class CheckInConfirmationPage extends MPopBasePage {
     );
   }
 
-  /** A link to the person's record in MPOP, styled as a button. */
+  /** A link to the person's record in MPOP. */
   overviewLink(): Locator {
     return this.getQA("submit-btn");
   }

@@ -233,10 +233,10 @@ export default class ManageCheckInsJourney {
    * The restart confirmation's two links back to MPOP: check the all cases href,
    * then follow the overview link.
    *
-   * Out of restartCheckIns for the same reason as the setup confirmation - a
-   * link change should fail a link test, not whatever else happened to restart
-   * check ins. The page only exists just after restarting, so call this straight
-   * afterwards. It navigates away, so call it last.
+   * Kept out of restartCheckIns so a link change fails a link test, not
+   * whatever else happened to restart check ins. The page only exists just
+   * after restarting, so call this straight afterwards. It navigates away, so
+   * call it last.
    */
   async assertRestartConfirmationLinksLandInMpop(crn: string): Promise<void> {
     await test.step("Restart confirmation links hand off to MPOP", async () => {

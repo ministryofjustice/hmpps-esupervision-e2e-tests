@@ -268,10 +268,10 @@ export default class SetupOnlineCheckinsJourney {
    * The confirmation page's two links back to MPOP: check the all cases href,
    * then follow the record link.
    *
-   * Deliberately not inside submitSetup, which nearly every setup in the suite
-   * runs through - a link change would then fail a pile of tests that aren't
-   * about links. The page only exists just after submitting, so call this
-   * straight afterwards. It navigates away, so call it last.
+   * Kept out of submitSetup, which nearly every setup in the suite runs
+   * through, so a link change fails a link test rather than a pile of unrelated
+   * ones. The page only exists just after submitting, so call this straight
+   * afterwards. It navigates away, so call it last.
    */
   async assertConfirmationLinksLandInMpop(crn: string): Promise<void> {
     const confirmation = new CheckInConfirmationPage(this.page);

@@ -4,28 +4,21 @@ import { LEGACY_MPOP } from "../../utils/legacyMpop";
 import { absoluteUrl, urlPattern } from "../../utils/url";
 
 /**
- * Links that take a practitioner from Manage Online Check Ins back to MPOP.
+ * Assertions for links that hand a practitioner back to MPOP from Manage
+ * Online Check Ins.
  *
- * Two kinds. Some hold MPOP's full URL, so checking the href is enough. Others
- * are relative, like "/case/X123" - this service doesn't serve that, it
- * redirects out to MPOP, so those only prove anything if you follow them.
- *
- * None of this runs on legacy MPOP. There the practitioner never left MPOP, so
- * there is no hand off to test.
+ * Not checked on legacy MPOP, since the practitioner never leaves MPOP there.
  *
  * TODO(legacy-mpop): delete noHandOffOnLegacy and its callers, and the two
  * imports above, when legacy MPOP goes.
  */
 
 /**
- * True when the run is targeting legacy MPOP, so the caller should bail.
+ * True when running against legacy MPOP, so the caller should skip its checks.
  *
- * Not test.skip - the test carries on and passes. The annotation is there so the
- * report says which check was dropped, rather than it vanishing quietly.
- *
- * Exported for callers that would otherwise navigate somewhere just to reach a
- * check that won't run. If a whole test would be left with nothing to assert,
- * use test.skip instead, so it shows as skipped rather than passed.
+ * Records an annotation instead of calling test.skip, so the test still runs
+ * and passes but the report shows which check was dropped. Use test.skip
+ * instead when a whole test would be left with nothing else to assert.
  */
 export const noHandOffOnLegacy = (name: string): boolean => {
   if (!LEGACY_MPOP) return false;
@@ -40,19 +33,14 @@ export const noHandOffOnLegacy = (name: string): boolean => {
  *  a path as a literal. */
 export const MPOP_PATH = {
   overview: (crn: string) => `/case/${crn}`,
-  /** The case list. The setup confirmation links to it with MPOP's full URL, the
-   *  restart confirmation with this relative path.
+  /** The case list. Some links hold this as an absolute MPOP URL, others as a
+   *  relative path.
    *
    *  Written exactly as those pages render it, trailing slash and all, because
    *  the href checks compare the attribute character for character. If a page
    *  ever renders "/case" instead, change it here. Landing URLs are looser -
    *  urlPathPattern lets the slash go, since a redirect tidying a path isn't the
-   *  link changing.
-   *
-   *  Nothing clicks the relative one: the click is spent on the record link,
-   *  which is where a practitioner actually wants to go. So it's covered in two
-   *  parts - the href here, and layout.spec walking the same path out to MPOP's
-   *  case list. */
+   *  link changing. */
   allCases: "/case/",
   activityLog: (crn: string) => `/case/${crn}/activity-log`,
   /** An offender's manage page. The id in the URL is the offender's own uuid -
@@ -90,10 +78,8 @@ export const assertRelativeHref = async (
 
 /**
  * Filing a review redirects rather than links, so check where it lands.
- *
- * Prefix match with landedOn behind it, the same as the Back link on the
- * reviewed check in page. Both go to the activity log, so both are checked the
- * same way.
+ * The URL match is only a prefix, so landedOn confirms MPOP actually rendered
+ * the activity log.
  */
 export const assertReturnedToMpopActivityLog = async (
   page: Page,

@@ -101,8 +101,6 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
   test("Back and Cancel on the manage and stop check ins pages return to MPOP", async ({
     page,
   }) => {
-    // Every check in this test is a link back to MPOP, and none of those run on
-    // legacy - without this it would pass having checked nothing.
     test.skip(LEGACY_MPOP, "Links back to MPOP aren't tested on legacy");
 
     const journey = new ManageCheckInsJourney(page);

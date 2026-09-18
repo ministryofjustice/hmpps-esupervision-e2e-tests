@@ -82,17 +82,13 @@ test.describe("manage online check ins UI layout", () => {
     await expect(badge).toHaveText(/^(\d{1,2}|99\+)$/);
   });
 
-  // urlPathPattern on all three: a nav link lands on a whole top-level path,
-  // with nothing following it. "/case" is the one with a real clash to avoid
-  // ("/caseload"); the other two just follow the same rule. The "MPOP can change
-  // its own URLs" caveat elsewhere is about paths under a case, not these.
+  // urlPathPattern so the match ends at "/case" - a plain prefix would also
+  // accept "/caseload".
   test("cases nav link takes the practitioner to their case list in MPOP", async ({
     page: ownPage,
   }) => {
     const ownPages = await new SignInJourney(ownPage).login(UNROUTED_PATH);
     await ownPages.primaryNavigation.navLink("Cases").click();
-    // Same place the confirmation pages link to, so the same constant.
-    // urlPathPattern drops the trailing slash, so it matches "/case" either way.
     await expect(ownPage).toHaveURL(
       urlPathPattern(env.mpopUrl(), MPOP_PATH.allCases),
     );
@@ -144,11 +140,6 @@ test.describe("manage online check ins UI layout", () => {
       "this service's homepage URL should redirect to MPOP",
     ).toHaveURL(originPattern(env.mpopUrl()));
 
-    // MPOP_PATH.allCases rather than a "/case" of its own: this walks the exact
-    // path the restart confirmation links to, which is the half of that link
-    // nothing clicks. urlPathPattern keeps "/caseload" and individual cases from
-    // passing as the case list, while still letting the redirect drop the
-    // trailing slash - the href checks are where that slash has to be exact.
     await ownPage.goto(
       absoluteUrl(env.manageCheckinsUiUrl(), MPOP_PATH.allCases),
     );
