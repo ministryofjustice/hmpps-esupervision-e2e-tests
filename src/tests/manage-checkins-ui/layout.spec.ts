@@ -36,12 +36,12 @@ test.describe("manage online check ins UI layout", () => {
     await page.close();
   });
 
-  test("header account menu button is un-hidden by the component JavaScript", async () => {
+  test("header component's assets load correctly", async () => {
     const header = pages.header;
     await expect(header.header()).toBeVisible();
 
-    // The button is served `hidden` and un-hidden by the header component's
-    // JavaScript, so a visible one proves the assets loaded and ran.
+    // The account menu button is served `hidden` and un-hidden by the header
+    // component's JavaScript, so a visible button proves the assets loaded and ran.
     await expect(
       header.accountMenuToggle(),
       "Account menu button should be un-hidden by the header component's JavaScript",
