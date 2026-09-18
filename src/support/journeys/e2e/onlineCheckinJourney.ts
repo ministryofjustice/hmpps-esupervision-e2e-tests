@@ -30,8 +30,16 @@ export default class OnlineCheckinJourney {
     this.review = new ReviewCheckinJourney(page);
   }
 
+  /**
+   * `assertMpopHandoff` checks the confirmation page's two links back to MPOP.
+   *
+   * Off by default. The links never vary, so one scenario covers them and the
+   * rest would just repeat the same check. It also ends on the person's overview
+   * rather than the confirmation page.
+   */
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
+    { assertMpopHandoff = false } = {},
   ): Promise<NewOffender> {
     // createTestOffender() records the CRN before returning, so it's recoverable
     // by cleanup even if setup below fails.
@@ -55,6 +63,11 @@ export default class OnlineCheckinJourney {
       rationale: "E2E test rationale",
     });
     await setup.submitSetup(summary);
+    // The confirmation page only exists right after submitting, so if we're
+    // following the link at all, it has to be now.
+    if (assertMpopHandoff) {
+      await setup.assertConfirmationLinksLandInMpop(offender.crn);
+    }
     return offender;
   }
 
@@ -100,12 +113,20 @@ export default class OnlineCheckinJourney {
     await this.customQuestions.assertChangeQuestionsUnavailable(crn);
   }
 
+  /** `assertMpopHandoff` - see reviewCompletedCheckin for what it turns on. */
   async reviewCheckin(
     crn: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
+    { assertMpopHandoff = false } = {},
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details);
+    await this.review.reviewCompletedCheckin(crn, decision, details, {
+      assertMpopHandoff,
+    });
+  }
+
+  async assertReviewedCheckinBackLink(crn: string): Promise<void> {
+    await this.review.assertReviewedCheckinBackLinkLandsInMpop(crn);
   }
 
   async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {

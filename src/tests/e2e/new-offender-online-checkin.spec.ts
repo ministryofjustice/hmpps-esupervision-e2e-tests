@@ -25,6 +25,10 @@ interface CheckinScenario {
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
+  /** Check every link back to MPOP this journey passes: the confirmation page's
+   *  links, the review pages' Back links, and where filing a review redirects to.
+   *  One scenario is enough - the links are the same whichever one runs. */
+  assertMpopHandoff?: boolean;
 }
 
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
@@ -34,6 +38,7 @@ const scenarios: CheckinScenario[] = [
   {
     name: "checkin created by the scheduler - first checkin today, MATCH review",
     firstCheckinDaysAhead: 0,
+    assertMpopHandoff: true,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
@@ -99,6 +104,7 @@ test.describe("Online check in for a new offender", () => {
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
+        { assertMpopHandoff: scenario.assertMpopHandoff },
       );
       await attachCreatedCrn(testInfo, offender.crn);
       if (scenario.expectNoChangeQuestions) {
@@ -119,7 +125,13 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details);
+      await journey.reviewCheckin(offender.crn, scenario.review, details, {
+        assertMpopHandoff: scenario.assertMpopHandoff,
+      });
+
+      if (scenario.assertMpopHandoff) {
+        await journey.assertReviewedCheckinBackLink(offender.crn);
+      }
 
       await journey.annotateCheckin(offender.crn, scenario.annotation);
     });

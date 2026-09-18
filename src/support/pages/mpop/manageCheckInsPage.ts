@@ -1,10 +1,29 @@
 import { Locator, Page } from "@playwright/test";
 import MPopBasePage from "../base/mpopBasePage";
 import { escapeRegExp } from "../../utils/url";
+import { LEGACY_MPOP } from "../../utils/legacyMpop";
 
 export default class ManageCheckInsPage extends MPopBasePage {
   constructor(page: Page) {
     super(page, "Online check ins");
+  }
+
+  /**
+   * Back to the person's overview. Both services send you to `/case/{crn}`, but
+   * MOCI renders a back link and legacy MPOP a one-item "< Back" breadcrumb.
+   * Branching on the flag keeps this to a single element either way.
+   *
+   * The breadcrumb side isn't tested any more - link tests don't run on legacy.
+   * Left alone because taking it out belongs to retiring legacy MPOP, not to
+   * these tests.
+   *
+   * TODO(legacy-mpop): drop the branch when legacy MPOP goes - this is the only
+   * page where the two differ.
+   */
+  backLink(): Locator {
+    return LEGACY_MPOP
+      ? this.getClass("govuk-breadcrumbs__link")
+      : this.getClass("govuk-back-link");
   }
 
   async clickStopCheckIns(): Promise<void> {
