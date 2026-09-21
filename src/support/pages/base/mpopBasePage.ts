@@ -31,6 +31,16 @@ export default abstract class MPopBasePage {
     return this.summaryValueByKey(ASSISTANCE_ROW_KEY);
   }
 
+  /** The shared form layout renders both, so any page using it has them. */
+  backLink(): Locator {
+    return this.getClass("govuk-back-link");
+  }
+
+  /** The "Cancel and go back" link. Only on pages that set showAnchorLink. */
+  cancelLink(): Locator {
+    return this.getQA("formAnchorLink");
+  }
+
   protected yesNo(value: boolean): string {
     return value ? "Yes" : "No";
   }

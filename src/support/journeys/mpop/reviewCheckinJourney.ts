@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { expect, Locator, Page, test } from "@playwright/test";
 import { MpopPages } from "../../pages/mpop/mpopPages";
 import {
   AdditionalAnswer,
@@ -17,6 +17,12 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { assertExpectedService } from "../../utils/legacyMpop";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import {
+  assertAbsoluteMpopHref,
+  assertReturnedToMpopActivityLog,
+  followToMpop,
+  MPOP_PATH,
+} from "../../assertions/manage-checkins-ui/mpopHandoff";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -48,10 +54,19 @@ export default class ReviewCheckinJourney {
     this.pages = new MpopPages(page);
   }
 
+  /**
+   * `assertMpopHandoff` turns on the two link checks this review passes through:
+   * the identity page's Back link, and where filing the review redirects to.
+   *
+   * Off by default. They're the same every time, so one scenario covers them,
+   * and leaving them on would fail every test that reviews anything if a link
+   * moved.
+   */
   async reviewCompletedCheckin(
     crn: string,
     decision: ReviewDecision = {},
     details?: CompletedCheckinDetails,
+    { assertMpopHandoff = false } = {},
   ): Promise<void> {
     const {
       identity = IdentityDecision.MATCH,
@@ -64,6 +79,14 @@ export default class ReviewCheckinJourney {
     await this.openCheckinContact(crn);
     await this.pages.reviewIdentity.assertOnPage();
     await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
+    if (assertMpopHandoff) {
+      // Back goes to the activity log in MPOP.
+      await assertAbsoluteMpopHref(
+        this.pages.reviewIdentity.backLink(),
+        "Back on the review identity page",
+        MPOP_PATH.activityLog(crn),
+      );
+    }
     if (decision.assertValidation) {
       await this.assertIdentityDecisionRequired();
     }
@@ -86,6 +109,15 @@ export default class ReviewCheckinJourney {
       riskManagement,
       sensitive,
     });
+    if (assertMpopHandoff) {
+      // A redirect, so this is the only moment to catch it - the next
+      // navigation loses it.
+      await test.step("Filing the review hands off to MPOP", async () => {
+        await assertReturnedToMpopActivityLog(this.page, crn, () =>
+          this.pages.activityLog.assertOnPage(),
+        );
+      });
+    }
 
     // Re-open the check in and verify the review was saved
     await this.openCheckinContact(crn);
@@ -97,6 +129,22 @@ export default class ReviewCheckinJourney {
       await this.assertCheckinDetails(this.pages.reviewedCheckin, details);
     }
     await this.assertIdentityImages(identity);
+  }
+
+  /** Opens a reviewed check in and follows Back, which should land on the
+   *  activity log in MPOP. */
+  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
+    await test.step("Back returns to the activity log in MPOP", async () => {
+      await this.openCheckinContact(crn);
+      await this.pages.reviewedCheckin.assertOnPage();
+      await followToMpop(
+        this.page,
+        this.pages.reviewedCheckin.backLink(),
+        "Back on the reviewed check in page",
+        MPOP_PATH.activityLog(crn),
+        () => this.pages.activityLog.assertOnPage(),
+      );
+    });
   }
 
   /** Without an identity decision an unverified check in would be filed as reviewed. */

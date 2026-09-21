@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/mpop/checkInSummaryPage";
 import DateFrequencyPage, {
   FrequencyOptions,
@@ -6,7 +6,6 @@ import DateFrequencyPage, {
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
 import { MpopPages } from "../../pages/mpop/mpopPages";
-import test from "@playwright/test";
 import CheckInConfirmationPage from "../../pages/mpop/checkInConfirmationPage";
 import { ManageCheckinsUiPages } from "../../pages/manage-checkins-ui/manageCheckinsUiPages";
 import { assertExpectedService, LEGACY_MPOP } from "../../utils/legacyMpop";
@@ -19,6 +18,11 @@ import {
 } from "../../../data/manage-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
 import { assertManageCheckinsPage } from "../../assertions/manage-checkins-ui/manageCheckinsAssertions";
+import {
+  assertAbsoluteMpopHref,
+  followToMpop,
+  MPOP_PATH,
+} from "../../assertions/manage-checkins-ui/mpopHandoff";
 
 interface ContactPreferenceValues {
   preference: Preference;
@@ -258,6 +262,34 @@ export default class SetupOnlineCheckinsJourney {
   async submitSetup(summary: CheckInSummaryPage): Promise<void> {
     await summary.submitSetUp();
     await new CheckInConfirmationPage(this.page).assertOnPage();
+  }
+
+  /**
+   * The confirmation page's two links back to MPOP: check the all cases href,
+   * then follow the record link.
+   *
+   * Kept out of submitSetup, which nearly every setup in the suite runs
+   * through, so a link change fails a link test rather than a pile of unrelated
+   * ones. The page only exists just after submitting, so call this straight
+   * afterwards. It navigates away, so call it last.
+   */
+  async assertConfirmationLinksLandInMpop(crn: string): Promise<void> {
+    const confirmation = new CheckInConfirmationPage(this.page);
+    await test.step("Confirmation links hand off to MPOP", async () => {
+      // Check the href first - the click below leaves this page.
+      await assertAbsoluteMpopHref(
+        confirmation.allCasesLink(),
+        "Return to all cases",
+        MPOP_PATH.allCases,
+      );
+      await followToMpop(
+        this.page,
+        confirmation.overviewLink(),
+        "View the person's record",
+        MPOP_PATH.overview(crn),
+        () => this.pages.overview.assertOnPage(),
+      );
+    });
   }
 
   async changeContactPreferenceFromSummary(
