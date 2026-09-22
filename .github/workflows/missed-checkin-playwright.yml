@@ -2,10 +2,7 @@ name: Missed Check In Playwright Tests
 on:
   # Run manually via GitHub API / Action tab
   workflow_dispatch:
-  # 11:00 UTC, between dev's scheduled expiry runs at 09:30 and 11:30 - the 09:30
-  # one has already cleared the environment, so the run this suite triggers has
-  # little left to expire. Both schedules are UTC, so the gap holds through BST.
-  # Clear of the main pack (07:30) and the dashboard suite (09:00) too.
+
   schedule:
     - cron: "0 11 * * 1-5"
 
@@ -16,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    # 7 minutes of test, plus npm ci and a browser install on a cold cache.
+    # 5 minutes of test, plus npm ci and a browser install on a cold cache.
     timeout-minutes: 25
     runs-on: [self-hosted, hmpps-github-actions-runner]
     env:
@@ -24,7 +21,6 @@ jobs:
       # Dev only: the API's manual job triggers are switched on there and nowhere
       # else.
       ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
-      PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
       AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
       MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
       DELIUS_URL: https://ndelius.test.probation.service.justice.gov.uk
@@ -35,9 +31,6 @@ jobs:
       AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
 
       # test data. No fixed CRNs - the spec creates its own offender.
-      TEST_PERSON_FIRST_NAME: ${{ secrets.TEST_PERSON_FIRST_NAME }}
-      TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
-      TEST_PERSON_DOB: ${{ secrets.TEST_PERSON_DOB }}
       DELIUS_USERNAME: ${{ secrets.DELIUS_USERNAME }}
       DELIUS_PASSWORD: ${{ secrets.DELIUS_PASSWORD }}
       PRACTITIONER_NAME: ${{ secrets.PRACTITIONER_NAME }}

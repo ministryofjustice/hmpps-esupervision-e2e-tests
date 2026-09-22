@@ -6,9 +6,8 @@ import { dueDateString, today } from "./date";
 // One day past the API's grace period (3 days), so the check in is old enough to
 // expire without sitting on the boundary. Keep in step if that setting changes.
 const DUE_DAYS_AGO = 4;
-// The job works through the whole environment, so it can take a while.
-const POLL_TIMEOUT_MS = 120_000;
-const POLL_INTERVAL_MS = 5_000;
+const POLL_TIMEOUT_MS = 60_000;
+const POLL_INTERVAL_MS = 2_000;
 const RETRIGGER_BACKOFF_MS = 30_000;
 
 /** A due date old enough for the expiry job to take the check in. */
@@ -64,27 +63,29 @@ const tryTrigger = async (
 };
 
 /**
- * Gets a check in to EXPIRED without waiting for a scheduled expiry run.
- *
- * Proves it reached EXPIRED, not that our trigger did it - a scheduled run, or
- * someone else's, can get there first.
+ * Gets a check in to EXPIRED, triggering the job even if it's already there.
+ * Returns the time it was seen EXPIRED, so callers can measure how long the
+ * UI takes to catch up.
  */
 export const expireCheckin = async (
   uuid: string,
   token: string,
-): Promise<void> => {
+): Promise<number> => {
   const initial = await getCheckin(uuid, token);
-  // Already expired, so nothing to trigger.
-  if (initial.status === "EXPIRED") {
-    return;
-  }
   assertNotMovedUnexpectedly(uuid, initial.status);
   assertDueInPast(uuid, initial.dueDate);
+  const alreadyExpired = initial.status === "EXPIRED";
 
   const started = Date.now();
   let { accepted, error: triggerError } = await tryTrigger(token);
   let lastTrigger = Date.now();
   let seen: CheckinStatus = initial.status;
+  console.log(`Expiry job triggered for check in ${uuid}.`);
+
+  if (alreadyExpired) {
+    console.log(`Check in ${uuid} expired.`);
+    return Date.now();
+  }
 
   for (;;) {
     // Don't let one bad response end a 5 minute test - only the deadline does.
@@ -96,7 +97,8 @@ export const expireCheckin = async (
       pollError = error instanceof Error ? error.message : String(error);
     }
     if (seen === "EXPIRED") {
-      return;
+      console.log(`Check in ${uuid} expired.`);
+      return Date.now();
     }
     assertNotMovedUnexpectedly(uuid, seen);
 

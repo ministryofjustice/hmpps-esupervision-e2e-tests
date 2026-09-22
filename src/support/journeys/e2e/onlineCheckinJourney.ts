@@ -139,8 +139,9 @@ export default class OnlineCheckinJourney {
   async reviewMissedCheckin(
     crn: string,
     decision: MissedReviewDecision,
+    expiredAt?: number,
   ): Promise<void> {
-    await this.review.reviewMissedCheckin(crn, decision);
+    await this.review.reviewMissedCheckin(crn, decision, expiredAt);
   }
 
   async annotateMissedCheckin(

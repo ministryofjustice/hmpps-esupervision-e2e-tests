@@ -26,9 +26,8 @@ test("missed check in: expiry job, review, then sensitive updates", async ({
   page,
 }, testInfo) => {
   // Creating the offender, waiting for expiry and eight trips through MPOP
-  // don't fit the default 180s. And if it does time out, the poll's own error
-  // says far more than Playwright's would.
-  test.setTimeout(420_000);
+  // don't fit the default 180s.
+  test.setTimeout(300_000);
 
   const journey = new OnlineCheckinJourney(page);
   const offender = await journey.createOffenderAndSetupCheckins(
@@ -44,13 +43,18 @@ test("missed check in: expiry job, review, then sensitive updates", async ({
     type: "checkin",
     description: `uuid=${uuid} crn=${offender.crn} dueDate=${dueDate}`,
   });
+  console.log("Setup completed.");
 
-  await expireCheckin(uuid, token);
+  const expiredAt = await expireCheckin(uuid, token);
 
-  await journey.reviewMissedCheckin(offender.crn, {
-    reason: MISSED_REASON,
-    sensitive: false,
-  });
+  await journey.reviewMissedCheckin(
+    offender.crn,
+    {
+      reason: MISSED_REASON,
+      sensitive: false,
+    },
+    expiredAt,
+  );
 
   await assertReviewedWhileExpired(uuid, token);
 

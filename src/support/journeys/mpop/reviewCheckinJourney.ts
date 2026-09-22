@@ -209,8 +209,9 @@ export default class ReviewCheckinJourney {
   async reviewMissedCheckin(
     crn: string,
     { reason, sensitive }: MissedReviewDecision,
+    expiredAt?: number,
   ): Promise<void> {
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, 120_000, expiredAt);
     await this.pages.missedCheckin.assertOnPage();
     await assertManageCheckinsPage(this.page, crn, MISSED_CHECK_IN_TITLE);
     await this.pages.missedCheckin.completePage({ reason, sensitive });
@@ -415,15 +416,33 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(crn: string): Promise<void> {
+  /**
+   * `timeoutMs` is how long to wait for the check in to appear.
+   * `expiredAt` is when the check in was first seen EXPIRED
+   */
+  private async openCheckinContact(
+    crn: string,
+    timeoutMs = 60000,
+    expiredAt?: number,
+  ): Promise<void> {
+    await this.pages.overview.goTo(crn);
+    await this.pages.overview.clickActivityLogTab();
+    await this.pages.activityLog.assertOnPage();
     await expect(async () => {
-      await this.pages.overview.goTo(crn);
-      await this.pages.overview.clickActivityLogTab();
+      await this.page.reload();
       await this.pages.activityLog.assertOnPage();
       await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
         timeout: 5000,
       });
-    }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
+    }).toPass({
+      timeout: timeoutMs,
+      intervals: [3000, 5000, 10000, 30000],
+    });
+    if (expiredAt !== undefined) {
+      console.log(
+        `Check in for ${crn} shown as expired in UI after ${Date.now() - expiredAt}ms.`,
+      );
+    }
     await this.pages.activityLog.openCheckinReview();
     await assertExpectedService(this.page, "Review journey");
   }
