@@ -73,7 +73,13 @@ export const expireCheckin = async (
   assertNotMovedUnexpectedly(uuid, initial.status);
   assertDueInPast(uuid, initial.dueDate);
   if (initial.status === "EXPIRED") {
-    console.log(`Check in ${uuid} expired.`);
+    // Due date is already past the grace period, so the status read alone
+    // shows EXPIRED - but the job still needs to run to produce the
+    // downstream effect the UI depends on (e.g. the activity log entry).
+    console.log(
+      `Check in ${uuid} already expired; triggering the job so its UI effects run.`,
+    );
+    await tryTrigger(token);
     return Date.now();
   }
 
