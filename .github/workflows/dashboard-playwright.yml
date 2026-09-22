@@ -3,11 +3,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 9 * * 1-5"
-# All three suites drive the same Delius account, so only one may run at a time.
-concurrency:
-  group: esupervision-e2e-delius
-  cancel-in-progress: false
-
 jobs:
   test:
     timeout-minutes: 10

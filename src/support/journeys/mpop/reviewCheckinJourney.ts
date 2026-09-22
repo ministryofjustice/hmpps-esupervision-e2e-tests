@@ -428,16 +428,18 @@ export default class ReviewCheckinJourney {
     await this.pages.overview.goTo(crn);
     await this.pages.overview.clickActivityLogTab();
     await this.pages.activityLog.assertOnPage();
-    await expect(async () => {
-      await this.page.reload();
-      await this.pages.activityLog.assertOnPage();
-      await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
-        timeout: 5000,
+    if (!(await this.pages.activityLog.manageCheckinLink().isVisible())) {
+      await expect(async () => {
+        await this.page.reload();
+        await this.pages.activityLog.assertOnPage();
+        await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
+          timeout: 5000,
+        });
+      }).toPass({
+        timeout: timeoutMs,
+        intervals: [3000, 5000, 10000, 30000],
       });
-    }).toPass({
-      timeout: timeoutMs,
-      intervals: [3000, 5000, 10000, 30000],
-    });
+    }
     if (expiredAt !== undefined) {
       console.log(
         `Check in for ${crn} shown as expired in UI after ${Date.now() - expiredAt}ms.`,

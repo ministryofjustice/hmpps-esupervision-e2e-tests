@@ -53,15 +53,12 @@ export default defineConfig({
       },
     },
     {
-      // Its own project because it can only run where a test is allowed to
-      // trigger the expiry job, which is dev. Its workflow says when and why.
       name: "missed-checkin",
       testDir: "./src/tests/e2e",
       testMatch: /missed-checkin-expiry\.spec\.ts/,
       workers: 1,
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: process.env.PROBATION_CHECK_IN_URL,
         ...(headed ? { viewport: null } : {}),
       },
     },

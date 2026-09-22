@@ -15,10 +15,10 @@ export const assertCaseBanner = async (
   const tierCount = await banner.tierLink().count();
   if (tierCount === 0) {
     console.log(`Case banner for ${crn} has no tier link - tier not set yet.`);
-    return;
+  } else {
+    await expect(
+      banner.tierLink(),
+      "Case banner should show the case's tier",
+    ).toBeVisible();
   }
-  await expect(
-    banner.tierLink(),
-    "Case banner should show the case's tier",
-  ).toBeVisible();
 };

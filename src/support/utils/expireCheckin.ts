@@ -63,9 +63,7 @@ const tryTrigger = async (
 };
 
 /**
- * Gets a check in to EXPIRED, triggering the job even if it's already there.
- * Returns the time it was seen EXPIRED, so callers can measure how long the
- * UI takes to catch up.
+ * Gets a check in to EXPIRED without waiting for a scheduled expiry run.
  */
 export const expireCheckin = async (
   uuid: string,
@@ -74,22 +72,22 @@ export const expireCheckin = async (
   const initial = await getCheckin(uuid, token);
   assertNotMovedUnexpectedly(uuid, initial.status);
   assertDueInPast(uuid, initial.dueDate);
-  const alreadyExpired = initial.status === "EXPIRED";
+  if (initial.status === "EXPIRED") {
+    console.log(`Check in ${uuid} expired.`);
+    return Date.now();
+  }
 
   const started = Date.now();
   let { accepted, error: triggerError } = await tryTrigger(token);
   let lastTrigger = Date.now();
   let seen: CheckinStatus = initial.status;
-  console.log(`Expiry job triggered for check in ${uuid}.`);
-
-  if (alreadyExpired) {
-    console.log(`Check in ${uuid} expired.`);
-    return Date.now();
-  }
+  console.log(
+    accepted
+      ? `Expiry job triggered for check in ${uuid}.`
+      : `Expiry job trigger for check in ${uuid} was not accepted: ${triggerError || "a run was already in progress"}.`,
+  );
 
   for (;;) {
-    // Don't let one bad response end a 5 minute test - only the deadline does.
-    // The status check stays outside the catch so a real change still throws.
     let pollError = "";
     try {
       seen = (await getCheckin(uuid, token)).status;
@@ -105,35 +103,21 @@ export const expireCheckin = async (
     if (Date.now() - started > POLL_TIMEOUT_MS) {
       const waited = Math.round((Date.now() - started) / 1000);
       const runAge = Math.round((Date.now() - lastTrigger) / 1000);
-      // Lead with a failing request - the job is unlikely to be the problem.
-      if (pollError) {
-        throw new Error(
-          `Gave up after ${waited}s waiting for check in ${uuid} to expire: the ` +
-            `last status read failed with ${pollError}. Last status seen was ${seen}.`,
-        );
-      }
-      if (triggerError) {
-        throw new Error(
-          `Gave up after ${waited}s waiting for check in ${uuid} to expire: the ` +
-            `last job trigger failed with ${triggerError}. Last status seen was ${seen}.`,
-        );
-      }
+      const cause = pollError
+        ? `the last status read failed with ${pollError}`
+        : triggerError
+          ? `the last job trigger failed with ${triggerError}`
+          : accepted
+            ? `a run this test started ${runAge}s ago did not take it, or is still ` +
+              `going. It is due ${DUE_DAYS_AGO} days ago; if the API's grace period ` +
+              `is longer than that now, the check in is no longer eligible`
+            : `every trigger was refused, so a run was going throughout - the job ` +
+              `is slower than this window`;
       throw new Error(
-        accepted
-          ? `Check in ${uuid} (due ${initial.dueDate}) was still ${seen} after ` +
-              `${waited}s, ${runAge}s after a run this test started. That run did ` +
-              `not take it, or is still going. It is due ${DUE_DAYS_AGO} days ago; ` +
-              `if the API's grace period is longer than that now, the check in is ` +
-              `no longer eligible.`
-          : `Check in ${uuid} (due ${initial.dueDate}) was still ${seen} after ` +
-              `${waited}s and every trigger was refused, so a run was going ` +
-              `throughout - the job is slower than this window.`,
+        `Gave up after ${waited}s waiting for check in ${uuid} (due ${initial.dueDate}) ` +
+          `to expire: ${cause}. Last status seen was ${seen}.`,
       );
     }
-
-    // Only if we never got a run of our own: one we started began after this check
-    // in existed, so it has already seen it. Each run works through the whole
-    // environment, so don't start one we don't need.
     if (!accepted && Date.now() - lastTrigger > RETRIGGER_BACKOFF_MS) {
       ({ accepted, error: triggerError } = await tryTrigger(token));
       lastTrigger = Date.now();
