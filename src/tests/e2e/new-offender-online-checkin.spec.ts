@@ -29,6 +29,10 @@ interface CheckinScenario {
   annotation?: Annotation;
   /** Verify confirmation page links return to MPOP after setup completes. */
   assertConfirmationLinks?: boolean;
+  /** Verify setup enters a missing contact detail, then confirms it on file. */
+  assertContactRoutes?: boolean;
+  /** Verify review handoff and reviewed-page Back link navigation to MPOP. */
+  assertMpopHandoff?: boolean;
 }
 
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
@@ -40,6 +44,8 @@ const scenarios: CheckinScenario[] = [
     firstCheckinDaysAhead: 0,
     profile: "custodialAge25",
     assertConfirmationLinks: true,
+    assertContactRoutes: true,
+    assertMpopHandoff: true,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
@@ -110,6 +116,7 @@ test.describe("Online check in for a new offender", () => {
         {
           profile: scenario.profile,
           assertConfirmationLinks: scenario.assertConfirmationLinks,
+          assertContactRoutes: scenario.assertContactRoutes,
         },
       );
       await attachCreatedCrn(testInfo, offender.crn);
@@ -131,7 +138,12 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details);
+      await journey.reviewCheckin(offender.crn, scenario.review, details, {
+        assertMpopHandoff: scenario.assertMpopHandoff,
+      });
+      if (scenario.assertMpopHandoff) {
+        await journey.assertReviewedCheckinBackLinkLandsInMpop(offender.crn);
+      }
 
       await journey.annotateCheckin(offender.crn, scenario.annotation);
     });

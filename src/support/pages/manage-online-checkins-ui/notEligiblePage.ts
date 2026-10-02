@@ -1,10 +1,13 @@
 import { Locator, Page } from "@playwright/test";
 import { eligibilityReason } from "./eligibilityReason";
+import PractitionerBasePage from "../base/practitionerBasePage";
 
-export default class NotEligiblePage {
-  constructor(private readonly page: Page) {}
+export default class NotEligiblePage extends PractitionerBasePage {
+  constructor(page: Page) {
+    super(page, /is not eligible to use online check ins/);
+  }
 
-  heading(): Locator {
+  headingLocator(): Locator {
     return this.page.getByRole("heading", {
       name: /is not eligible to use online check ins/,
     });
@@ -17,14 +20,6 @@ export default class NotEligiblePage {
   /** Listed when more than one fact rules the person out. */
   reasonBullets(): Locator {
     return this.page.locator('[data-qa="reasonBullets"] li');
-  }
-
-  backLink(): Locator {
-    return this.page.getByRole("link", { name: "Back", exact: true });
-  }
-
-  overviewButton(): Locator {
-    return this.page.getByRole("button", { name: /^Go to .+'s overview$/ });
   }
 
   missingTierReason(): Locator {

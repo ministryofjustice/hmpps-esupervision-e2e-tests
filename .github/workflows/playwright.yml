@@ -2,9 +2,11 @@ name: Playwright Tests
 on:
   # Run manually via GitHub API / Action tab
   workflow_dispatch:
-  pull_request:
   schedule:
     - cron: "30 7 * * 1-5"
+concurrency:
+  group: esupervision-e2e-shared-state
+  cancel-in-progress: false
 jobs:
   test:
     timeout-minutes: 60

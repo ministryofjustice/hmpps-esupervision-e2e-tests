@@ -12,10 +12,10 @@ import { Preference } from "../../data/models";
 import { assertTierCrnPreconditions } from "../../support/assertions/api/supervisionPackageAPI";
 import { assertTier } from "../../support/assertions/manage-online-checkins-ui/manageCheckinsAssertions";
 
-// Tests for changing frequency and contact details from the summary page.
-// These use existing CRNs since they're testing UI workflows, not setup or eligibility.
+// Tests setup-summary changes with existing CRNs and stop before submitting setup so the
+// records can be reused.
 
-test("practitioner changes the next check in date and frequency from the manage page", async ({
+test("practitioner changes the next check in date and frequency from the setup summary", async ({
   page,
 }) => {
   const crn = env.tierCrn("G");
@@ -52,7 +52,7 @@ test("practitioner changes the next check in date and frequency from the manage 
   });
 });
 
-test("practitioner changes contact details from the manage page", async ({
+test("practitioner changes contact details from the setup summary", async ({
   page,
 }) => {
   const crn = env.tierCrn("A");
@@ -60,7 +60,7 @@ test("practitioner changes contact details from the manage page", async ({
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(crn);
-  await assertTier(page, crn, /Tier:\s*A\b/);
+  await assertTier(page, crn, /Tier:\s*A\d*\b/);
 
   // Entering the email saves it to the record, which sets up the rest of the test.
   const summary = await journey.completeSetupToSummary(crn, {
@@ -95,5 +95,22 @@ test("practitioner changes contact details from the manage page", async ({
     await expect(summary.summaryValueLocator("email")).toContainText(
       UPDATED_CONTACT.email,
     );
+  });
+
+  await test.step("Confirm the saved email without replacing it", async () => {
+    await journey.changeContactPreferenceFromSummary(crn, summary, {
+      preference: Preference.EMAIL,
+    });
+    await expect(
+      summary.summaryValueLocator("contactPreference"),
+    ).toContainText("Email");
+    await expect(summary.summaryValueLocator("email")).toContainText(
+      UPDATED_CONTACT.email,
+    );
+  });
+
+  await test.step("Change photo: uploaded -> taken", async () => {
+    await journey.changePhotoFromSummary(summary, PhotoOptions.TAKE);
+    await expect(summary.photoPreview()).toBeVisible();
   });
 });

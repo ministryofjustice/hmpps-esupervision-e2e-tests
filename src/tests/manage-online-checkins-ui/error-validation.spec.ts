@@ -32,7 +32,7 @@ const openSetupValidationDateFrequency = async (page: Page) => {
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(setupValidationCrn);
-  await assertTier(page, setupValidationCrn, /Tier:\s*[A-G]\b/);
+  await assertTier(page, setupValidationCrn, /Tier:\s*[A-G]\d*\b/);
   return journey.completeSetupToDateFrequency(setupValidationCrn);
 };
 

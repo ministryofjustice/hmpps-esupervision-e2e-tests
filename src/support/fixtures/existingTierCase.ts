@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { env } from "../../config/env";
 import { ExistingTier } from "../../data/models";
 import SetupOnlineCheckinsJourney from "../journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
@@ -19,7 +19,17 @@ export const openExistingTierSetup = async (
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(crn);
-  await assertTier(page, crn, new RegExp(`Tier:\\s*${tier}\\b`));
+  await assertTier(page, crn, new RegExp(`Tier:\\s*${tier}(?:\\d+)?\\b`));
   const moci = new ManageCheckinsPages(page);
+  await test.step(`Check eligibility questions for Tier ${tier}`, async () => {
+    for (const question of ["accreditedProgramme", "youthSentence"] as const) {
+      const checkbox = moci.eligibilityCheck.answerCheckbox(question);
+      if (tier === "A" || tier === "B") {
+        await expect(checkbox).toBeVisible();
+      } else {
+        await expect(checkbox).toHaveCount(0);
+      }
+    }
+  });
   return { crn, moci };
 };

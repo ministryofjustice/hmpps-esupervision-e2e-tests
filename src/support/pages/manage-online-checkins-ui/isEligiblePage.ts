@@ -16,6 +16,10 @@ export default class IsEligiblePage extends PractitionerBasePage {
     return eligibilityReason(this.page);
   }
 
+  reasonBullets(): Locator {
+    return this.reason().locator("xpath=following-sibling::ul[1]/li");
+  }
+
   discussionCheckbox(point: DiscussionPoint): Locator {
     return this.page.locator(
       `input[name$="[checkins][discussion]"][value="${point}"]`,

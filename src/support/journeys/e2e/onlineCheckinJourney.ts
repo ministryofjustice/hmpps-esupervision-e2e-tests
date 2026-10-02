@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
 import { TEST_CONTACT } from "../../../data/manage-online-checkins-ui/testData";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/dateFrequencyPage";
@@ -49,11 +49,13 @@ export default class OnlineCheckinJourney {
       eligibilityAnswers,
       pilotAnswer,
       assertConfirmationLinks = false,
+      assertContactRoutes = false,
     }: {
       profile?: OffenderProfile;
       eligibilityAnswers?: EligibilityAnswer[];
       pilotAnswer?: boolean;
       assertConfirmationLinks?: boolean;
+      assertContactRoutes?: boolean;
     } = {},
   ): Promise<NewOffender> {
     // Delius records the CRN before assessment, so it remains recoverable if OASys fails.
@@ -73,10 +75,20 @@ export default class OnlineCheckinJourney {
       frequency: FrequencyOptions.EVERY_WEEK,
       preference: Preference.EMAIL,
       contact: { email: TEST_CONTACT.email },
+      expectedContactRoute: assertContactRoutes ? "missing" : undefined,
       photo: PhotoOptions.UPLOAD,
       eligibilityAnswers,
       pilotAnswer,
     });
+    if (assertContactRoutes) {
+      await setup.changeContactPreferenceFromSummary(offender.crn, summary, {
+        preference: Preference.EMAIL,
+        expectedContactRoute: "confirm",
+      });
+      await expect(summary.summaryValueLocator("email")).toContainText(
+        TEST_CONTACT.email,
+      );
+    }
     await setup.submitSetup(summary);
 
     // Verify confirmation page links if requested. This must be done before
@@ -135,8 +147,13 @@ export default class OnlineCheckinJourney {
     crn: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
+    options?: { assertMpopHandoff?: boolean },
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details);
+    await this.review.reviewCompletedCheckin(crn, decision, details, options);
+  }
+
+  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
+    await this.review.assertReviewedCheckinBackLinkLandsInMpop(crn);
   }
 
   async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {

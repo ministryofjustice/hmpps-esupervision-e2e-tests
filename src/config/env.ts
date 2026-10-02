@@ -22,6 +22,10 @@ function required(name: string): string {
   return value;
 }
 
+function requiredCrn(name: string): string {
+  return required(name).trim();
+}
+
 export function envName(): string {
   return process.env.ENV ?? "dev";
 }
@@ -46,13 +50,14 @@ export const env = {
     process.env.OASYS_PASSWORD_BOOKING = required("OASYS_PASSWORD");
   },
   practitionerName: (): string => required("PRACTITIONER_NAME"),
-  manageCrn: (): string => required("TEST_MANAGE_CRN"),
-  mpopStopRestartCrn: (): string => required("TEST_MPOP_STOP_RESTART_CRN"),
-  tierMissingCrn: (): string => required("TEST_TIER_MISSING_CRN"),
-  tierNotSupervisedCrn: (): string => required("TEST_TIER_NOT_SUPERVISED_CRN"),
-  noPackageCrn: (): string => required("TEST_NO_PACKAGE_CRN"),
-  finalThirdCrn: (): string => required("TEST_FINAL_THIRD_CRN"),
-  earlyEngagementCrn: (): string => required("TEST_EARLY_ENGAGEMENT_CRN"),
+  manageCrn: (): string => requiredCrn("TEST_MANAGE_CRN"),
+  mpopStopRestartCrn: (): string => requiredCrn("TEST_MPOP_STOP_RESTART_CRN"),
+  tierMissingCrn: (): string => requiredCrn("TEST_TIER_MISSING_CRN"),
+  tierNotSupervisedCrn: (): string =>
+    requiredCrn("TEST_TIER_NOT_SUPERVISED_CRN"),
+  noPackageCrn: (): string => requiredCrn("TEST_NO_PACKAGE_CRN"),
+  finalThirdCrn: (): string => requiredCrn("TEST_FINAL_THIRD_CRN"),
+  earlyEngagementCrn: (): string => requiredCrn("TEST_EARLY_ENGAGEMENT_CRN"),
   tierCrn: (tier: ExistingTier): string =>
-    required(EXISTING_TIER_CRN_ENV[tier]),
+    requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
 };

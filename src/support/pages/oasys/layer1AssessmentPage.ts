@@ -11,6 +11,14 @@ export default class Layer1AssessmentPage {
     return this.page.getByLabel("Date of current conviction");
   }
 
+  async setConvictionDate(value: string): Promise<void> {
+    const field = this.convictionDateField();
+    await this.page.waitForTimeout(200);
+    await field.clear();
+    await this.page.waitForTimeout(200);
+    await field.pressSequentially(value, { delay: 100 });
+  }
+
   predictorQuestionsLink(): Locator {
     return this.page.getByRole("link", { name: "Predictor Questions" });
   }

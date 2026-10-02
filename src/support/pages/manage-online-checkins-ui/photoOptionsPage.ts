@@ -2,8 +2,8 @@ import { Page } from "@playwright/test";
 import PractitionerBasePage from "../base/practitionerBasePage";
 
 export enum PhotoOptions {
-  TAKE = 0,
-  UPLOAD = 1,
+  TAKE = "TAKE_A_PIC",
+  UPLOAD = "UPLOAD_A_PIC",
 }
 
 export default class PhotoOptionsPage extends PractitionerBasePage {
@@ -12,7 +12,7 @@ export default class PhotoOptionsPage extends PractitionerBasePage {
   }
 
   async completePage(optionId: PhotoOptions) {
-    await this.clickRadioById("uploadOptions", optionId);
+    await this.clickRadioByValue("uploadOptions", optionId);
     await this.clickContinue();
   }
 }

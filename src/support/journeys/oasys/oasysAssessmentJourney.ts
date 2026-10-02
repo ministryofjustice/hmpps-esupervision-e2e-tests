@@ -125,12 +125,14 @@ export default class OasysAssessmentJourney {
       const convictionDate = OasysDateFormatter(
         DateTime.now().minus({ days: 2 }).toJSDate(),
       );
-      const convictionDateField = this.assessmentPage.convictionDateField();
-      await convictionDateField.click();
-      await convictionDateField.pressSequentially(convictionDate);
-      await expect(convictionDateField).toHaveValue(convictionDate);
+      await this.assessmentPage.setConvictionDate(convictionDate);
+      await expect(this.assessmentPage.convictionDateField()).toHaveValue(
+        convictionDate,
+      );
       await this.assessmentPage.saveButton().click();
-      await expect(convictionDateField).toHaveValue(convictionDate);
+      await expect(this.assessmentPage.convictionDateField()).toHaveValue(
+        convictionDate,
+      );
 
       await this.assessmentPage.selfAssessmentLink().click();
       const selfAssessmentRationale =

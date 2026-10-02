@@ -95,9 +95,16 @@ test.describe("Tier G", () => {
     await moci.eligibilityCheck.completePage(["none"]);
 
     await assertManageCheckinsPage(page, crn, IS_ELIGIBLE_TITLE);
-    await expect(moci.isEligible.reason()).toContainText(
-      "have not been recalled to prison",
+    await assertRelativeHref(
+      moci.isEligible.cancelLink(),
+      "Cancel on the eligible page",
+      MPOP_PATH.overview(crn),
     );
+    await expect(moci.isEligible.reasonBullets()).toHaveText([
+      "have not been recalled to prison",
+      "have no sentence restrictions that mean they cannot use a device or the internet",
+      "are not in the final third of their sentence",
+    ]);
     await expect(moci.isEligible.discussionPoints()).toHaveCount(4);
     await moci.isEligible.completePage();
     await new ManageCheckinsPages(page).dateFrequency.assertOnPage();

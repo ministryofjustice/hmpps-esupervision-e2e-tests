@@ -1,5 +1,5 @@
 import { Locator, Page } from "@playwright/test";
 
 export function eligibilityReason(page: Page): Locator {
-  return page.getByRole("main");
+  return page.locator("main p.govuk-body").first();
 }

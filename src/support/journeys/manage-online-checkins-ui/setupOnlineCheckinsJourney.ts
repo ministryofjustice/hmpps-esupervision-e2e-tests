@@ -31,10 +31,13 @@ import {
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
 
+type ExpectedContactRoute = "missing" | "confirm";
+
 interface ContactPreferenceValues {
   preference: Preference;
   /** The detail that should end up on file - entered, or replacing what is there. */
   contact?: ContactDetails;
+  expectedContactRoute?: ExpectedContactRoute;
 }
 
 interface SetupValues extends ContactPreferenceValues {
@@ -131,6 +134,11 @@ export default class SetupOnlineCheckinsJourney {
         .confirmDetailsGroup()
         .or(contactPreference.missingDetailsField()),
     ).toBeVisible();
+    if (setup.expectedContactRoute === "missing") {
+      await expect(contactPreference.missingDetailsField()).toBeVisible();
+    } else if (setup.expectedContactRoute === "confirm") {
+      await expect(contactPreference.confirmDetailsGroup()).toBeVisible();
+    }
 
     const value =
       setup.preference === Preference.EMAIL
@@ -252,34 +260,6 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /**
-   * Assert that the eligibility check page shows the correct questions for a given tier.
-   * Tier A/B show accredited programme and youth sentence; Tier C-G do not.
-   */
-  async assertEligibilityQuestionsForTier(tier: string): Promise<void> {
-    const moci = this.pages;
-    const isHighRiskTier = ["A", "B"].includes(tier);
-
-    await test.step(`Verify eligibility questions for Tier ${tier}`, async () => {
-      if (isHighRiskTier) {
-        await expect(
-          moci.eligibilityCheck.answerCheckbox("accreditedProgramme"),
-        ).toBeVisible();
-        await expect(
-          moci.eligibilityCheck.answerCheckbox("youthSentence"),
-        ).toBeVisible();
-      } else {
-        // Tier C-G should not show accredited programme/youth sentence
-        await expect(
-          moci.eligibilityCheck.answerCheckbox("accreditedProgramme"),
-        ).not.toBeVisible();
-        await expect(
-          moci.eligibilityCheck.answerCheckbox("youthSentence"),
-        ).not.toBeVisible();
-      }
-    });
-  }
-
-  /**
    * Answers eligibility check questions (default: "None of these apply") and follows
    * the tier-dependent route through the eligibility wizard. Tier determines which
    * questions appear and which pages are shown:
@@ -296,7 +276,7 @@ export default class SetupOnlineCheckinsJourney {
     const moci = this.pages;
     await moci.eligibilityCheck.completePage(answers);
 
-    const notEligibleHeading = moci.notEligible.heading();
+    const notEligibleHeading = moci.notEligible.headingLocator();
     const pilotYes = moci.pilotCheck.yesRadio();
     const eligibleDiscussion = moci.isEligible.discussionCheckbox("optional");
     await expect(
@@ -305,7 +285,9 @@ export default class SetupOnlineCheckinsJourney {
 
     if (await notEligibleHeading.isVisible()) {
       await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
-      return;
+      throw new Error(
+        `CRN ${crn} was ruled not eligible during setup eligibility checks`,
+      );
     }
 
     if (await pilotYes.isVisible()) {
@@ -313,7 +295,9 @@ export default class SetupOnlineCheckinsJourney {
       // If pilot was answered "No", person is disqualified
       if (!pilotAnswer) {
         await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
-        return;
+        throw new Error(
+          `CRN ${crn} was ruled not eligible because the pilot answer was No`,
+        );
       }
     }
 
@@ -339,26 +323,6 @@ export default class SetupOnlineCheckinsJourney {
       await this.pages.summary.assertOnPage();
       return this.pages.summary;
     });
-  }
-
-  /**
-   * Test that an offender is disqualified from online check-ins based on eligibility answers.
-   * Returns when the not-eligible page is reached.
-   */
-  async assertDisqualifiedDuringSetup(
-    crn: string,
-    eligibilityAnswers: EligibilityAnswer[],
-    pilotAnswer?: boolean,
-  ): Promise<void> {
-    await this.login();
-    await this.startSetup(crn);
-    await this.completeSetupToDateFrequency(
-      crn,
-      eligibilityAnswers,
-      pilotAnswer,
-    );
-    // completeEligibility returns early if not-eligible was reached
-    await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
   }
 
   async submitSetup(summary: CheckInSummaryPage): Promise<void> {
