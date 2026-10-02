@@ -274,6 +274,16 @@ export default class SetupOnlineCheckinsJourney {
     pilotAnswer: boolean = true,
   ): Promise<void> {
     const moci = this.pages;
+    for (const answer of answers) {
+      if (answer === "accreditedProgramme" || answer === "youthSentence") {
+        const checkbox = moci.eligibilityCheck.answerCheckbox(answer);
+        if (!(await checkbox.isVisible())) {
+          throw new Error(
+            `CRN ${crn} cannot answer ${answer}: this question is not available on its eligibility route`,
+          );
+        }
+      }
+    }
     await moci.eligibilityCheck.completePage(answers);
 
     const notEligibleHeading = moci.notEligible.headingLocator();

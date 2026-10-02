@@ -15,6 +15,7 @@ import {
 import { Person } from "../../../data/delius/types";
 import { CreatedDeliusOffender } from "../ndelius/deliusOffenderJourney";
 import { OasysAssessment } from "../../../data/models";
+import type { ExistingTier } from "../../../data/models";
 import { env } from "../../../config/env";
 import Layer1AssessmentPage from "../../pages/oasys/layer1AssessmentPage";
 
@@ -38,8 +39,13 @@ export default class OasysAssessmentJourney {
     offender: CreatedDeliusOffender,
     assessment: OasysAssessment,
   ): Promise<void> {
-    await this.completeLayer1(offender.crn, offender.deliusPerson, assessment);
-    await this.waitForCalculatedTier(offender.crn);
+    await this.completeLayer1(
+      offender.crn,
+      offender.deliusPerson,
+      assessment,
+      offender.convictionDate,
+    );
+    await this.waitForCalculatedTier(offender.crn, offender.expectedTier);
   }
 
   async completeLayer1(
@@ -56,6 +62,7 @@ export default class OasysAssessmentJourney {
       totalSanctions,
       violentSanctions,
     }: OasysAssessment,
+    offenderConvictionDate: Date,
   ): Promise<void> {
     test.info().setTimeout(test.info().timeout + LAYER1_EXTRA_TIMEOUT);
     await test.step(`Complete OASys Layer 1 for ${crn}`, async () => {
@@ -122,16 +129,14 @@ export default class OasysAssessmentJourney {
       }
 
       await this.assessmentPage.predictorsLink().click();
-      const convictionDate = OasysDateFormatter(
-        DateTime.now().minus({ days: 2 }).toJSDate(),
-      );
-      await this.assessmentPage.setConvictionDate(convictionDate);
+      const convictionDateValue = OasysDateFormatter(offenderConvictionDate);
+      await this.assessmentPage.setConvictionDate(convictionDateValue);
       await expect(this.assessmentPage.convictionDateField()).toHaveValue(
-        convictionDate,
+        convictionDateValue,
       );
       await this.assessmentPage.saveButton().click();
       await expect(this.assessmentPage.convictionDateField()).toHaveValue(
-        convictionDate,
+        convictionDateValue,
       );
 
       await this.assessmentPage.selfAssessmentLink().click();
@@ -159,17 +164,23 @@ export default class OasysAssessmentJourney {
     });
   }
 
-  async waitForCalculatedTier(crn: string): Promise<void> {
+  async waitForCalculatedTier(
+    crn: string,
+    expectedTier?: ExistingTier,
+  ): Promise<void> {
     await test.step(`Wait for ${crn} to receive a calculated Tier`, async () => {
       const token = await getToken();
       await expect
         .poll(
           async () => {
             const header = await getOffenderHeader(crn, token);
-            return /^[A-G]$/i.test(header.tierScore?.charAt(0) ?? "");
+            const tier = header.tierScore?.charAt(0).toUpperCase() ?? "";
+            return expectedTier ? tier === expectedTier : /^[A-G]$/.test(tier);
           },
           {
-            message: `${crn} should have a calculated Tier`,
+            message: expectedTier
+              ? `${crn} should receive expected Tier ${expectedTier}`
+              : `${crn} should have a calculated Tier`,
             timeout: TIER_PROPAGATION_TIMEOUT,
           },
         )

@@ -10,6 +10,7 @@ import {
 import { internalTransfer } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/transfer/internal-transfer.mjs";
 import { TEST_TEAM, TEST_STAFF } from "../../../data/delius/testData";
 import { NewOffender, Person } from "../../../data/delius/types";
+import type { ExistingTier } from "../../../data/models";
 import { recordCreatedCrn } from "../../utils/createdCrns";
 import {
   dismissModals,
@@ -28,6 +29,7 @@ export type OffenderProfile = "custodialAge25" | "highRiskAge25" | "tierCAge25";
 export interface CreatedDeliusOffender extends NewOffender {
   deliusPerson: Person;
   convictionDate: Date;
+  expectedTier?: ExistingTier;
 }
 
 interface DeliusEventProfile {
@@ -42,6 +44,7 @@ interface DeliusEventProfile {
 interface OffenderProfileConfig {
   person?: { sex: "Male" | "Female"; dob: Date };
   event?: DeliusEventProfile;
+  expectedTier: ExistingTier;
 }
 
 /** Offender profiles for E2E scenarios. Each produces a different tier after OASys assessment.
@@ -51,6 +54,7 @@ interface OffenderProfileConfig {
  */
 const OFFENDER_PROFILES: Record<OffenderProfile, OffenderProfileConfig> = {
   custodialAge25: {
+    expectedTier: "G",
     person: {
       sex: "Female",
       dob: DateTime.now().minus({ years: 25 }).toJSDate(),
@@ -65,12 +69,14 @@ const OFFENDER_PROFILES: Record<OffenderProfile, OffenderProfileConfig> = {
     },
   },
   highRiskAge25: {
+    expectedTier: "A",
     person: {
       sex: "Male",
       dob: DateTime.now().minus({ years: 25 }).toJSDate(),
     },
   },
   tierCAge25: {
+    expectedTier: "C",
     person: {
       sex: "Male",
       dob: DateTime.now().minus({ years: 25 }).toJSDate(),
@@ -153,6 +159,7 @@ export default class DeliusOffenderJourney {
       crn,
       deliusPerson: person,
       convictionDate,
+      expectedTier: profileConfig?.expectedTier,
       person: {
         firstName: person.firstName,
         lastName: person.lastName,
