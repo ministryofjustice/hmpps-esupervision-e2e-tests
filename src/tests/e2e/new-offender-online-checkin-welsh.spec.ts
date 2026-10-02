@@ -1,17 +1,12 @@
 import { test } from "@playwright/test";
-import CheckinJourney from "../../support/journeys/checkinJourney";
+import CheckinJourney from "../../support/journeys/checkins-ui/checkinJourney";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
 import { getToken } from "../../api/auth";
-import { createEsupervisionCheckin } from "../../api/checkin";
-import {
-  dueDateString,
-  today,
-  firstCheckinDateString,
-  dobParts,
-} from "../../support/utils/date";
+import { firstCheckinDateString, dobParts } from "../../support/utils/date";
+import { waitForAwaitingCheckinUuid } from "../../support/utils/waitForCheckin";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { env } from "../../config/env";
-import { Pages } from "../../support/pages/checkin-ui/Pages";
+import { Pages } from "../../support/pages/checkins-ui/Pages";
 import { welshHeadings } from "../../data/labels";
 
 test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
@@ -24,11 +19,7 @@ test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   await attachCreatedCrn(testInfo, offender.crn);
 
   const token = await getToken();
-  const uuid = await createEsupervisionCheckin(
-    offender.crn,
-    dueDateString(today),
-    token,
-  );
+  const uuid = await waitForAwaitingCheckinUuid(offender.crn, token);
 
   const pages = new Pages(page);
   const journey = new CheckinJourney(page);

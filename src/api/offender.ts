@@ -33,6 +33,45 @@ export const getOffenderByCrn = async (
   return offender;
 };
 
+export interface OffenderHeader {
+  tierScore: string | null;
+  tierProvisional?: boolean | null;
+}
+
+export const getOffenderHeader = async (
+  crn: string,
+  token: string,
+): Promise<OffenderHeader> =>
+  withApiContext<OffenderHeader>(async (ctx) => {
+    const response = await ctx.get(`/v2/offenders/header/${crn}`, {
+      headers: authHeader(token),
+    });
+    await assertOk(response, `Get offender header ${crn}`);
+    return (await response.json()) as OffenderHeader;
+  });
+
+export interface SupervisionPackageStatus {
+  onSupervisionPackage: boolean;
+  inFinalThird: boolean;
+  inEarlyEngagement: boolean;
+}
+
+export const findSupervisionPackageStatus = async (
+  crn: string,
+  token: string,
+): Promise<SupervisionPackageStatus | null> =>
+  withApiContext<SupervisionPackageStatus | null>(async (ctx) => {
+    const response = await ctx.get(
+      `/v2/offenders/crn/${crn}/supervision-package`,
+      { headers: authHeader(token) },
+    );
+    if (response.status() === 404) {
+      return null;
+    }
+    await assertOk(response, `Get supervision package for ${crn}`);
+    return (await response.json()) as SupervisionPackageStatus;
+  });
+
 export interface CheckinScheduleOpts {
   firstCheckin?: string;
   checkinInterval?: string;

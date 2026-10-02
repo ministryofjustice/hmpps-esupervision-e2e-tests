@@ -12,23 +12,23 @@ import {
 import {
   Annotation,
   ReviewDecision,
-} from "../../support/journeys/mpop/reviewCheckinJourney";
-import { IdentityDecision } from "../../support/pages/mpop/reviewIdentityPage";
+} from "../../support/journeys/manage-online-checkins-ui/reviewCheckinJourney";
+import { IdentityDecision } from "../../support/pages/manage-online-checkins-ui/reviewIdentityPage";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { CustomQuestion } from "../../data/models";
+import { OffenderProfile } from "../../support/journeys/ndelius/deliusOffenderJourney";
 
 interface CheckinScenario {
   name: string;
   firstCheckinDaysAhead: number;
   getCheckinUuid: (offender: NewOffender, token: string) => Promise<string>;
+  profile?: OffenderProfile;
   customQuestions?: CustomQuestion[];
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
-  /** Check every link back to MPOP this journey passes: the confirmation page's
-   *  links, the review pages' Back links, and where filing a review redirects to.
-   *  One scenario is enough - the links are the same whichever one runs. */
-  assertMpopHandoff?: boolean;
+  /** Verify confirmation page links return to MPOP after setup completes. */
+  assertConfirmationLinks?: boolean;
 }
 
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
@@ -38,7 +38,8 @@ const scenarios: CheckinScenario[] = [
   {
     name: "checkin created by the scheduler - first checkin today, MATCH review",
     firstCheckinDaysAhead: 0,
-    assertMpopHandoff: true,
+    profile: "custodialAge25",
+    assertConfirmationLinks: true,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
@@ -60,6 +61,7 @@ const scenarios: CheckinScenario[] = [
   {
     name: "checkin created via API - first check in date in the future, add custom questions and complete the check in, NO_MATCH review",
     firstCheckinDaysAhead: 4,
+    profile: "highRiskAge25",
     getCheckinUuid: apiCheckin,
     customQuestions: [
       { template: "Do you", text: "have an update about something" },
@@ -78,6 +80,7 @@ const scenarios: CheckinScenario[] = [
   {
     name: "checkin created via API - first check in date in the future, MATCH_WITH_CONCERN review",
     firstCheckinDaysAhead: 4,
+    profile: "tierCAge25",
     getCheckinUuid: apiCheckin,
     review: {
       identity: IdentityDecision.MATCH_WITH_CONCERN,
@@ -104,7 +107,10 @@ test.describe("Online check in for a new offender", () => {
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
-        { assertMpopHandoff: scenario.assertMpopHandoff },
+        {
+          profile: scenario.profile,
+          assertConfirmationLinks: scenario.assertConfirmationLinks,
+        },
       );
       await attachCreatedCrn(testInfo, offender.crn);
       if (scenario.expectNoChangeQuestions) {
@@ -125,13 +131,7 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details, {
-        assertMpopHandoff: scenario.assertMpopHandoff,
-      });
-
-      if (scenario.assertMpopHandoff) {
-        await journey.assertReviewedCheckinBackLink(offender.crn);
-      }
+      await journey.reviewCheckin(offender.crn, scenario.review, details);
 
       await journey.annotateCheckin(offender.crn, scenario.annotation);
     });

@@ -90,3 +90,34 @@ export interface ContactDetails {
   mobile?: string;
   email?: string;
 }
+
+// Tiers backed by existing CRNs for the MOCI eligibility checks.
+export type ExistingTier = "A" | "B" | "C" | "D" | "E" | "F" | "G";
+
+// Inputs to the OASys Layer 1 assessment that gives a new person their tier.
+export interface OasysAssessment {
+  highRosh: boolean;
+  sexualOffence: boolean;
+  firstSanctionAge?: number;
+  currentOffenceSexuallyMotivated?: boolean;
+  partnerRelationshipNoProblems?: boolean;
+  offenceCode?: string;
+  offenceSubCode?: string;
+  totalSanctions?: number;
+  violentSanctions?: number;
+}
+
+// Values of the checkboxes on MOCI's eligibility-check page. The accredited
+// programme and youth sentence boxes are only shown for Tier A/B.
+export type EligibilityAnswer =
+  | "recalled"
+  | "deviceRestriction"
+  | "accreditedProgramme"
+  | "youthSentence"
+  | "none";
+
+// Values of the discussion checkboxes on MOCI's is-eligible page, except the
+// exclusive "notAll". "programmeOnly" is only shown on the accredited
+// programme route.
+export type DiscussionPoint =
+  "optional" | "canStop" | "notEnforceable" | "moreTime" | "programmeOnly";

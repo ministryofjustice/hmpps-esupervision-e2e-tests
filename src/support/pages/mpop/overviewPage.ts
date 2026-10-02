@@ -1,13 +1,19 @@
-import { Page, expect } from "@playwright/test";
-import MPopBasePage from "../base/mpopBasePage";
+import { Locator, Page, expect } from "@playwright/test";
+import PractitionerBasePage from "../base/practitionerBasePage";
 import { env } from "../../../config/env";
 
-export default class OverviewPage extends MPopBasePage {
+export default class OverviewPage extends PractitionerBasePage {
   constructor(page: Page) {
     super(page, "Overview");
   }
   async goTo(crn: string): Promise<void> {
     await this.page.goto(`${env.mpopUrl()}/case/${crn}/`);
+  }
+  caseHeaderDetails(): Locator {
+    return this.page.locator(".pop-header__details");
+  }
+  caseHeaderFields(): Locator {
+    return this.caseHeaderDetails().locator("h1, li");
   }
   async clickSetupOnlineCheckIns(): Promise<void> {
     const link = this.getQA("checkinCard").getByRole("link", {

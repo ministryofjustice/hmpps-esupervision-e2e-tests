@@ -3,7 +3,7 @@ import {
   randomMentalHealthOption,
   randomAssistanceSelections,
 } from "../../data/models";
-import CheckinJourney from "../../support/journeys/checkinJourney";
+import CheckinJourney from "../../support/journeys/checkins-ui/checkinJourney";
 import { label } from "../../data/labels";
 import { getToken } from "../../api/auth";
 import { createEsupervisionCheckin } from "../../api/checkin";
@@ -13,7 +13,7 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { attachCreatedCrn } from "../../support/utils/createdCrns";
-import { Pages } from "../../support/pages/checkin-ui/Pages";
+import { Pages } from "../../support/pages/checkins-ui/Pages";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
 
 // Randomised per run, the chosen values are logged below so

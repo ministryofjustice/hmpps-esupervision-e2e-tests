@@ -1,0 +1,184 @@
+import { expect, Page, test } from "@playwright/test";
+import {
+  login as loginToOasys,
+  UserType,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/oasys/login.mjs";
+import { createLayer1CompleteAssessment } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/oasys/layer1-assessment/create-layer1-assessment/create-layer1-assessment.mjs";
+import { signAndlock } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/oasys/layer1-assessment/sign-and-lock.mjs";
+import { OasysDateFormatter } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/date-time.mjs";
+import { DateTime } from "luxon";
+import { getToken } from "../../../api/auth";
+import {
+  findSupervisionPackageStatus,
+  getOffenderHeader,
+} from "../../../api/offender";
+import { Person } from "../../../data/delius/types";
+import { CreatedDeliusOffender } from "../ndelius/deliusOffenderJourney";
+import { OasysAssessment } from "../../../data/models";
+import { env } from "../../../config/env";
+import Layer1AssessmentPage from "../../pages/oasys/layer1AssessmentPage";
+
+// A Layer 1 assessment is many screens long - on top of whatever the calling
+// test or hook already had, rather than raising the suite-wide timeout for it.
+const LAYER1_EXTRA_TIMEOUT = 6 * 60 * 1000;
+const TIER_PROPAGATION_TIMEOUT = 5 * 60 * 1000;
+
+/**
+ * Gives a person a tier through an OASys Layer 1 assessment.
+ *  The tier is calculated afterwards; startSetup waits for it.
+ */
+export default class OasysAssessmentJourney {
+  private readonly assessmentPage: Layer1AssessmentPage;
+
+  constructor(private readonly page: Page) {
+    this.assessmentPage = new Layer1AssessmentPage(page);
+  }
+
+  async assessOffender(
+    offender: CreatedDeliusOffender,
+    assessment: OasysAssessment,
+  ): Promise<void> {
+    await this.completeLayer1(offender.crn, offender.deliusPerson, assessment);
+    await this.waitForCalculatedTier(offender.crn);
+  }
+
+  async completeLayer1(
+    crn: string,
+    person: Person,
+    {
+      highRosh,
+      sexualOffence,
+      firstSanctionAge,
+      currentOffenceSexuallyMotivated,
+      partnerRelationshipNoProblems,
+      offenceCode,
+      offenceSubCode,
+      totalSanctions,
+      violentSanctions,
+    }: OasysAssessment,
+  ): Promise<void> {
+    test.info().setTimeout(test.info().timeout + LAYER1_EXTRA_TIMEOUT);
+    await test.step(`Complete OASys Layer 1 for ${crn}`, async () => {
+      env.requireOasys();
+      await loginToOasys(this.page, UserType.Booking);
+      await createLayer1CompleteAssessment(
+        this.page,
+        crn,
+        person,
+        undefined,
+        highRosh,
+        sexualOffence,
+        offenceCode,
+        offenceSubCode,
+      );
+      const hasPredictorOverrides =
+        firstSanctionAge !== undefined ||
+        currentOffenceSexuallyMotivated === false ||
+        partnerRelationshipNoProblems === true ||
+        totalSanctions !== undefined ||
+        violentSanctions !== undefined;
+
+      if (hasPredictorOverrides) {
+        await this.assessmentPage.predictorsLink().click();
+        if (firstSanctionAge !== undefined) {
+          await this.assessmentPage
+            .firstSanctionAgeField()
+            .fill(String(firstSanctionAge));
+        }
+        if (currentOffenceSexuallyMotivated === false) {
+          await this.assessmentPage
+            .strangerContactOffence()
+            .selectOption("1.44~NO");
+          await this.assessmentPage
+            .currentOffenceSexualMotivation()
+            .selectOption("1.41~NO");
+          await this.assessmentPage
+            .mostRecentSexualSanctionDate()
+            .fill(
+              OasysDateFormatter(
+                DateTime.now().minus({ months: 1 }).toJSDate(),
+              ),
+            );
+        }
+        if (totalSanctions !== undefined) {
+          await this.assessmentPage
+            .totalSanctionsField()
+            .fill(String(totalSanctions));
+        }
+        if (violentSanctions !== undefined) {
+          await this.assessmentPage
+            .violentSanctionsField()
+            .fill(String(violentSanctions));
+        }
+        await this.assessmentPage.saveButton().click();
+        if (partnerRelationshipNoProblems) {
+          await this.assessmentPage.predictorQuestionsLink().click();
+          await this.assessmentPage
+            .partnerRelationshipField()
+            .selectOption({ label: "0-No problems" });
+          await this.assessmentPage.saveButton().click();
+        }
+        await this.assessmentPage.basicSentencePlanLink().click();
+      }
+
+      await this.assessmentPage.predictorsLink().click();
+      const convictionDate = OasysDateFormatter(
+        DateTime.now().minus({ days: 2 }).toJSDate(),
+      );
+      const convictionDateField = this.assessmentPage.convictionDateField();
+      await convictionDateField.click();
+      await convictionDateField.pressSequentially(convictionDate);
+      await expect(convictionDateField).toHaveValue(convictionDate);
+      await this.assessmentPage.saveButton().click();
+      await expect(convictionDateField).toHaveValue(convictionDate);
+
+      await this.assessmentPage.selfAssessmentLink().click();
+      const selfAssessmentRationale =
+        this.assessmentPage.incompleteSelfAssessmentRationale();
+      if (await selfAssessmentRationale.isVisible()) {
+        await selfAssessmentRationale.fill(
+          "Not all self-assessment questions were completed during this test setup.",
+        );
+        await this.assessmentPage.saveButton().click();
+      }
+      await this.assessmentPage.markAsCompleteButton().click();
+      if (
+        (await selfAssessmentRationale.isVisible()) &&
+        !(await selfAssessmentRationale.inputValue())
+      ) {
+        await selfAssessmentRationale.fill(
+          "Not all self-assessment questions were completed during this test setup.",
+        );
+        await this.assessmentPage.saveButton().click();
+        await this.assessmentPage.markAsCompleteButton().click();
+      }
+      await this.assessmentPage.basicSentencePlanLink().click();
+      await signAndlock(this.page);
+    });
+  }
+
+  async waitForCalculatedTier(crn: string): Promise<void> {
+    await test.step(`Wait for ${crn} to receive a calculated Tier`, async () => {
+      const token = await getToken();
+      await expect
+        .poll(
+          async () => {
+            const header = await getOffenderHeader(crn, token);
+            return /^[A-G]$/i.test(header.tierScore?.charAt(0) ?? "");
+          },
+          {
+            message: `${crn} should have a calculated Tier`,
+            timeout: TIER_PROPAGATION_TIMEOUT,
+          },
+        )
+        .toBe(true);
+
+      await expect
+        .poll(() => findSupervisionPackageStatus(crn, token), {
+          message: `${crn} should be on a supervision package once it has a Tier`,
+          timeout: TIER_PROPAGATION_TIMEOUT,
+        })
+        .toMatchObject({ onSupervisionPackage: true });
+    });
+  }
+}

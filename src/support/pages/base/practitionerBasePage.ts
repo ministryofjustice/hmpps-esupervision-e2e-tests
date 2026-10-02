@@ -1,0 +1,88 @@
+import { expect, Locator, Page } from "@playwright/test";
+import { FEELING_ROW_KEY, ASSISTANCE_ROW_KEY } from "../../../data/models";
+import { errorSummary, fieldError } from "./errors";
+import BasePage from "./basePage";
+
+export default abstract class PractitionerBasePage extends BasePage {
+  constructor(
+    page: Page,
+    protected readonly heading: string | RegExp,
+  ) {
+    super(page);
+  }
+
+  getQA(qa: string, locator: Locator | Page = this.page): Locator {
+    return locator.locator(`[data-qa="${qa}"]`);
+  }
+  getClass(cssClass: string, locator: Locator | Page = this.page): Locator {
+    return locator.locator(`.${cssClass}`);
+  }
+
+  //Shared check in summary rows on both the review notes and reviewed checkin page
+  feelingValue(): Locator {
+    return this.getSummaryValue(FEELING_ROW_KEY);
+  }
+
+  assistanceValue(): Locator {
+    return this.getSummaryValue(ASSISTANCE_ROW_KEY);
+  }
+
+  /** The shared form layout renders both, so any page using it has them. */
+  backLink(): Locator {
+    return this.getClass("govuk-back-link");
+  }
+
+  /** The "Cancel and go back" link. Only on pages that set showAnchorLink. */
+  cancelLink(): Locator {
+    return this.getQA("formAnchorLink");
+  }
+
+  protected yesNo(value: boolean): string {
+    return value ? "Yes" : "No";
+  }
+
+  async assertOnPage(timeout = 10000): Promise<void> {
+    await expect(this.getQA("pageHeading")).toContainText(this.heading, {
+      timeout,
+    });
+  }
+  async clickRadioById(qa: string, id: number): Promise<void> {
+    const radio = this.getQA(qa).getByRole("radio").nth(id);
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
+  async clickRadioByName(qa: string, label: string): Promise<void> {
+    const radio = this.getQA(qa).getByRole("radio", { name: label });
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
+  async clickRadioByValue(qa: string, value: string): Promise<void> {
+    const radio = this.getQA(qa).locator(`input[value="${value}"]`);
+    await expect(radio).toBeVisible();
+    await radio.check();
+  }
+
+  async clickContinue(): Promise<void> {
+    // the app has two data-qa for same button ("submitBtn and submit-btn")
+    const btn = this.page
+      .locator('[data-qa="submitBtn"],[data-qa="submit-btn"]')
+      .first();
+    await expect(btn).toBeEnabled();
+    await btn.click();
+  }
+
+  async fillText(qa: string, note: string) {
+    await this.getQA(qa).getByRole("textbox").clear();
+    await this.getQA(qa).getByRole("textbox").fill(note);
+  }
+
+  errorSummary(): Locator {
+    return errorSummary(this.page);
+  }
+
+  fieldError(message: string): Locator {
+    return fieldError(this.page, message);
+  }
+}

@@ -2,6 +2,7 @@ name: Playwright Tests
 on:
   # Run manually via GitHub API / Action tab
   workflow_dispatch:
+  pull_request:
   schedule:
     - cron: "30 7 * * 1-5"
 jobs:
@@ -17,19 +18,32 @@ jobs:
       MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
       DELIUS_URL: https://ndelius.test.probation.service.justice.gov.uk
       MANAGE_CHECKINS_UI_URL: https://manage-online-check-ins-ui-dev.hmpps.service.justice.gov.uk
+      OASYS_URL: https://t2.oasys.service.justice.gov.uk/eor/f?p=100:101
 
       # Credentials
       AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
       AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
+      OASYS_USERNAME: ${{ secrets.OASYS_USERNAME }}
+      OASYS_PASSWORD: ${{ secrets.OASYS_PASSWORD }}
 
       # test data
-      TEST_PERSON_FIRST_NAME: ${{secrets.TEST_PERSON_FIRST_NAME }}
-      TEST_PERSON_LAST_NAME: ${{ secrets.TEST_PERSON_LAST_NAME }}
-      TEST_PERSON_DOB: ${{secrets.TEST_PERSON_DOB }}
       DELIUS_USERNAME: ${{secrets.DELIUS_USERNAME }}
       DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
+      TEST_MANAGE_CRN: ${{secrets.TEST_MANAGE_CRN }}
       TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
-      TEST_MPOP_ELIGIBILITY_CRN: ${{secrets.TEST_MPOP_ELIGIBILITY_CRN }}
+      TEST_TIER_A_CRN: ${{secrets.TEST_TIER_A_CRN }}
+      TEST_TIER_B_CRN: ${{secrets.TEST_TIER_B_CRN }}
+      TEST_TIER_C_CRN: ${{secrets.TEST_TIER_C_CRN }}
+      TEST_TIER_D_CRN: ${{secrets.TEST_TIER_D_CRN }}
+      TEST_TIER_E_CRN: ${{secrets.TEST_TIER_E_CRN }}
+      TEST_TIER_F_CRN: ${{secrets.TEST_TIER_F_CRN }}
+      TEST_TIER_G_CRN: ${{secrets.TEST_TIER_G_CRN }}
+      TEST_TIER_MISSING_CRN: ${{secrets.TEST_TIER_MISSING_CRN }}
+      TEST_TIER_NOT_SUPERVISED_CRN: ${{secrets.TEST_TIER_NOT_SUPERVISED_CRN }}
+      TEST_NO_PACKAGE_CRN: ${{secrets.TEST_NO_PACKAGE_CRN }}
+      TEST_FINAL_THIRD_CRN: ${{secrets.TEST_FINAL_THIRD_CRN }}
+      TEST_EARLY_ENGAGEMENT_CRN: ${{secrets.TEST_EARLY_ENGAGEMENT_CRN }}
+
       PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
     steps:
       - uses: actions/checkout@v7
