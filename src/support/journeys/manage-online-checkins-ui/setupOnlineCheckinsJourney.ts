@@ -274,6 +274,11 @@ export default class SetupOnlineCheckinsJourney {
     pilotAnswer: boolean = true,
   ): Promise<void> {
     const moci = this.pages;
+    if (answers.includes("accreditedProgramme")) {
+      throw new Error(
+        `CRN ${crn} cannot use completeSetupToDateFrequency for the accredited-programme route; it requires approval and rationale steps`,
+      );
+    }
     for (const answer of answers) {
       if (answer === "accreditedProgramme" || answer === "youthSentence") {
         const checkbox = moci.eligibilityCheck.answerCheckbox(answer);
