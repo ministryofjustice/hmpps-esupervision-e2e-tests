@@ -1,7 +1,7 @@
 import { Locator, Page } from "@playwright/test";
-import MPopBasePage from "../base/mpopBasePage";
+import PractitionerBasePage from "../base/practitionerBasePage";
 
-export default class ActivityLogPage extends MPopBasePage {
+export default class ActivityLogPage extends PractitionerBasePage {
   constructor(page: Page) {
     super(page, "Contacts");
   }

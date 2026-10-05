@@ -1,25 +1,33 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
-import { TEST_CONTACT } from "../../../data/mpop/testData";
-import { FrequencyOptions } from "../../pages/mpop/dateFrequencyPage";
-import { PhotoOptions } from "../../pages/mpop/photoOptionsPage";
-import DeliusOffenderJourney from "../ndelius/deliusOffenderJourney";
+import { TEST_CONTACT } from "../../../data/manage-online-checkins-ui/testData";
+import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/dateFrequencyPage";
+import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
+import DeliusOffenderJourney, {
+  OffenderProfile,
+} from "../ndelius/deliusOffenderJourney";
+import OasysAssessmentJourney from "../oasys/oasysAssessmentJourney";
+import {
+  PROFILE_ASSESSMENTS,
+  SETUP_ASSESSMENT,
+} from "../../../data/delius/testData";
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
   CustomQuestion,
+  EligibilityAnswer,
   Preference,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
-import CheckinJourney from "../checkinJourney";
+import CheckinJourney from "../checkins-ui/checkinJourney";
 import { label } from "../../../data/labels";
 import ReviewCheckinJourney, {
   Annotation,
   ReviewDecision,
-} from "../mpop/reviewCheckinJourney";
-import CustomQuestionsJourney from "../mpop/customQuestionsJourney";
-import SetupOnlineCheckinsJourney from "../mpop/setupOnlineCheckinsJourney";
+} from "../manage-online-checkins-ui/reviewCheckinJourney";
+import CustomQuestionsJourney from "../manage-online-checkins-ui/customQuestionsJourney";
+import SetupOnlineCheckinsJourney from "../manage-online-checkins-ui/setupOnlineCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   private readonly customQuestions: CustomQuestionsJourney;
@@ -31,21 +39,33 @@ export default class OnlineCheckinJourney {
   }
 
   /**
-   * `assertMpopHandoff` checks the confirmation page's two links back to MPOP.
-   *
-   * Off by default. The links never vary, so one scenario covers them and the
-   * rest would just repeat the same check. It also ends on the person's overview
-   * rather than the confirmation page.
+   * Create a new offender and complete the full online check-in setup flow.
+   * Tests the complete end-to-end journey without intermediate assertions.
    */
   async createOffenderAndSetupCheckins(
     firstCheckin: string,
-    { assertMpopHandoff = false } = {},
+    {
+      profile,
+      eligibilityAnswers,
+      pilotAnswer,
+      assertConfirmationLinks = false,
+      assertContactRoutes = false,
+    }: {
+      profile?: OffenderProfile;
+      eligibilityAnswers?: EligibilityAnswer[];
+      pilotAnswer?: boolean;
+      assertConfirmationLinks?: boolean;
+      assertContactRoutes?: boolean;
+    } = {},
   ): Promise<NewOffender> {
-    // createTestOffender() records the CRN before returning, so it's recoverable
-    // by cleanup even if setup below fails.
+    // Delius records the CRN before assessment, so it remains recoverable if OASys fails.
     const offender = await new DeliusOffenderJourney(
       this.page,
-    ).createTestOffender();
+    ).createTestOffender({ profile });
+    await new OasysAssessmentJourney(this.page).assessOffender(
+      offender,
+      profile ? PROFILE_ASSESSMENTS[profile] : SETUP_ASSESSMENT,
+    );
 
     const setup = new SetupOnlineCheckinsJourney(this.page);
     await setup.login();
@@ -54,20 +74,29 @@ export default class OnlineCheckinJourney {
       date: firstCheckin,
       frequency: FrequencyOptions.EVERY_WEEK,
       preference: Preference.EMAIL,
-      // TODO(legacy-mpop): Drop the mobile when legacy MPOP is removed. MPOP saves
-      // both details inline; MOCI can hold both too, but in its setup summary it
-      // shows only the preferred contact, so the mobile here is unused on that path.
-      contact: { mobile: TEST_CONTACT.mobile, email: TEST_CONTACT.email },
+      contact: { email: TEST_CONTACT.email },
+      expectedContactRoute: assertContactRoutes ? "missing" : undefined,
       photo: PhotoOptions.UPLOAD,
-      eligibilityIds: [9],
-      rationale: "E2E test rationale",
+      eligibilityAnswers,
+      pilotAnswer,
     });
+    if (assertContactRoutes) {
+      await setup.changeContactPreferenceFromSummary(offender.crn, summary, {
+        preference: Preference.EMAIL,
+        expectedContactRoute: "confirm",
+      });
+      await expect(summary.summaryValueLocator("email")).toContainText(
+        TEST_CONTACT.email,
+      );
+    }
     await setup.submitSetup(summary);
-    // The confirmation page only exists right after submitting, so if we're
-    // following the link at all, it has to be now.
-    if (assertMpopHandoff) {
+
+    // Verify confirmation page links if requested. This must be done before
+    // returning, as the confirmation page only exists immediately after submit.
+    if (assertConfirmationLinks) {
       await setup.assertConfirmationLinksLandInMpop(offender.crn);
     }
+
     return offender;
   }
 
@@ -118,14 +147,12 @@ export default class OnlineCheckinJourney {
     crn: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
-    { assertMpopHandoff = false } = {},
+    options?: { assertMpopHandoff?: boolean },
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details, {
-      assertMpopHandoff,
-    });
+    await this.review.reviewCompletedCheckin(crn, decision, details, options);
   }
 
-  async assertReviewedCheckinBackLink(crn: string): Promise<void> {
+  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
     await this.review.assertReviewedCheckinBackLinkLandsInMpop(crn);
   }
 

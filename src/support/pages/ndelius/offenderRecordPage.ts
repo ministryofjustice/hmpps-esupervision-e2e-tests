@@ -3,6 +3,10 @@ import { Locator, Page } from "@playwright/test";
 export default class OffenderRecordPage {
   constructor(private readonly page: Page) {}
 
+  caseSummary(): Locator {
+    return this.page.locator("#offender-overview");
+  }
+
   eventListLink(): Locator {
     return this.page.getByRole("link", { name: "Event List" });
   }
