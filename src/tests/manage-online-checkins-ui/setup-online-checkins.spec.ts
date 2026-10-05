@@ -1,4 +1,5 @@
 import test, { expect } from "@playwright/test";
+import { DateTime } from "luxon";
 import { env } from "../../config/env";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
 import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/dateFrequencyPage";
@@ -19,6 +20,15 @@ test("practitioner changes the next check in date and frequency from the setup s
   page,
 }) => {
   const firstCheckin = firstCheckinDateString(7);
+  const displayedFirstCheckin = DateTime.fromFormat(
+    firstCheckin,
+    "d/M/yyyy",
+  ).toFormat("d MMMM yyyy");
+  const changedCheckinDate = DateTime.fromFormat(firstCheckin, "d/M/yyyy").plus(
+    { days: 7 },
+  );
+  const changedCheckin = changedCheckinDate.toFormat("d/M/yyyy");
+  const displayedChangedCheckin = changedCheckinDate.toFormat("d MMMM yyyy");
   const crn = env.tierCrn("G");
   await assertTierCrnPreconditions(crn, "G");
   const journey = new SetupOnlineCheckinsJourney(page);
@@ -34,18 +44,22 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Summary reflects the answers entered", async () => {
-    await expect(summary.summaryValueLocator("date")).toContainText(
-      firstCheckin,
+    await expect(summary.summaryValueLocator("date")).toHaveText(
+      displayedFirstCheckin,
     );
     await expect(summary.summaryValueLocator("frequency")).toContainText(
       "Every week",
     );
   });
 
-  await test.step("Change frequency: Every week -> Every 4 weeks", async () => {
+  await test.step("Change the check in date and frequency from the summary", async () => {
     await journey.changeDateFrequencyFromSummary(summary, {
+      date: changedCheckin,
       frequency: FrequencyOptions.EVERY_4_WEEKS,
     });
+    await expect(summary.summaryValueLocator("date")).toHaveText(
+      displayedChangedCheckin,
+    );
     await expect(summary.summaryValueLocator("frequency")).toContainText(
       "Every 4 weeks",
     );

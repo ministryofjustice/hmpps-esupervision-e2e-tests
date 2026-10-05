@@ -22,7 +22,9 @@ import Layer1AssessmentPage from "../../pages/oasys/layer1AssessmentPage";
 // A Layer 1 assessment is many screens long - on top of whatever the calling
 // test or hook already had, rather than raising the suite-wide timeout for it.
 const LAYER1_EXTRA_TIMEOUT = 6 * 60 * 1000;
-const TIER_PROPAGATION_TIMEOUT = 5 * 60 * 1000;
+const TIER_PROPAGATION_TIMEOUT = 7 * 60 * 1000;
+const SUPERVISION_PACKAGE_PROPAGATION_TIMEOUT = 7 * 60 * 1000;
+const PROPAGATION_EXTRA_TEST_TIMEOUT = 4 * 60 * 1000;
 
 /**
  * Gives a person a tier through an OASys Layer 1 assessment.
@@ -168,6 +170,9 @@ export default class OasysAssessmentJourney {
     crn: string,
     expectedTier?: ExistingTier,
   ): Promise<void> {
+    test
+      .info()
+      .setTimeout(test.info().timeout + PROPAGATION_EXTRA_TEST_TIMEOUT);
     await test.step(`Wait for ${crn} to receive a calculated Tier`, async () => {
       const token = await getToken();
       await expect
@@ -189,7 +194,7 @@ export default class OasysAssessmentJourney {
       await expect
         .poll(() => findSupervisionPackageStatus(crn, token), {
           message: `${crn} should be on a supervision package once it has a Tier`,
-          timeout: TIER_PROPAGATION_TIMEOUT,
+          timeout: SUPERVISION_PACKAGE_PROPAGATION_TIMEOUT,
         })
         .toMatchObject({ onSupervisionPackage: true });
     });
