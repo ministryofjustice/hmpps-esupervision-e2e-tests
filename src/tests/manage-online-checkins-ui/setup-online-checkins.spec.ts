@@ -18,6 +18,7 @@ import { assertTier } from "../../support/assertions/manage-online-checkins-ui/m
 test("practitioner changes the next check in date and frequency from the setup summary", async ({
   page,
 }) => {
+  const firstCheckin = firstCheckinDateString(7);
   const crn = env.tierCrn("G");
   await assertTierCrnPreconditions(crn, "G");
   const journey = new SetupOnlineCheckinsJourney(page);
@@ -25,7 +26,7 @@ test("practitioner changes the next check in date and frequency from the setup s
   await journey.startSetup(crn);
 
   const summary = await journey.completeSetupToSummary(crn, {
-    date: firstCheckinDateString(7),
+    date: firstCheckin,
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.EMAIL,
     contact: { email: TEST_CONTACT.email },
@@ -33,7 +34,6 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Summary reflects the answers entered", async () => {
-    const firstCheckin = firstCheckinDateString(7);
     await expect(summary.summaryValueLocator("date")).toContainText(
       firstCheckin,
     );
@@ -64,6 +64,8 @@ test("practitioner changes contact details from the setup summary", async ({
 
   // Entering the email saves it to the record, which sets up the rest of the test.
   const summary = await journey.completeSetupToSummary(crn, {
+    eligibilityAnswers: ["accreditedProgramme"],
+    rationale: "E2E accredited programme rationale",
     date: firstCheckinDateString(7),
     frequency: FrequencyOptions.EVERY_WEEK,
     preference: Preference.EMAIL,

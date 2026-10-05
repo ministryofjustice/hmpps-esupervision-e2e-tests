@@ -44,6 +44,7 @@ interface SetupValues extends ContactPreferenceValues {
   date: string;
   frequency: FrequencyOptions;
   photo: PhotoOptions;
+  rationale?: string;
   /** Eligibility check answers. Defaults to ["none"] for standard setup. */
   eligibilityAnswers?: EligibilityAnswer[];
   /** Pilot question answer. Only used if pilot question is shown. Defaults to true. */
@@ -247,6 +248,7 @@ export default class SetupOnlineCheckinsJourney {
     crn: string,
     eligibilityAnswers?: EligibilityAnswer[],
     pilotAnswer?: boolean,
+    rationale: string = "E2E accredited programme rationale",
   ): Promise<DateFrequencyPage> {
     await test.step("Complete eligibility to the check in date page", async () => {
       // startSetup() already retried until this page rendered, so this is just
@@ -254,6 +256,12 @@ export default class SetupOnlineCheckinsJourney {
       await assertManageCheckinsPage(this.page, crn, ELIGIBILITY_CHECK_TITLE);
       await this.completeEligibility(crn, eligibilityAnswers, pilotAnswer);
 
+      if (eligibilityAnswers?.includes("accreditedProgramme")) {
+        await this.pages.accreditedProgrammeApproval.assertOnPage();
+        await this.pages.accreditedProgrammeApproval.completePage();
+        await this.pages.rationale.assertOnPage();
+        await this.pages.rationale.completePage(rationale);
+      }
       await this.pages.dateFrequency.assertOnPage();
     });
     return this.pages.dateFrequency;
@@ -274,11 +282,6 @@ export default class SetupOnlineCheckinsJourney {
     pilotAnswer: boolean = true,
   ): Promise<void> {
     const moci = this.pages;
-    if (answers.includes("accreditedProgramme")) {
-      throw new Error(
-        `CRN ${crn} cannot use completeSetupToDateFrequency for the accredited-programme route; it requires approval and rationale steps`,
-      );
-    }
     for (const answer of answers) {
       if (answer === "accreditedProgramme" || answer === "youthSentence") {
         const checkbox = moci.eligibilityCheck.answerCheckbox(answer);
@@ -329,6 +332,7 @@ export default class SetupOnlineCheckinsJourney {
         crn,
         setup.eligibilityAnswers,
         setup.pilotAnswer,
+        setup.rationale,
       );
       await dateFrequency.completePage(setup.date, setup.frequency);
 
