@@ -11,6 +11,8 @@ import {
 } from "../../../data/labels";
 import { IdentityDecision } from "../../pages/manage-online-checkins-ui/reviewIdentityPage";
 import {
+  MISSED_CHECK_IN_TITLE,
+  MISSED_REVIEWED_CHECK_IN_TITLE,
   REVIEW_IDENTITY_TITLE,
   REVIEW_QUESTIONS_TITLE,
   REVIEWED_CHECK_IN_TITLE,
@@ -22,6 +24,8 @@ import {
   followToMpop,
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
+import type { MissedReviewDecision } from "../../pages/manage-online-checkins-ui/missedCheckinPage";
+export type { MissedReviewDecision } from "../../pages/manage-online-checkins-ui/missedCheckinPage";
 
 interface CheckinDetailsView {
   feelingValue(): Locator;
@@ -45,6 +49,17 @@ export interface Annotation {
   note?: string;
   sensitive?: boolean;
 }
+
+export interface MissedAnnotationBase {
+  note: string;
+  retains: string[];
+}
+
+export interface MissedAnnotation extends MissedAnnotationBase {
+  sensitive: boolean;
+}
+
+export type SensitiveMissedAnnotation = MissedAnnotationBase;
 
 export default class ReviewCheckinJourney {
   private readonly pages: ManageCheckinsPages;
@@ -194,6 +209,109 @@ export default class ReviewCheckinJourney {
     await this.assertReviewSummaryShows(note);
   }
 
+  async reviewMissedCheckin(
+    crn: string,
+    checkinUuid: string,
+    decision: MissedReviewDecision,
+    expiredAt?: number,
+  ): Promise<void> {
+    await this.openMissedCheckin(crn, checkinUuid, false);
+    if (expiredAt !== undefined) {
+      console.log(
+        `Check in for ${crn} shown as expired in UI after ${Date.now() - expiredAt}ms.`,
+      );
+    }
+    await this.pages.missedCheckin.completePage(decision);
+
+    await this.openMissedCheckin(crn, checkinUuid, true);
+    await this.assertMissedReviewSummaryShows(decision.reason);
+    await this.assertSensitiveTag(decision.sensitive);
+  }
+
+  async annotateMissedCheckin(
+    crn: string,
+    checkinUuid: string,
+    { note, sensitive, retains }: MissedAnnotation,
+  ): Promise<void> {
+    await this.openMissedCheckin(crn, checkinUuid, true);
+    await this.assertSensitiveQuestionAsked(true);
+    await this.pages.missedReviewedCheckin.addNote({ note, sensitive });
+    await this.openMissedCheckin(crn, checkinUuid, true);
+    await this.assertUpdateSaved(note, retains);
+    await this.assertSensitiveTag(sensitive);
+  }
+
+  async annotateSensitiveMissedCheckin(
+    crn: string,
+    checkinUuid: string,
+    { note, retains }: SensitiveMissedAnnotation,
+  ): Promise<void> {
+    await this.openMissedCheckin(crn, checkinUuid, true);
+    await this.assertSensitiveTag(true);
+    await this.assertSensitiveQuestionAsked(false);
+    await this.pages.missedReviewedCheckin.addNoteWithSensitiveHidden(note);
+    await this.openMissedCheckin(crn, checkinUuid, true);
+    await this.assertUpdateSaved(note, retains);
+    await this.assertSensitiveTag(true);
+  }
+
+  private async openMissedCheckin(
+    crn: string,
+    checkinUuid: string,
+    reviewed: boolean,
+  ): Promise<void> {
+    await expect(async () => {
+      await this.pages.overview.goTo(crn);
+      await this.pages.overview.clickActivityLogTab();
+      await this.pages.activityLog.assertOnPage();
+      await expect(
+        this.pages.activityLog.manageCheckinLink(checkinUuid),
+      ).toBeVisible({ timeout: 5000 });
+      await this.pages.activityLog.openCheckinReview(checkinUuid);
+      const expectedPage = reviewed
+        ? this.pages.missedReviewedCheckin
+        : this.pages.missedCheckin;
+      await expectedPage.assertOnPage();
+      await assertManageCheckinsPage(
+        this.page,
+        crn,
+        reviewed ? MISSED_REVIEWED_CHECK_IN_TITLE : MISSED_CHECK_IN_TITLE,
+      );
+    }).toPass({ timeout: 120_000, intervals: [3000, 5000, 10000] });
+  }
+
+  private async assertUpdateSaved(
+    note: string,
+    retains: string[],
+  ): Promise<void> {
+    await this.assertMissedReviewSummaryShows(note);
+    for (const earlier of retains) {
+      await this.assertMissedReviewSummaryShows(earlier);
+    }
+  }
+
+  private async assertSensitiveQuestionAsked(asked: boolean): Promise<void> {
+    await this.assertShown(
+      "Sensitive question",
+      this.pages.missedReviewedCheckin.sensitiveQuestion(),
+      asked,
+    );
+  }
+
+  private async assertMissedReviewSummaryShows(text: string): Promise<void> {
+    await expect(
+      this.pages.missedReviewedCheckin.reviewSummary(),
+    ).toContainText(text.trim());
+  }
+
+  private async assertSensitiveTag(sensitive: boolean): Promise<void> {
+    await this.assertShown(
+      "Sensitive tag",
+      this.pages.missedReviewedCheckin.sensitiveTag(),
+      sensitive,
+    );
+  }
+
   private async assertReviewSummaryShows(note: string): Promise<void> {
     const text = note.trim();
     await expect(
@@ -293,7 +411,10 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(crn: string): Promise<void> {
+  private async openCheckinContact(
+    crn: string,
+    timeoutMs = 60000,
+  ): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
@@ -301,7 +422,7 @@ export default class ReviewCheckinJourney {
       await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
         timeout: 5000,
       });
-    }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
+    }).toPass({ timeout: timeoutMs, intervals: [3000, 5000, 10000] });
     await this.pages.activityLog.openCheckinReview();
   }
 }

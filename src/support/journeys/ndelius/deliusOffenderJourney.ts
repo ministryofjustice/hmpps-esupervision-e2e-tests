@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { DateTime } from "luxon";
 import { login as loginToDelius } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/login.mjs";
 import { deliusPerson } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/person.mjs";
@@ -11,7 +11,7 @@ import { internalTransfer } from "@ministryofjustice/hmpps-probation-integration
 import { TEST_TEAM, TEST_STAFF } from "../../../data/delius/testData";
 import { NewOffender, Person } from "../../../data/delius/types";
 import type { ExistingTier } from "../../../data/models";
-import { recordCreatedCrn } from "../../utils/createdCrns";
+import { attachCreatedCrn, recordCreatedCrn } from "../../utils/createdCrns";
 import {
   dismissModals,
   findFirstOffender,
@@ -126,6 +126,7 @@ export default class DeliusOffenderJourney {
       );
     }
     recordCreatedCrn(crn);
+    await attachCreatedCrn(test.info(), crn);
 
     const convictionDate = Yesterday.toJSDate();
     // Failure here is an unpopulated allocation dropdown, which happens before the

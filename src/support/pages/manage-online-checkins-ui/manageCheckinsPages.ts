@@ -15,6 +15,8 @@ import ReviewIdentityPage from "./reviewIdentityPage";
 import ReviewNotesPage from "./reviewNotesPage";
 import ActivityLogPage from "../mpop/activityLogPage";
 import ReviewedCheckinPage from "./reviewedCheckinPage";
+import MissedCheckinPage from "./missedCheckinPage";
+import MissedReviewedCheckinPage from "./missedReviewedCheckinPage";
 import HowToWriteQuestionsPage from "./howToWriteQuestionsPage";
 import AddQuestionsPage from "./addQuestionsPage";
 import ChooseQuestionPage from "./chooseQuestionPage";
@@ -69,6 +71,8 @@ export class ManageCheckinsPages {
   readonly reviewIdentity: ReviewIdentityPage;
   readonly reviewNotes: ReviewNotesPage;
   readonly reviewedCheckin: ReviewedCheckinPage;
+  readonly missedCheckin: MissedCheckinPage;
+  readonly missedReviewedCheckin: MissedReviewedCheckinPage;
 
   readonly restartDateFrequency: DateFrequencyPage;
   readonly restartContactPreference: RestartContactPreferencePage;
@@ -113,6 +117,8 @@ export class ManageCheckinsPages {
     this.reviewIdentity = new ReviewIdentityPage(page);
     this.reviewNotes = new ReviewNotesPage(page);
     this.reviewedCheckin = new ReviewedCheckinPage(page);
+    this.missedCheckin = new MissedCheckinPage(page);
+    this.missedReviewedCheckin = new MissedReviewedCheckinPage(page);
 
     this.restartDateFrequency = new DateFrequencyPage(page, "restart");
     this.restartContactPreference = new RestartContactPreferencePage(page);
