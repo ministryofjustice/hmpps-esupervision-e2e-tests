@@ -14,7 +14,7 @@ const MISSED_REASON = "Person did not have access to a device";
 const FIRST_UPDATE = "Discussed the missed check in at the next appointment";
 const EXPIRY_JOB_TIMEOUT_MS = 5 * 60 * 1000;
 
-test("missed check in: expiry job, review, then sensitive updates", async ({
+test("missed check in: expiry job, review, then sensitive updates @expiry-job", async ({
   page,
 }, testInfo) => {
   test.setTimeout(300_000);
@@ -39,16 +39,14 @@ test("missed check in: expiry job, review, then sensitive updates", async ({
   });
 
   testInfo.setTimeout(testInfo.timeout + EXPIRY_JOB_TIMEOUT_MS);
-  const expiredAt = await expireCheckin(offender.crn, checkinUuid, token, {
+  await expireCheckin(offender.crn, checkinUuid, token, {
     timeoutMs: EXPIRY_JOB_TIMEOUT_MS,
   });
 
-  await journey.reviewMissedCheckin(
-    offender.crn,
-    checkinUuid,
-    { reason: MISSED_REASON, sensitive: false },
-    expiredAt,
-  );
+  await journey.reviewMissedCheckin(offender.crn, checkinUuid, {
+    reason: MISSED_REASON,
+    sensitive: false,
+  });
   await assertReviewedWhileExpired(checkinUuid, token);
 
   await journey.annotateMissedCheckin(offender.crn, checkinUuid, {
@@ -56,7 +54,7 @@ test("missed check in: expiry job, review, then sensitive updates", async ({
     sensitive: true,
     retains: [MISSED_REASON],
   });
-  await journey.annotateSensitiveMissedCheckin(offender.crn, checkinUuid, {
+  await journey.annotateMissedCheckin(offender.crn, checkinUuid, {
     note: "Agreed a plan for the next check in",
     retains: [MISSED_REASON, FIRST_UPDATE],
   });

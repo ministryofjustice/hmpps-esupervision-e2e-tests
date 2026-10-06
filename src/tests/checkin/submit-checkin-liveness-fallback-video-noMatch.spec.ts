@@ -12,7 +12,6 @@ import {
   today,
   firstCheckinDateString,
 } from "../../support/utils/date";
-import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { Pages } from "../../support/pages/checkins-ui/Pages";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
 
@@ -28,12 +27,11 @@ const assistance = randomAssistanceSelections(2);
 
 test("video fallback: no match, submit anyway, checkin completes", async ({
   page,
-}, testInfo) => {
+}) => {
   const onlineCheckin = new OnlineCheckinJourney(page);
   const offender = await onlineCheckin.createOffenderAndSetupCheckins(
     firstCheckinDateString(0),
   );
-  await attachCreatedCrn(testInfo, offender.crn);
 
   const token = await getToken();
   const uuid = await createEsupervisionCheckin(

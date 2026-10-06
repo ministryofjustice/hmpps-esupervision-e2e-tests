@@ -10,7 +10,7 @@ export default class ActivityLogPage extends PractitionerBasePage {
     if (checkinUuid) {
       return this.getQA("esup-manage-link")
         .locator(
-          `xpath=self::a[contains(substring-before(concat(@href, '?'), '?'), '/appointments/${checkinUuid}/check-in/')]`,
+          `xpath=self::a[contains(substring-before(concat(@href, '?'), '?'), '/appointments/${checkinUuid}/check-in/update')]`,
         )
         .first();
     }

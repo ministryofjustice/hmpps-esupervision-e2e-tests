@@ -4,7 +4,7 @@ import PractitionerBasePage from "../base/practitionerBasePage";
 
 export interface MissedCheckinUpdate {
   note: string;
-  sensitive: boolean;
+  sensitive?: boolean;
 }
 
 export default class MissedReviewedCheckinPage extends PractitionerBasePage {
@@ -26,12 +26,9 @@ export default class MissedReviewedCheckinPage extends PractitionerBasePage {
 
   async addNote({ note, sensitive }: MissedCheckinUpdate): Promise<void> {
     await this.fillText("notes", note);
-    await this.clickRadioByName("sensitiveContact", this.yesNo(sensitive));
-    await this.clickContinue();
-  }
-
-  async addNoteWithSensitiveHidden(note: string): Promise<void> {
-    await this.fillText("notes", note);
+    if (sensitive !== undefined) {
+      await this.clickRadioByName("sensitiveContact", this.yesNo(sensitive));
+    }
     await this.clickContinue();
   }
 }

@@ -37,7 +37,7 @@ export default class Layer1AssessmentPage {
   }
 
   predictorQuestionsCompleteButton(): Locator {
-    return this.page.locator("#B200111883325231656CAP");
+    return this.page.getByRole("button", { name: "Complete", exact: true });
   }
 
   selfAssessmentLink(): Locator {

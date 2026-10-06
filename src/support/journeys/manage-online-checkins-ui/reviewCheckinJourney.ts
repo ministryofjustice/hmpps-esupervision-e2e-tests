@@ -50,16 +50,11 @@ export interface Annotation {
   sensitive?: boolean;
 }
 
-export interface MissedAnnotationBase {
+export interface MissedAnnotation {
   note: string;
   retains: string[];
+  sensitive?: boolean;
 }
-
-export interface MissedAnnotation extends MissedAnnotationBase {
-  sensitive: boolean;
-}
-
-export type SensitiveMissedAnnotation = MissedAnnotationBase;
 
 export default class ReviewCheckinJourney {
   private readonly pages: ManageCheckinsPages;
@@ -213,14 +208,8 @@ export default class ReviewCheckinJourney {
     crn: string,
     checkinUuid: string,
     decision: MissedReviewDecision,
-    expiredAt?: number,
   ): Promise<void> {
     await this.openMissedCheckin(crn, checkinUuid, false);
-    if (expiredAt !== undefined) {
-      console.log(
-        `Check in for ${crn} shown as expired in UI after ${Date.now() - expiredAt}ms.`,
-      );
-    }
     await this.pages.missedCheckin.completePage(decision);
 
     await this.openMissedCheckin(crn, checkinUuid, true);
@@ -234,25 +223,16 @@ export default class ReviewCheckinJourney {
     { note, sensitive, retains }: MissedAnnotation,
   ): Promise<void> {
     await this.openMissedCheckin(crn, checkinUuid, true);
-    await this.assertSensitiveQuestionAsked(true);
+    if (sensitive === undefined) {
+      await this.assertSensitiveTag(true);
+      await this.assertSensitiveQuestionAsked(false);
+    } else {
+      await this.assertSensitiveQuestionAsked(true);
+    }
     await this.pages.missedReviewedCheckin.addNote({ note, sensitive });
     await this.openMissedCheckin(crn, checkinUuid, true);
     await this.assertUpdateSaved(note, retains);
-    await this.assertSensitiveTag(sensitive);
-  }
-
-  async annotateSensitiveMissedCheckin(
-    crn: string,
-    checkinUuid: string,
-    { note, retains }: SensitiveMissedAnnotation,
-  ): Promise<void> {
-    await this.openMissedCheckin(crn, checkinUuid, true);
-    await this.assertSensitiveTag(true);
-    await this.assertSensitiveQuestionAsked(false);
-    await this.pages.missedReviewedCheckin.addNoteWithSensitiveHidden(note);
-    await this.openMissedCheckin(crn, checkinUuid, true);
-    await this.assertUpdateSaved(note, retains);
-    await this.assertSensitiveTag(true);
+    await this.assertSensitiveTag(sensitive ?? true);
   }
 
   private async openMissedCheckin(

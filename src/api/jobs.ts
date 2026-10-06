@@ -44,6 +44,5 @@ export const runJob = async (job: JobName, token: string): Promise<boolean> =>
         `Run job ${job} returned ${response.status()}; expected 202 Accepted.`,
       );
     }
-    await assertOk(response, `Run job ${job}`);
     return true;
   });

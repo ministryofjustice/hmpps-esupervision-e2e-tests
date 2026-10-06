@@ -27,7 +27,6 @@ import ReviewCheckinJourney, {
   MissedAnnotation,
   MissedReviewDecision,
   ReviewDecision,
-  SensitiveMissedAnnotation,
 } from "../manage-online-checkins-ui/reviewCheckinJourney";
 import CustomQuestionsJourney from "../manage-online-checkins-ui/customQuestionsJourney";
 import SetupOnlineCheckinsJourney from "../manage-online-checkins-ui/setupOnlineCheckinsJourney";
@@ -167,14 +166,8 @@ export default class OnlineCheckinJourney {
     crn: string,
     checkinUuid: string,
     decision: MissedReviewDecision,
-    expiredAt?: number,
   ): Promise<void> {
-    await this.review.reviewMissedCheckin(
-      crn,
-      checkinUuid,
-      decision,
-      expiredAt,
-    );
+    await this.review.reviewMissedCheckin(crn, checkinUuid, decision);
   }
 
   async annotateMissedCheckin(
@@ -183,17 +176,5 @@ export default class OnlineCheckinJourney {
     annotation: MissedAnnotation,
   ): Promise<void> {
     await this.review.annotateMissedCheckin(crn, checkinUuid, annotation);
-  }
-
-  async annotateSensitiveMissedCheckin(
-    crn: string,
-    checkinUuid: string,
-    annotation: SensitiveMissedAnnotation,
-  ): Promise<void> {
-    await this.review.annotateSensitiveMissedCheckin(
-      crn,
-      checkinUuid,
-      annotation,
-    );
   }
 }

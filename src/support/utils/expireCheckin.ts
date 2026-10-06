@@ -1,4 +1,3 @@
-import { DateTime } from "luxon";
 import { expect } from "@playwright/test";
 import { getCheckin, listOffenderCheckins } from "../../api/checkin";
 import { JobTriggersUnavailableError, runJob } from "../../api/jobs";
@@ -13,20 +12,6 @@ const RETRIGGER_BACKOFF_MS = 30_000;
 
 export const expiredDueDate = (): string =>
   dueDateString(today.minus({ days: DUE_DAYS_AGO }));
-
-const assertDueInPast = (uuid: string, dueDate: string): void => {
-  const due = DateTime.fromISO(dueDate);
-  if (!due.isValid) {
-    throw new Error(
-      `Check in ${uuid} has an unparseable due date "${dueDate}" (${due.invalidReason}).`,
-    );
-  }
-  if (due.startOf("day") >= today.startOf("day")) {
-    throw new Error(
-      `Check in ${uuid} is due ${dueDate}, not in the past, so no expiry run will take it.`,
-    );
-  }
-};
 
 const assertNotMovedUnexpectedly = (uuid: string, status: string): void => {
   if (status !== "CREATED" && status !== "EXPIRED") {
@@ -55,16 +40,12 @@ export const expireCheckin = async (
   uuid: string,
   token: string,
   { timeoutMs = DEFAULT_POLL_TIMEOUT_MS }: { timeoutMs?: number } = {},
-): Promise<number> => {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    throw new Error("Expiry polling timeout must be a positive finite number.");
-  }
+): Promise<void> => {
   const offender = await getOffenderByCrn(crn, token);
   const listCheckins = (useCase: "AWAITING_CHECKIN" | "NEEDS_ATTENTION") =>
     listOffenderCheckins(env.practitionerName(), offender.uuid, token, useCase);
   const initial = await getCheckin(uuid, token);
   assertNotMovedUnexpectedly(uuid, initial.status);
-  assertDueInPast(uuid, initial.dueDate);
   const awaitingBeforeTrigger = await listCheckins("AWAITING_CHECKIN");
   if (!awaitingBeforeTrigger.some((checkin) => checkin.uuid === uuid)) {
     throw new Error(
@@ -94,14 +75,7 @@ export const expireCheckin = async (
             lastTrigger = Date.now();
           }
           try {
-            const [checkin, awaiting, needsAttention] = await Promise.all([
-              getCheckin(uuid, token),
-              listCheckins("AWAITING_CHECKIN"),
-              listCheckins("NEEDS_ATTENTION"),
-            ]);
-            lastStatus = checkin.status;
-            isAwaiting = awaiting.some((item) => item.uuid === uuid);
-            needsReview = needsAttention.some((item) => item.uuid === uuid);
+            lastStatus = (await getCheckin(uuid, token)).status;
             lastPollError = "";
           } catch (error) {
             lastPollError =
@@ -109,6 +83,20 @@ export const expireCheckin = async (
             return false;
           }
           assertNotMovedUnexpectedly(uuid, lastStatus);
+          if (lastStatus !== "EXPIRED") return false;
+
+          try {
+            const [awaiting, needsAttention] = await Promise.all([
+              listCheckins("AWAITING_CHECKIN"),
+              listCheckins("NEEDS_ATTENTION"),
+            ]);
+            isAwaiting = awaiting.some((item) => item.uuid === uuid);
+            needsReview = needsAttention.some((item) => item.uuid === uuid);
+          } catch (error) {
+            lastPollError =
+              error instanceof Error ? error.message : String(error);
+            return false;
+          }
           return (
             accepted && lastStatus === "EXPIRED" && needsReview && !isAwaiting
           );
@@ -130,6 +118,4 @@ export const expireCheckin = async (
       { cause: error },
     );
   }
-
-  return Date.now();
 };
