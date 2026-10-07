@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 export default class Layer1AssessmentPage {
   constructor(private readonly page: Page) {}
@@ -64,9 +64,11 @@ export default class Layer1AssessmentPage {
 
   async selectPartnerRelationshipNoProblems(): Promise<void> {
     const field = this.partnerRelationshipField();
+    // Keyboard input triggers OASys's change handler; selectOption did not persist this choice.
     await field.focus();
     await field.press("0");
     await field.press("Tab");
+    await expect(field).toHaveValue("0");
   }
 
   totalSanctionsField(): Locator {

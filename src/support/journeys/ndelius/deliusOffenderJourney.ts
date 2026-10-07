@@ -126,6 +126,7 @@ export default class DeliusOffenderJourney {
       );
     }
     recordCreatedCrn(crn);
+    // Attach before setup so failures retain this CRN for investigation.
     await attachCreatedCrn(test.info(), crn);
 
     const convictionDate = Yesterday.toJSDate();

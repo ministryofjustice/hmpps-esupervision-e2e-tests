@@ -145,6 +145,9 @@ export default class OasysAssessmentJourney {
         );
       }
       await this.assessmentPage.saveButton().click();
+      await expect(this.assessmentPage.convictionDateField()).toHaveValue(
+        convictionDateValue,
+      );
 
       await this.assessmentPage.selfAssessmentLink().click();
       const selfAssessmentRationale =
