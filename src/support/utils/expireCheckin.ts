@@ -46,18 +46,6 @@ export const expireCheckin = async (
     listOffenderCheckins(env.practitionerName(), offender.uuid, token, useCase);
   const initial = await getCheckin(uuid, token);
   assertNotMovedUnexpectedly(uuid, initial.status);
-  const awaitingBeforeTrigger = await listCheckins("AWAITING_CHECKIN");
-  if (!awaitingBeforeTrigger.some((checkin) => checkin.uuid === uuid)) {
-    throw new Error(
-      `Check in ${uuid} was not in AWAITING_CHECKIN before triggering expiry.`,
-    );
-  }
-  const needsAttentionBeforeTrigger = await listCheckins("NEEDS_ATTENTION");
-  if (needsAttentionBeforeTrigger.some((checkin) => checkin.uuid === uuid)) {
-    throw new Error(
-      `Check in ${uuid} was already in NEEDS_ATTENTION before triggering expiry.`,
-    );
-  }
 
   let { accepted, error: triggerError } = await tryTrigger(token);
   let lastTrigger = Date.now();

@@ -23,8 +23,9 @@ export interface CheckinSummary {
   createdBy: string;
 }
 
-export interface Checkin extends Omit<CheckinSummary, "createdBy"> {
+export interface Checkin extends CheckinSummary {
   reviewedAt: string | null;
+  sensitive: boolean;
 }
 
 export const getCheckin = async (

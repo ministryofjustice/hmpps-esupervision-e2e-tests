@@ -47,16 +47,17 @@ test("missed check in: expiry job, review, then sensitive updates @expiry-job", 
     reason: MISSED_REASON,
     sensitive: false,
   });
-  await assertReviewedWhileExpired(checkinUuid, token);
+  await assertReviewedWhileExpired(checkinUuid, token, false);
 
   await journey.annotateMissedCheckin(offender.crn, checkinUuid, {
     note: FIRST_UPDATE,
     sensitive: true,
     retains: [MISSED_REASON],
   });
+  // Sensitivity is inherited from the first note
   await journey.annotateMissedCheckin(offender.crn, checkinUuid, {
     note: "Agreed a plan for the next check in",
     retains: [MISSED_REASON, FIRST_UPDATE],
   });
-  await assertReviewedWhileExpired(checkinUuid, token);
+  await assertReviewedWhileExpired(checkinUuid, token, true);
 });

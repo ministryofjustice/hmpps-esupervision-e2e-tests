@@ -391,10 +391,7 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(
-    crn: string,
-    timeoutMs = 60000,
-  ): Promise<void> {
+  private async openCheckinContact(crn: string): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
@@ -402,7 +399,7 @@ export default class ReviewCheckinJourney {
       await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
         timeout: 5000,
       });
-    }).toPass({ timeout: timeoutMs, intervals: [3000, 5000, 10000] });
+    }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
     await this.pages.activityLog.openCheckinReview();
   }
 }
