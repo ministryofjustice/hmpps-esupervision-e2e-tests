@@ -58,10 +58,6 @@ export const expireCheckin = async (
     await expect
       .poll(
         async () => {
-          if (!accepted && Date.now() - lastTrigger >= RETRIGGER_BACKOFF_MS) {
-            ({ accepted, error: triggerError } = await tryTrigger(token));
-            lastTrigger = Date.now();
-          }
           try {
             lastStatus = (await getCheckin(uuid, token)).status;
             lastPollError = "";
@@ -71,7 +67,13 @@ export const expireCheckin = async (
             return false;
           }
           assertNotMovedUnexpectedly(uuid, lastStatus);
-          if (lastStatus !== "EXPIRED") return false;
+          if (lastStatus !== "EXPIRED") {
+            if (!accepted && Date.now() - lastTrigger >= RETRIGGER_BACKOFF_MS) {
+              ({ accepted, error: triggerError } = await tryTrigger(token));
+              lastTrigger = Date.now();
+            }
+            return false;
+          }
 
           try {
             const [awaiting, needsAttention] = await Promise.all([
@@ -85,9 +87,8 @@ export const expireCheckin = async (
               error instanceof Error ? error.message : String(error);
             return false;
           }
-          return (
-            accepted && lastStatus === "EXPIRED" && needsReview && !isAwaiting
-          );
+          if (needsReview && !isAwaiting) return true;
+          return false;
         },
         {
           message: `${uuid} should expire and move from AWAITING_CHECKIN to NEEDS_ATTENTION`,
