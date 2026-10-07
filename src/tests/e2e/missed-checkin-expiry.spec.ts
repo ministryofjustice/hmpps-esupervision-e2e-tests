@@ -54,9 +54,10 @@ test("missed check in: expiry job, review, then sensitive updates @expiry-job", 
     sensitive: true,
     retains: [MISSED_REASON],
   });
-  // Sensitivity is inherited from the first note
+  // A non-sensitive update cannot clear the sensitivity already inherited.
   await journey.annotateMissedCheckin(offender.crn, checkinUuid, {
     note: "Agreed a plan for the next check in",
+    sensitive: false,
     retains: [MISSED_REASON, FIRST_UPDATE],
   });
   await assertReviewedWhileExpired(checkinUuid, token, true);

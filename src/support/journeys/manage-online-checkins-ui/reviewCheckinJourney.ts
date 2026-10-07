@@ -223,16 +223,22 @@ export default class ReviewCheckinJourney {
     { note, sensitive, retains }: MissedAnnotation,
   ): Promise<void> {
     await this.openMissedCheckin(crn, checkinUuid, true);
-    if (sensitive === undefined) {
-      await this.assertSensitiveTag(true);
-      await this.assertSensitiveQuestionAsked(false);
-    } else {
-      await this.assertSensitiveQuestionAsked(true);
+    const alreadySensitive =
+      (await this.pages.missedReviewedCheckin.sensitiveTag().count()) === 1;
+    await this.assertSensitiveTag(alreadySensitive);
+    await this.assertSensitiveQuestionAsked(!alreadySensitive);
+    if (!alreadySensitive && sensitive === undefined) {
+      throw new Error(
+        "A missed-check-in annotation can omit sensitivity only when sensitivity is inherited.",
+      );
     }
-    await this.pages.missedReviewedCheckin.addNote({ note, sensitive });
+    await this.pages.missedReviewedCheckin.addNote({
+      note,
+      sensitive: alreadySensitive ? undefined : sensitive,
+    });
     await this.openMissedCheckin(crn, checkinUuid, true);
     await this.assertUpdateSaved(note, retains);
-    await this.assertSensitiveTag(sensitive ?? true);
+    await this.assertSensitiveTag(alreadySensitive || sensitive === true);
   }
 
   private async openMissedCheckin(
