@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 export default class Layer1AssessmentPage {
   constructor(private readonly page: Page) {}
@@ -7,12 +7,25 @@ export default class Layer1AssessmentPage {
     return this.page.getByRole("link", { name: "Predictors", exact: true });
   }
 
+  tierRiskConfirmation(): Locator {
+    return this.page.getByRole("alertdialog").filter({
+      hasText: /Please confirm, do you want the tier to be based on .+ Risk\?/,
+    });
+  }
+
   convictionDateField(): Locator {
     return this.page.getByLabel("Date of current conviction");
   }
 
   async setConvictionDate(value: string): Promise<void> {
-    const field = this.convictionDateField();
+    await this.setMaskedDate(this.convictionDateField(), value);
+  }
+
+  async setMostRecentSexualSanctionDate(value: string): Promise<void> {
+    await this.setMaskedDate(this.mostRecentSexualSanctionDate(), value);
+  }
+
+  private async setMaskedDate(field: Locator, value: string): Promise<void> {
     await this.page.waitForTimeout(200);
     await field.clear();
     await this.page.waitForTimeout(200);
@@ -21,6 +34,10 @@ export default class Layer1AssessmentPage {
 
   predictorQuestionsLink(): Locator {
     return this.page.getByRole("link", { name: "Predictor Questions" });
+  }
+
+  predictorQuestionsCompleteButton(): Locator {
+    return this.page.getByRole("button", { name: "Complete", exact: true });
   }
 
   selfAssessmentLink(): Locator {
@@ -43,6 +60,15 @@ export default class Layer1AssessmentPage {
 
   partnerRelationshipField(): Locator {
     return this.page.getByLabel("Current relationship with partner");
+  }
+
+  async selectPartnerRelationshipNoProblems(): Promise<void> {
+    const field = this.partnerRelationshipField();
+    // Keyboard input triggers OASys's change handler; selectOption did not persist this choice.
+    await field.focus();
+    await field.press("0");
+    await field.press("Tab");
+    await expect(field).toHaveValue("0");
   }
 
   totalSanctionsField(): Locator {

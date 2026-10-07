@@ -6,11 +6,18 @@ export default class ActivityLogPage extends PractitionerBasePage {
     super(page, "Contacts");
   }
 
-  manageCheckinLink(): Locator {
+  manageCheckinLink(checkinUuid?: string): Locator {
+    if (checkinUuid) {
+      return this.getQA("esup-manage-link")
+        .locator(
+          `xpath=self::a[contains(substring-before(concat(@href, '?'), '?'), '/appointments/${checkinUuid}/check-in/update')]`,
+        )
+        .first();
+    }
     return this.getQA("esup-manage-link").first();
   }
 
-  async openCheckinReview(): Promise<void> {
-    await this.manageCheckinLink().click();
+  async openCheckinReview(checkinUuid?: string): Promise<void> {
+    await this.manageCheckinLink(checkinUuid).click();
   }
 }

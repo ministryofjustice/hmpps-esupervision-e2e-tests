@@ -12,6 +12,7 @@ const CRN_FILE = path.join(process.cwd(), "created-crns.txt");
 
 export const CRN_ATTACHMENT_NAME = "created-crn";
 
+/** Attach a CRN to its test so the reporter can retain it when the test fails. */
 export const attachCreatedCrn = (
   testInfo: TestInfo,
   crn: string,
@@ -21,6 +22,7 @@ export const attachCreatedCrn = (
     contentType: "text/plain",
   });
 
+/** Record a CRN for cleanup, including offenders orphaned before test completion. */
 export const recordCreatedCrn = (crn: string): void => {
   if (existsSync(CRN_FILE)) {
     const content = readFileSync(CRN_FILE, "utf-8");

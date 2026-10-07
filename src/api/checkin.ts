@@ -23,6 +23,23 @@ export interface CheckinSummary {
   createdBy: string;
 }
 
+export interface Checkin extends CheckinSummary {
+  reviewedAt: string | null;
+  sensitive: boolean;
+}
+
+export const getCheckin = async (
+  uuid: string,
+  token: string,
+): Promise<Checkin> =>
+  withApiContext<Checkin>(async (ctx) => {
+    const response = await ctx.get(`/v2/offender_checkins/${uuid}`, {
+      headers: authHeader(token),
+    });
+    await assertOk(response, `Get checkin ${uuid}`);
+    return (await response.json()) as Checkin;
+  });
+
 export type CheckinUseCase =
   "AWAITING_CHECKIN" | "NEEDS_ATTENTION" | "REVIEWED";
 

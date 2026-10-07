@@ -4,19 +4,17 @@ import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourne
 import { getToken } from "../../api/auth";
 import { firstCheckinDateString, dobParts } from "../../support/utils/date";
 import { waitForAwaitingCheckinUuid } from "../../support/utils/waitForCheckin";
-import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { env } from "../../config/env";
 import { Pages } from "../../support/pages/checkins-ui/Pages";
 import { welshHeadings } from "../../data/labels";
 
 test("Complete a full check in with the UI set to Welsh (Cymraeg)", async ({
   page,
-}, testInfo) => {
+}) => {
   const onlineCheckin = new OnlineCheckinJourney(page);
   const offender = await onlineCheckin.createOffenderAndSetupCheckins(
     firstCheckinDateString(0),
   );
-  await attachCreatedCrn(testInfo, offender.crn);
 
   const token = await getToken();
   const uuid = await waitForAwaitingCheckinUuid(offender.crn, token);

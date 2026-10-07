@@ -25,8 +25,9 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- n
 ## Run
 
 ```bash
-npm run test                            # all checkin:dev tests except dashboard
-npm run test:e2e                        # new-offender E2E journeys
+npm run test                            # checkin:dev tests except dashboard and expiry job
+npm run test:e2e                        # new-offender E2E journeys (excludes expiry job test)
+npm run test:missed-checkin             # missed check-in expiry, review, and updates
 npm run test:welsh                      # Welsh-language E2E journey
 npm run test:fallback-video             # liveness fallback: NO_MATCH, submit anyway
 npm run test:manage-online-checkins-ui  # Manage Online Check Ins and MPOP journeys
@@ -90,6 +91,16 @@ early-engagement CRN must have `inEarlyEngagement: true` and remain distinct fro
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag
 is false.
 
+## Missed Check-in Expiry
+
+Run the expiry journey separately with `npm run test:missed-checkin`. It creates
+a new Tier G offender, creates a check-in due four days ago, triggers the
+`checkin-expiry` job, then verifies the check-in can be reviewed and annotated
+with sensitive updates while retaining its expired status. The general E2E
+commands (`test:e2e` and `test:e2e:headed`) exclude this test because the expiry
+job operates across the shared dev environment rather than only on the test
+check-in. Running it may expire other eligible overdue check-ins in dev.
+
 ## Cleanup
 
 Every newly created CRN is recorded in the gitignored `created-crns.txt`. The
@@ -115,8 +126,10 @@ op run --account ministryofjustice.1password.eu --env-file=./.env.1password -- n
 
 - `.github/workflows/playwright.yml` runs the main suite on a schedule and via
   `workflow_dispatch`.
+- `.github/workflows/missed-checkin-playwright.yml` runs the missed check-in
+  expiry test.
 - `.github/workflows/dashboard-playwright.yml` runs the dashboard suite with
   its own `DASHBOARD_URL` and Delius credentials.
 
-Both workflows publish JUnit and HTML reports. The main Playwright config runs
+All three workflows publish JUnit and HTML reports. The main Playwright config runs
 CRN cleanup through its reporter after the test run.

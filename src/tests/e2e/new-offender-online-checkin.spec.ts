@@ -14,7 +14,6 @@ import {
   ReviewDecision,
 } from "../../support/journeys/manage-online-checkins-ui/reviewCheckinJourney";
 import { IdentityDecision } from "../../support/pages/manage-online-checkins-ui/reviewIdentityPage";
-import { attachCreatedCrn } from "../../support/utils/createdCrns";
 import { CustomQuestion } from "../../data/models";
 import { OffenderProfile } from "../../support/journeys/ndelius/deliusOffenderJourney";
 
@@ -109,7 +108,7 @@ test.describe("Online check in for a new offender", () => {
   for (const scenario of scenarios) {
     test(`Create offender and setup online checkin and Completes a checkin when ${scenario.name} -> complete check in`, async ({
       page,
-    }, testInfo) => {
+    }) => {
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
@@ -119,7 +118,6 @@ test.describe("Online check in for a new offender", () => {
           assertContactRoutes: scenario.assertContactRoutes,
         },
       );
-      await attachCreatedCrn(testInfo, offender.crn);
       if (scenario.expectNoChangeQuestions) {
         await journey.assertChangeQuestionsUnavailable(offender.crn);
       }

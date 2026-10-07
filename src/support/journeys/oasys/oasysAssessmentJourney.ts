@@ -66,20 +66,33 @@ export default class OasysAssessmentJourney {
     }: OasysAssessment,
     offenderConvictionDate: Date,
   ): Promise<void> {
+    const recentSexualSanctionDate = OasysDateFormatter(
+      currentOffenceSexuallyMotivated === false
+        ? DateTime.now().minus({ months: 1 }).toJSDate()
+        : offenderConvictionDate,
+    );
     test.info().setTimeout(test.info().timeout + LAYER1_EXTRA_TIMEOUT);
     await test.step(`Complete OASys Layer 1 for ${crn}`, async () => {
       env.requireOasys();
       await loginToOasys(this.page, UserType.Booking);
-      await createLayer1CompleteAssessment(
-        this.page,
-        crn,
-        person,
-        undefined,
-        highRosh,
-        sexualOffence,
-        offenceCode,
-        offenceSubCode,
-      );
+      const riskConfirmation = this.assessmentPage.tierRiskConfirmation();
+      await this.page.addLocatorHandler(riskConfirmation, async (dialog) => {
+        await dialog.getByRole("button", { name: "Yes", exact: true }).click();
+      });
+      try {
+        await createLayer1CompleteAssessment(
+          this.page,
+          crn,
+          person,
+          undefined,
+          highRosh,
+          sexualOffence,
+          offenceCode,
+          offenceSubCode,
+        );
+      } finally {
+        await this.page.removeLocatorHandler(riskConfirmation);
+      }
       const hasPredictorOverrides =
         firstSanctionAge !== undefined ||
         currentOffenceSexuallyMotivated === false ||
@@ -101,13 +114,6 @@ export default class OasysAssessmentJourney {
           await this.assessmentPage
             .currentOffenceSexualMotivation()
             .selectOption("1.41~NO");
-          await this.assessmentPage
-            .mostRecentSexualSanctionDate()
-            .fill(
-              OasysDateFormatter(
-                DateTime.now().minus({ months: 1 }).toJSDate(),
-              ),
-            );
         }
         if (totalSanctions !== undefined) {
           await this.assessmentPage
@@ -122,9 +128,9 @@ export default class OasysAssessmentJourney {
         await this.assessmentPage.saveButton().click();
         if (partnerRelationshipNoProblems) {
           await this.assessmentPage.predictorQuestionsLink().click();
-          await this.assessmentPage
-            .partnerRelationshipField()
-            .selectOption({ label: "0-No problems" });
+          await this.assessmentPage.selectPartnerRelationshipNoProblems();
+          await this.assessmentPage.saveButton().click();
+          await this.assessmentPage.predictorQuestionsCompleteButton().click();
           await this.assessmentPage.saveButton().click();
         }
         await this.assessmentPage.basicSentencePlanLink().click();
@@ -133,9 +139,11 @@ export default class OasysAssessmentJourney {
       await this.assessmentPage.predictorsLink().click();
       const convictionDateValue = OasysDateFormatter(offenderConvictionDate);
       await this.assessmentPage.setConvictionDate(convictionDateValue);
-      await expect(this.assessmentPage.convictionDateField()).toHaveValue(
-        convictionDateValue,
-      );
+      if (sexualOffence || currentOffenceSexuallyMotivated === false) {
+        await this.assessmentPage.setMostRecentSexualSanctionDate(
+          recentSexualSanctionDate,
+        );
+      }
       await this.assessmentPage.saveButton().click();
       await expect(this.assessmentPage.convictionDateField()).toHaveValue(
         convictionDateValue,
