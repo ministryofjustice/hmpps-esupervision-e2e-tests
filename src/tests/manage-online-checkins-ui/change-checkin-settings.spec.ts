@@ -2,7 +2,7 @@ import test, { expect } from "@playwright/test";
 import { env } from "../../config/env";
 import { assertActiveManageCrn } from "../../support/assertions/api/supervisionPackageAPI";
 import ManageCheckInsJourney from "../../support/journeys/manage-online-checkins-ui/manageCheckinsJourney";
-import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
   displayedCheckinDatePattern,
   firstCheckinDateString,

@@ -107,7 +107,7 @@ test.describe("Tier G", () => {
     ]);
     await expect(moci.isEligible.discussionPoints()).toHaveCount(4);
     await moci.isEligible.completePage();
-    await new ManageCheckinsPages(page).dateFrequency.assertOnPage();
+    await new ManageCheckinsPages(page).checkinFrequency.assertOnPage();
   });
 
   test("a disqualifying answer makes them not eligible", async ({ page }) => {
@@ -207,7 +207,7 @@ test.describe("Tier A", () => {
     await mpop.rationale.assertOnPage();
     await mpop.rationale.completePage("E2E accredited programme rationale");
     // Stops here: completing setup would use up the existing CRN.
-    await mpop.dateFrequency.assertOnPage();
+    await mpop.checkinFrequency.assertOnPage();
   });
 
   test("accredited programme with a youth sentence is not eligible", async ({

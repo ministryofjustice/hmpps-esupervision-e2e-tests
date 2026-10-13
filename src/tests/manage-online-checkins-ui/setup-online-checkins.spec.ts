@@ -2,7 +2,7 @@ import test, { expect } from "@playwright/test";
 import { DateTime } from "luxon";
 import { env } from "../../config/env";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
-import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { PhotoOptions } from "../../support/pages/manage-online-checkins-ui/photoOptionsPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import {

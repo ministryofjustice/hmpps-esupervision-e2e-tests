@@ -1,7 +1,7 @@
 import { expect, Page } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
 import { TEST_CONTACT } from "../../../data/manage-online-checkins-ui/testData";
-import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
 import DeliusOffenderJourney, {
   OffenderProfile,

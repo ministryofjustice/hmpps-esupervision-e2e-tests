@@ -4,7 +4,11 @@ const staticPages = [
   { path: "/accessibility", heading: "Accessibility statement" },
   {
     path: "/guidance",
-    heading: "About the Check in with your probation officer service",
+    heading: "Check in with your probation officer guidance",
+  },
+  {
+    path: "/practitioner-guidance",
+    heading: "Online check ins",
   },
   { path: "/cookies", heading: "Cookies" },
   { path: "/privacy-notice", heading: "Privacy Notice" },

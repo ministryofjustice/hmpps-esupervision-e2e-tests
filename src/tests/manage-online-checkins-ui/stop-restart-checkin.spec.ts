@@ -6,7 +6,7 @@ import {
   displayedCheckinDatePattern,
   firstCheckinDateString,
 } from "../../support/utils/date";
-import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { getOffenderByCrn } from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 import { Preference } from "../../data/models";

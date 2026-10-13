@@ -13,6 +13,41 @@ export default class Layer1AssessmentPage {
     });
   }
 
+  riskConfirmationYesButton(dialog: Locator): Locator {
+    return dialog.getByRole("button", { name: "Yes", exact: true });
+  }
+
+  riskManagementPlanLink(): Locator {
+    return this.page.getByRole("link", {
+      name: "Risk Management Plan",
+      exact: true,
+    });
+  }
+
+  riskManagementPlanNextButton(): Locator {
+    return this.page.getByRole("button", { name: "Next", exact: true }).last();
+  }
+
+  sentencePlanServiceHeading(): Locator {
+    return this.page.locator("#contextleft > h3");
+  }
+
+  openSentencePlanServiceButton(): Locator {
+    return this.page.locator('input[value="Open Sentence Plan Service"]');
+  }
+
+  sentencePlanAgreementCheckbox(): Locator {
+    return this.page.getByRole("checkbox");
+  }
+
+  confirmButton(): Locator {
+    return this.page.getByRole("button", { name: "Confirm" });
+  }
+
+  returnToOasysButton(): Locator {
+    return this.page.getByRole("button", { name: "Return to OASys" });
+  }
+
   convictionDateField(): Locator {
     return this.page.getByLabel("Date of current conviction");
   }

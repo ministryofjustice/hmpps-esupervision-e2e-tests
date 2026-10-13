@@ -5,7 +5,7 @@ export default class CheckInConfirmationPage extends PractitionerBasePage {
   constructor(page: Page, restart = false) {
     super(
       page,
-      restart ? "Online check ins restarted" : "Online check ins added",
+      restart ? "Online check ins restarted" : "Online check ins set up",
     );
   }
 
