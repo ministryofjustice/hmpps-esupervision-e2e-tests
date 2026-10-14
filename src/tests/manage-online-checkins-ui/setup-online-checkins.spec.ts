@@ -52,9 +52,20 @@ test("practitioner changes the next check in date and frequency from the setup s
     );
   });
 
-  await test.step("Change the check in date and frequency from the summary", async () => {
+  await test.step("Change the check in date from the summary", async () => {
     await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
       date: changedCheckin,
+    });
+    await expect(summary.summaryValueLocator("date")).toHaveText(
+      displayedChangedCheckin,
+    );
+    await expect(summary.summaryValueLocator("frequency")).toContainText(
+      "Every week",
+    );
+  });
+
+  await test.step("Change the check in frequency from the summary", async () => {
+    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
       frequency: FrequencyOptions.EVERY_4_WEEKS,
     });
     await expect(summary.summaryValueLocator("date")).toHaveText(
