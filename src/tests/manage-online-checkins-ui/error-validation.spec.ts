@@ -2,7 +2,7 @@ import test, { expect, Page } from "@playwright/test";
 import { env } from "../../config/env";
 import ManageCheckInsJourney from "../../support/journeys/manage-online-checkins-ui/manageCheckinsJourney";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
-import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { firstCheckinDateString } from "../../support/utils/date";
 import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-ui/manageCheckinsPages";
 import { openExistingTierSetup } from "../../support/fixtures/existingTierCase";
@@ -27,13 +27,13 @@ test.beforeAll(async () => {
   await assertActiveManageCrn(manageCrn);
 });
 
-const openSetupValidationDateFrequency = async (page: Page) => {
+const openSetupValidationFrequency = async (page: Page) => {
   await assertTierCrnPreconditions(setupValidationCrn, "G");
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();
   await journey.startSetup(setupValidationCrn);
   await assertTier(page, setupValidationCrn, /Tier:\s*[A-G]\d*\b/);
-  return journey.completeSetupToDateFrequency(setupValidationCrn);
+  return journey.completeSetupToFrequency(setupValidationCrn);
 };
 
 test.describe("Validation errors", () => {
@@ -137,43 +137,46 @@ test.describe("Validation errors", () => {
     test("rejects a first check in date that is in the past or malformed", async ({
       page,
     }) => {
-      const dateFrequency = await openSetupValidationDateFrequency(page);
-
+      const frequency = await openSetupValidationFrequency(page);
+      await frequency.completePage(FrequencyOptions.EVERY_WEEK);
+      const date = new ManageCheckinsPages(page).checkinDate;
+      await date.assertOnPage();
       const pastDate =
         "The first online check in date must be today or in the future";
-      await dateFrequency.changePage(
-        firstCheckinDateString(-7),
-        FrequencyOptions.EVERY_WEEK,
-      );
-      await expect(dateFrequency.errorSummary()).toContainText(pastDate);
-      await expect(dateFrequency.fieldError(pastDate)).toBeVisible();
-      await dateFrequency.assertOnPage();
+      await date.completePage(firstCheckinDateString(-7));
+      await expect(date.errorSummary()).toContainText(pastDate);
+      await expect(date.fieldError(pastDate)).toBeVisible();
+      await date.assertOnPage();
 
       // 31 February looks well-formed but isn't a real date - same error either way.
       const badFormat =
         "Enter a date in the correct format, for example 17/5/2024";
-      await dateFrequency.changePage("31/2/2026");
-      await expect(dateFrequency.errorSummary()).toContainText(badFormat);
-      await expect(dateFrequency.fieldError(badFormat)).toBeVisible();
-      await dateFrequency.assertOnPage();
+      await date.completePage("31/2/2026");
+      await expect(date.errorSummary()).toContainText(badFormat);
+      await expect(date.fieldError(badFormat)).toBeVisible();
+      await date.assertOnPage();
     });
 
     test("shows validation errors when the check in date and frequency are left blank", async ({
       page,
     }) => {
-      const dateFrequency = await openSetupValidationDateFrequency(page);
-
+      const frequency = await openSetupValidationFrequency(page);
+      const noFrequency =
+        "Select how often you would like the person to check in";
+      await frequency.completePage();
+      await expect(frequency.errorSummary()).toContainText(noFrequency);
+      await expect(frequency.fieldError(noFrequency)).toBeVisible();
+      await frequency.assertOnPage();
+      await frequency.completePage(FrequencyOptions.EVERY_WEEK);
       // Neither field has been filled yet on this fresh page.
       const noDate =
         "Enter the date you would like the person to complete their first check in";
-      const noFrequency =
-        "Select how often you would like the person to check in";
-      await dateFrequency.changePage("");
-      await expect(dateFrequency.errorSummary()).toContainText(noDate);
-      await expect(dateFrequency.errorSummary()).toContainText(noFrequency);
-      await expect(dateFrequency.fieldError(noDate)).toBeVisible();
-      await expect(dateFrequency.fieldError(noFrequency)).toBeVisible();
-      await dateFrequency.assertOnPage();
+      const date = new ManageCheckinsPages(page).checkinDate;
+      await date.assertOnPage();
+      await date.completePage("");
+      await expect(date.errorSummary()).toContainText(noDate);
+      await expect(date.fieldError(noDate)).toBeVisible();
+      await date.assertOnPage();
     });
   });
 

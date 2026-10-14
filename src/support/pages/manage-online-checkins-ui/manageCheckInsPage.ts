@@ -28,11 +28,11 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
     await this.changeContactDetailsLink().click();
   }
 
-  changeCheckinSettingsLink(): Locator {
-    return this.page.getByRole("link", { name: /Change check in settings/i });
+  async clickChangeFrequency(): Promise<void> {
+    await this.getQA("changeFrequencyAction").click();
   }
-  async clickChangeCheckinSettings(): Promise<void> {
-    await this.changeCheckinSettingsLink().click();
+  async clickChangeNextCheckinDate(): Promise<void> {
+    await this.getQA("changeDateAction").click();
   }
 
   // Scoped to this person's first name (the only name the banner shows) so it

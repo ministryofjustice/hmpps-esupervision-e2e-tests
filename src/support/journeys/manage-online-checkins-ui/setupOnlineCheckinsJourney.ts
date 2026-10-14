@@ -1,8 +1,8 @@
 import { expect, Page, test } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/manage-online-checkins-ui/checkInSummaryPage";
-import DateFrequencyPage, {
+import CheckInFrequencyPage, {
   FrequencyOptions,
-} from "../../pages/manage-online-checkins-ui/dateFrequencyPage";
+} from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
@@ -30,7 +30,6 @@ import {
   followToMpop,
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
-
 type ExpectedContactRoute = "missing" | "confirm";
 
 interface ContactPreferenceValues {
@@ -241,16 +240,16 @@ export default class SetupOnlineCheckinsJourney {
     await this.pages.photoMeetRules.completePage();
   }
   /**
-   * Drive the wizard as far as the date and frequency page and stop there, so a
-   * test can exercise it without completing a setup it does not need.
+   * Drive the wizard through eligibility to the frequency page and stop there,
+   * so a test can exercise it without completing a setup it does not need.
    */
-  async completeSetupToDateFrequency(
+  async completeSetupToFrequency(
     crn: string,
     eligibilityAnswers?: EligibilityAnswer[],
     pilotAnswer?: boolean,
     rationale: string = "E2E accredited programme rationale",
-  ): Promise<DateFrequencyPage> {
-    await test.step("Complete eligibility to the check in date page", async () => {
+  ): Promise<CheckInFrequencyPage> {
+    await test.step("Complete eligibility to the check in frequency page", async () => {
       // startSetup() already retried until this page rendered, so this is just
       // the normal on-page assertion, not extra flakiness handling.
       await assertManageCheckinsPage(this.page, crn, ELIGIBILITY_CHECK_TITLE);
@@ -262,9 +261,9 @@ export default class SetupOnlineCheckinsJourney {
         await this.pages.rationale.assertOnPage();
         await this.pages.rationale.completePage(rationale);
       }
-      await this.pages.dateFrequency.assertOnPage();
+      await this.pages.checkinFrequency.assertOnPage();
     });
-    return this.pages.dateFrequency;
+    return this.pages.checkinFrequency;
   }
 
   /**
@@ -328,13 +327,15 @@ export default class SetupOnlineCheckinsJourney {
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
     return test.step("Complete set up online check ins", async () => {
-      const dateFrequency = await this.completeSetupToDateFrequency(
+      const frequency = await this.completeSetupToFrequency(
         crn,
         setup.eligibilityAnswers,
         setup.pilotAnswer,
         setup.rationale,
       );
-      await dateFrequency.completePage(setup.date, setup.frequency);
+      await frequency.completePage(setup.frequency);
+      await this.pages.checkinDate.assertOnPage();
+      await this.pages.checkinDate.completePage(setup.date);
 
       await this.completeContactPreference(crn, setup);
 
@@ -387,18 +388,24 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  async changeDateFrequencyFromSummary(
+  async changeCheckInDateAndFrequencyFromSummary(
     summary: CheckInSummaryPage,
     opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
     if (opts.date === undefined && opts.frequency === undefined) {
       throw new Error(
-        "changeDateFrequencyFromSummary requires at least one of date or frequency",
+        "changeCheckInDateAndFrequencyFromSummary requires at least one of date or frequency",
       );
     }
-    await summary.clickChange(opts.date !== undefined ? "date" : "frequency");
-    await this.pages.dateFrequency.assertOnPage();
-    await this.pages.dateFrequency.changePage(opts.date, opts.frequency);
+    if (opts.frequency !== undefined) {
+      await summary.clickChange("frequency");
+      await this.pages.checkinFrequency.assertOnPage();
+      await this.pages.checkinFrequency.completePage(opts.frequency);
+    } else {
+      await summary.clickChange("date");
+    }
+    await this.pages.checkinDate.assertOnPage();
+    await this.pages.checkinDate.completePage(opts.date);
     await summary.assertOnPage();
   }
 

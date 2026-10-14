@@ -28,7 +28,6 @@ export const TIER_C_ASSESSMENT: OasysAssessment = {
   sexualOffence: true,
   firstSanctionAge: 15,
   currentOffenceSexuallyMotivated: false,
-  partnerRelationshipNoProblems: true,
   offenceCode: "041",
   offenceSubCode: "00",
   totalSanctions: 1,

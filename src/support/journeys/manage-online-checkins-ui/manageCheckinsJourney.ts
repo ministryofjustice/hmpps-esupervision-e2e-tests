@@ -2,15 +2,17 @@ import { expect, Page, test } from "@playwright/test";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
-import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/dateFrequencyPage";
+import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
-  CHECKIN_SETTINGS_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
 import { Preference, ContactDetails } from "../../../data/models";
-import { assertManageCheckinsPage } from "../../assertions/manage-online-checkins-ui/manageCheckinsAssertions";
+import {
+  assertCaseBanner,
+  assertManageCheckinsPage,
+} from "../../assertions/manage-online-checkins-ui/manageCheckinsAssertions";
 import {
   assertAbsoluteMpopHref,
   assertRelativeHref,
@@ -175,19 +177,23 @@ export default class ManageCheckInsJourney {
     values: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
     await test.step(`Change check in settings for ${crn}`, async () => {
-      const manage = await this.openManage(crn);
-      await expect(
-        manage.changeCheckinSettingsLink(),
-        "Change check in settings link should be present for an active check in",
-      ).toBeVisible();
-      await manage.clickChangeCheckinSettings();
-      await this.pages.changeCheckinSettings.assertOnPage();
-      await assertManageCheckinsPage(this.page, crn, CHECKIN_SETTINGS_TITLE);
-      await this.pages.changeCheckinSettings.changePage(
-        values.date,
-        values.frequency,
-      );
-      await this.pages.manage.assertOnPage();
+      if (values.frequency !== undefined) {
+        const manage = await this.openManage(crn);
+        await manage.clickChangeFrequency();
+
+        await this.pages.checkinFrequency.assertOnPage();
+        await assertCaseBanner(this.page, crn);
+        await this.pages.checkinFrequency.completePage(values.frequency);
+        await this.pages.manage.assertOnPage();
+      }
+      if (values.date !== undefined) {
+        const manage = await this.openManage(crn);
+        await manage.clickChangeNextCheckinDate();
+        await this.pages.checkinDate.assertOnPage();
+        await assertCaseBanner(this.page, crn);
+        await this.pages.checkinDate.completePage(values.date);
+        await this.pages.manage.assertOnPage();
+      }
     });
   }
 
@@ -195,11 +201,10 @@ export default class ManageCheckInsJourney {
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
-      await this.pages.restartDateFrequency.assertOnPage();
-      await this.pages.restartDateFrequency.completePage(
-        values.date,
-        values.frequency,
-      );
+      await this.pages.checkinFrequency.assertOnPage();
+      await this.pages.checkinFrequency.completePage(values.frequency);
+      await this.pages.checkinDate.assertOnPage();
+      await this.pages.checkinDate.completePage(values.date);
       await this.pages.restartContactPreference.assertOnPage();
       await this.pages.restartContactPreference.completePage(
         values.preference,
@@ -223,7 +228,7 @@ export default class ManageCheckInsJourney {
   async assertRestartConfirmationLinksLandInMpop(crn: string): Promise<void> {
     await test.step("Restart confirmation links hand off to MPOP", async () => {
       // Check the href first - the click below leaves this page.
-      await assertRelativeHref(
+      await assertAbsoluteMpopHref(
         this.pages.restartConfirmation.allCasesLink(),
         "Go to all cases",
         MPOP_PATH.allCases,

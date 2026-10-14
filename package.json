@@ -38,7 +38,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "1.295.0",
+    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "1.302.0",
     "@playwright/test": "1.63.0",
     "@types/luxon": "^3.4.2",
     "@types/node": "^25.9.2",

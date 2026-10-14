@@ -77,7 +77,7 @@ export default class OasysAssessmentJourney {
       await loginToOasys(this.page, UserType.Booking);
       const riskConfirmation = this.assessmentPage.tierRiskConfirmation();
       await this.page.addLocatorHandler(riskConfirmation, async (dialog) => {
-        await dialog.getByRole("button", { name: "Yes", exact: true }).click();
+        await this.assessmentPage.riskConfirmationYesButton(dialog).click();
       });
       try {
         await createLayer1CompleteAssessment(
@@ -133,7 +133,6 @@ export default class OasysAssessmentJourney {
           await this.assessmentPage.predictorQuestionsCompleteButton().click();
           await this.assessmentPage.saveButton().click();
         }
-        await this.assessmentPage.basicSentencePlanLink().click();
       }
 
       await this.assessmentPage.predictorsLink().click();
@@ -169,7 +168,16 @@ export default class OasysAssessmentJourney {
         await this.assessmentPage.saveButton().click();
         await this.assessmentPage.markAsCompleteButton().click();
       }
-      await this.assessmentPage.basicSentencePlanLink().click();
+      await this.assessmentPage.riskManagementPlanLink().click();
+      await this.assessmentPage.saveButton().click();
+      await this.assessmentPage.riskManagementPlanNextButton().click();
+      await expect(this.assessmentPage.sentencePlanServiceHeading()).toHaveText(
+        "Sentence Plan Service (Layer 1)",
+      );
+      await this.assessmentPage.openSentencePlanServiceButton().click();
+      await this.assessmentPage.sentencePlanAgreementCheckbox().check();
+      await this.assessmentPage.confirmButton().click();
+      await this.assessmentPage.returnToOasysButton().click();
       await signAndlock(this.page);
     });
   }

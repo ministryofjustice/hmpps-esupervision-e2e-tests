@@ -1,6 +1,7 @@
 import { Page } from "@playwright/test";
 import RestartContactPreferencePage from "./restartContactPreferencePage";
-import DateFrequencyPage from "./dateFrequencyPage";
+import CheckInFrequencyPage from "./checkInFrequencyPage";
+import CheckInDatePage from "./checkInDatePage";
 import OverviewPage from "../mpop/overviewPage";
 import PhotoMeetRulesPage from "./photoMeetRulesPage";
 import PhotoOptionsPage from "./photoOptionsPage";
@@ -51,7 +52,8 @@ export class ManageCheckinsPages {
 
   readonly overview: OverviewPage;
   readonly rationale: RationalePage;
-  readonly dateFrequency: DateFrequencyPage;
+  readonly checkinFrequency: CheckInFrequencyPage;
+  readonly checkinDate: CheckInDatePage;
   readonly photoOptions: PhotoOptionsPage;
   readonly uploadPhoto: UploadPhotoPage;
   readonly takePhoto: TakePhotoPage;
@@ -59,7 +61,6 @@ export class ManageCheckinsPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
-  readonly changeCheckinSettings: DateFrequencyPage;
 
   readonly howToWriteQuestions: HowToWriteQuestionsPage;
   readonly addQuestions: AddQuestionsPage;
@@ -74,7 +75,6 @@ export class ManageCheckinsPages {
   readonly missedCheckin: MissedCheckinPage;
   readonly missedReviewedCheckin: MissedReviewedCheckinPage;
 
-  readonly restartDateFrequency: DateFrequencyPage;
   readonly restartContactPreference: RestartContactPreferencePage;
   readonly restartSummary: CheckInSummaryPage;
   readonly restartConfirmation: CheckInConfirmationPage;
@@ -97,7 +97,8 @@ export class ManageCheckinsPages {
 
     this.overview = new OverviewPage(page);
     this.rationale = new RationalePage(page);
-    this.dateFrequency = new DateFrequencyPage(page);
+    this.checkinFrequency = new CheckInFrequencyPage(page);
+    this.checkinDate = new CheckInDatePage(page);
     this.photoOptions = new PhotoOptionsPage(page);
     this.uploadPhoto = new UploadPhotoPage(page);
     this.takePhoto = new TakePhotoPage(page);
@@ -105,7 +106,6 @@ export class ManageCheckinsPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
-    this.changeCheckinSettings = new DateFrequencyPage(page, "manage");
 
     this.howToWriteQuestions = new HowToWriteQuestionsPage(page);
     this.addQuestions = new AddQuestionsPage(page);
@@ -120,7 +120,6 @@ export class ManageCheckinsPages {
     this.missedCheckin = new MissedCheckinPage(page);
     this.missedReviewedCheckin = new MissedReviewedCheckinPage(page);
 
-    this.restartDateFrequency = new DateFrequencyPage(page, "restart");
     this.restartContactPreference = new RestartContactPreferencePage(page);
     this.restartSummary = new CheckInSummaryPage(page, true);
     this.restartConfirmation = new CheckInConfirmationPage(page, true);
