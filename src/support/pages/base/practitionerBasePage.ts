@@ -46,6 +46,13 @@ export default abstract class PractitionerBasePage extends BasePage {
       timeout,
     });
   }
+  // TODO: Remove this helper once these pages expose data-qa="pageHeading".
+  protected async assertHeadingOnPage(timeout = 10000): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { level: 1, name: this.heading }),
+    ).toBeVisible({ timeout });
+  }
+
   async clickRadioById(qa: string, id: number): Promise<void> {
     const radio = this.getQA(qa).getByRole("radio").nth(id);
     await expect(radio).toBeVisible();

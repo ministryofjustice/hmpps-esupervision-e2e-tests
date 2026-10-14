@@ -11,10 +11,8 @@ export default class CheckInDatePage extends PractitionerBasePage {
     );
   }
 
-  override async assertOnPage(): Promise<void> {
-    await expect(
-      this.page.getByRole("heading", { level: 1, name: this.heading }),
-    ).toBeVisible();
+  override async assertOnPage(timeout = 10000): Promise<void> {
+    await this.assertHeadingOnPage(timeout);
   }
 
   dateInput(): Locator {

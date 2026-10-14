@@ -1,6 +1,8 @@
 import { expect, Page, test } from "@playwright/test";
 import CheckInSummaryPage from "../../pages/manage-online-checkins-ui/checkInSummaryPage";
-
+import CheckInFrequencyPage, {
+  FrequencyOptions,
+} from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { loginToMpop } from "../../pages/mpop/loginPage";
 import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
@@ -28,10 +30,6 @@ import {
   followToMpop,
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
-import CheckInFrequencyPage, {
-  FrequencyOptions,
-} from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
-
 type ExpectedContactRoute = "missing" | "confirm";
 
 interface ContactPreferenceValues {
@@ -242,8 +240,8 @@ export default class SetupOnlineCheckinsJourney {
     await this.pages.photoMeetRules.completePage();
   }
   /**
-   * Drive the wizard as far as the date and frequency page and stop there, so a
-   * test can exercise it without completing a setup it does not need.
+   * Drive the wizard through eligibility to the frequency page and stop there,
+   * so a test can exercise it without completing a setup it does not need.
    */
   async completeSetupToFrequency(
     crn: string,
@@ -251,7 +249,7 @@ export default class SetupOnlineCheckinsJourney {
     pilotAnswer?: boolean,
     rationale: string = "E2E accredited programme rationale",
   ): Promise<CheckInFrequencyPage> {
-    await test.step("Complete eligibility to the check in date page", async () => {
+    await test.step("Complete eligibility to the check in frequency page", async () => {
       // startSetup() already retried until this page rendered, so this is just
       // the normal on-page assertion, not extra flakiness handling.
       await assertManageCheckinsPage(this.page, crn, ELIGIBILITY_CHECK_TITLE);
@@ -390,13 +388,13 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  async changeDateFrequencyFromSummary(
+  async changeCheckInDateAndFrequencyFromSummary(
     summary: CheckInSummaryPage,
     opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
     if (opts.date === undefined && opts.frequency === undefined) {
       throw new Error(
-        "changeDateFrequencyFromSummary requires at least one of date or frequency",
+        "changeCheckInDateAndFrequencyFromSummary requires at least one of date or frequency",
       );
     }
     if (opts.frequency !== undefined) {

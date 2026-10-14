@@ -89,10 +89,6 @@ export default class Layer1AssessmentPage {
     return this.page.locator('input.btn[value="Mark As Complete"]');
   }
 
-  basicSentencePlanLink(): Locator {
-    return this.page.getByRole("link", { name: "Basic Sentence Plan" });
-  }
-
   partnerRelationshipField(): Locator {
     return this.page.getByLabel("Current relationship with partner");
   }

@@ -228,7 +228,7 @@ export default class ManageCheckInsJourney {
   async assertRestartConfirmationLinksLandInMpop(crn: string): Promise<void> {
     await test.step("Restart confirmation links hand off to MPOP", async () => {
       // Check the href first - the click below leaves this page.
-      await assertRelativeHref(
+      await assertAbsoluteMpopHref(
         this.pages.restartConfirmation.allCasesLink(),
         "Go to all cases",
         MPOP_PATH.allCases,

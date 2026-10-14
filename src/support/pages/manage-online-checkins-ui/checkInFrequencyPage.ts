@@ -14,9 +14,7 @@ export default class CheckInFrequencyPage extends PractitionerBasePage {
   }
 
   override async assertOnPage(timeout = 10000): Promise<void> {
-    await expect(
-      this.page.getByRole("heading", { level: 1, name: this.heading }),
-    ).toBeVisible({ timeout });
+    await this.assertHeadingOnPage(timeout);
   }
 
   async completePage(frequency?: FrequencyOptions): Promise<void> {

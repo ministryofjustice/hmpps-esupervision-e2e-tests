@@ -53,7 +53,7 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in date and frequency from the summary", async () => {
-    await journey.changeDateFrequencyFromSummary(summary, {
+    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
       date: changedCheckin,
       frequency: FrequencyOptions.EVERY_4_WEEKS,
     });

@@ -32,7 +32,7 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
     await this.getQA("changeFrequencyAction").click();
   }
   async clickChangeNextCheckinDate(): Promise<void> {
-    await this.getQA("changeNextCheckinDateAction").click();
+    await this.getQA("changeDateAction").click();
   }
 
   // Scoped to this person's first name (the only name the banner shows) so it
