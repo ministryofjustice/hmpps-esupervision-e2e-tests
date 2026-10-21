@@ -6,6 +6,7 @@ export enum FrequencyOptions {
   EVERY_2_WEEKS = 1,
   EVERY_4_WEEKS = 2,
   EVERY_8_WEEKS = 3,
+  AD_HOC = 4,
 }
 
 export default class CheckInFrequencyPage extends PractitionerBasePage {

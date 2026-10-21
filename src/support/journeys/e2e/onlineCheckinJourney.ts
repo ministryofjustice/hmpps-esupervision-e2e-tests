@@ -1,5 +1,6 @@
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { NewOffender } from "../../../data/delius/types";
+import OverviewPage from "../../pages/mpop/overviewPage";
 import { TEST_CONTACT } from "../../../data/manage-online-checkins-ui/testData";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
@@ -30,6 +31,7 @@ import ReviewCheckinJourney, {
 } from "../manage-online-checkins-ui/reviewCheckinJourney";
 import CustomQuestionsJourney from "../manage-online-checkins-ui/customQuestionsJourney";
 import SetupOnlineCheckinsJourney from "../manage-online-checkins-ui/setupOnlineCheckinsJourney";
+import ManageCheckInsJourney from "../manage-online-checkins-ui/manageCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   private readonly customQuestions: CustomQuestionsJourney;
@@ -45,21 +47,29 @@ export default class OnlineCheckinJourney {
    * Tests the complete end-to-end journey without intermediate assertions.
    */
   async createOffenderAndSetupCheckins(
-    firstCheckin: string,
+    firstCheckin: string | undefined,
     {
       profile,
       eligibilityAnswers,
       pilotAnswer,
       assertConfirmationLinks = false,
       assertContactRoutes = false,
+      frequency = FrequencyOptions.EVERY_WEEK,
     }: {
       profile?: OffenderProfile;
       eligibilityAnswers?: EligibilityAnswer[];
       pilotAnswer?: boolean;
       assertConfirmationLinks?: boolean;
       assertContactRoutes?: boolean;
+      frequency?: FrequencyOptions;
     } = {},
   ): Promise<NewOffender> {
+    if (frequency !== FrequencyOptions.AD_HOC && !firstCheckin?.trim()) {
+      throw new Error(
+        "A first check in date is required for recurring check ins",
+      );
+    }
+
     // Delius records the CRN before assessment, so it remains recoverable if OASys fails.
     const offender = await new DeliusOffenderJourney(
       this.page,
@@ -74,7 +84,7 @@ export default class OnlineCheckinJourney {
     await setup.startSetup(offender.crn);
     const summary = await setup.completeSetupToSummary(offender.crn, {
       date: firstCheckin,
-      frequency: FrequencyOptions.EVERY_WEEK,
+      frequency,
       preference: Preference.EMAIL,
       contact: { email: TEST_CONTACT.email },
       expectedContactRoute: assertContactRoutes ? "missing" : undefined,
@@ -144,6 +154,14 @@ export default class OnlineCheckinJourney {
     await this.customQuestions.assertChangeQuestionsUnavailable(crn);
   }
 
+  async assertScheduleCheckInUnavailable(crn: string): Promise<void> {
+    const manage = new ManageCheckInsJourney(this.page).openManage(crn);
+    await expect(
+      (await manage).scheduleCheckInButton(),
+      "Schedule a check in button should not be visible",
+    ).toHaveCount(0);
+  }
+
   /** `assertMpopHandoff` - see reviewCompletedCheckin for what it turns on. */
   async reviewCheckin(
     crn: string,
@@ -176,5 +194,17 @@ export default class OnlineCheckinJourney {
     annotation: MissedAnnotation,
   ): Promise<void> {
     await this.review.annotateMissedCheckin(crn, checkinUuid, annotation);
+  }
+
+  async assertOverviewNextCheckin(
+    crn: string,
+    expectedDate: string | RegExp,
+  ): Promise<void> {
+    await test.step("MPOP overview shows the next online check in date", async () => {
+      const overview = new OverviewPage(this.page);
+      await overview.goTo(crn);
+      await overview.assertOnPage();
+      await expect(overview.nextCheckinValue()).toHaveText(expectedDate);
+    });
   }
 }

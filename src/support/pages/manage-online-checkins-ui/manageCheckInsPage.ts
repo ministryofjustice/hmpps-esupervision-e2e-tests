@@ -31,8 +31,12 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
   async clickChangeFrequency(): Promise<void> {
     await this.getQA("changeFrequencyAction").click();
   }
+
+  changeNextCheckinDateLink(): Locator {
+    return this.getQA("changeDateAction");
+  }
   async clickChangeNextCheckinDate(): Promise<void> {
-    await this.getQA("changeDateAction").click();
+    await this.changeNextCheckinDateLink().click();
   }
 
   // Scoped to this person's first name (the only name the banner shows) so it
@@ -66,6 +70,14 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
 
   settingsFrequency(): Locator {
     return this.getQA("frequencyValue", this.settingsCard());
+  }
+
+  scheduleCheckInButton(): Locator {
+    return this.getQA("schedule-check-in-btn");
+  }
+
+  successBanner(): Locator {
+    return this.getQA("updateBanner");
   }
 
   questionCard(): Locator {

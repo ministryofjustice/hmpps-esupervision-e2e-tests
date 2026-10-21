@@ -36,6 +36,9 @@ import IsEligiblePage from "./isEligiblePage";
 import NotEligiblePage from "./notEligiblePage";
 import AccreditedProgrammeApprovalPage from "./accreditedProgrammeApprovalPage";
 
+import ScheduleCheckInDatePage from "./scheduleCheckInDatePage";
+import ScheduleCheckInQuestionsPage from "./scheduleCheckInQuestionsPage";
+
 export class ManageCheckinsPages {
   readonly header: Header;
   readonly feedbackBanner: FeedbackBanner;
@@ -74,6 +77,9 @@ export class ManageCheckinsPages {
   readonly reviewedCheckin: ReviewedCheckinPage;
   readonly missedCheckin: MissedCheckinPage;
   readonly missedReviewedCheckin: MissedReviewedCheckinPage;
+
+  readonly scheduleCheckInDate: ScheduleCheckInDatePage;
+  readonly scheduleCheckInQuestions: ScheduleCheckInQuestionsPage;
 
   readonly restartContactPreference: RestartContactPreferencePage;
   readonly restartSummary: CheckInSummaryPage;
@@ -119,6 +125,9 @@ export class ManageCheckinsPages {
     this.reviewedCheckin = new ReviewedCheckinPage(page);
     this.missedCheckin = new MissedCheckinPage(page);
     this.missedReviewedCheckin = new MissedReviewedCheckinPage(page);
+
+    this.scheduleCheckInDate = new ScheduleCheckInDatePage(page);
+    this.scheduleCheckInQuestions = new ScheduleCheckInQuestionsPage(page);
 
     this.restartContactPreference = new RestartContactPreferencePage(page);
     this.restartSummary = new CheckInSummaryPage(page, true);

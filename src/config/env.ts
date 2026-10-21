@@ -60,4 +60,5 @@ export const env = {
   earlyEngagementCrn: (): string => requiredCrn("TEST_EARLY_ENGAGEMENT_CRN"),
   tierCrn: (tier: ExistingTier): string =>
     requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
+  adhocCrn: (): string => requiredCrn("TEST_ADHOC_CRN"),
 };

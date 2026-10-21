@@ -14,6 +14,18 @@ export default class CheckInConfirmationPage extends PractitionerBasePage {
     return this.getQA("submit-btn");
   }
 
+  panel(): Locator {
+    return this.getClass("govuk-panel");
+  }
+
+  scheduleCheckInButton(): Locator {
+    return this.page.getByRole("link", { name: "Schedule a check in" });
+  }
+
+  async clickScheduleCheckIn(): Promise<void> {
+    await this.scheduleCheckInButton().click();
+  }
+
   allCasesLink(): Locator {
     return this.getQA("returnToAllCases");
   }
