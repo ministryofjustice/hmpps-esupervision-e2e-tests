@@ -31,7 +31,6 @@ import ReviewCheckinJourney, {
 } from "../manage-online-checkins-ui/reviewCheckinJourney";
 import CustomQuestionsJourney from "../manage-online-checkins-ui/customQuestionsJourney";
 import SetupOnlineCheckinsJourney from "../manage-online-checkins-ui/setupOnlineCheckinsJourney";
-import ManageCheckInsJourney from "../manage-online-checkins-ui/manageCheckinsJourney";
 
 export default class OnlineCheckinJourney {
   private readonly customQuestions: CustomQuestionsJourney;
@@ -152,14 +151,6 @@ export default class OnlineCheckinJourney {
 
   async assertChangeQuestionsUnavailable(crn: string): Promise<void> {
     await this.customQuestions.assertChangeQuestionsUnavailable(crn);
-  }
-
-  async assertScheduleCheckInUnavailable(crn: string): Promise<void> {
-    const manage = new ManageCheckInsJourney(this.page).openManage(crn);
-    await expect(
-      (await manage).scheduleCheckInButton(),
-      "Schedule a check in button should not be visible",
-    ).toHaveCount(0);
   }
 
   /** `assertMpopHandoff` - see reviewCompletedCheckin for what it turns on. */

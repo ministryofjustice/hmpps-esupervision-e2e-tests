@@ -219,6 +219,7 @@ test.describe("Validation errors", () => {
     });
   });
 });
+//TEST_ADHOC_CRN is set up as adhoc with nothing booked
 test.describe("Schedule an ad hoc check in ", () => {
   test("shows errors for an empty, wrongly formatted or past date", async ({
     page,
@@ -260,40 +261,4 @@ test.describe("Schedule an ad hoc check in ", () => {
       });
     }
   });
-});
-test("schedule a check in date page shows errors for an empty, wrongly formatted or past date", async ({
-  page,
-}) => {
-  const journey = new ManageCheckInsJourney(page);
-  const date = new ManageCheckinsPages(page).scheduleCheckInDate;
-  await journey.login();
-  const manage = await journey.openManage(adhocCrn);
-  await manage.scheduleCheckInButton().click();
-  await date.assertOnPage();
-
-  const cases = [
-    {
-      name: "empty",
-      input: "",
-      error:
-        "Enter the date you would like the person to complete their online check in",
-    },
-    {
-      name: "wrong-format",
-      input: "31/02/2026",
-      error: "Enter a date in the correct format, for example 17/5/2024",
-    },
-    {
-      name: "in the past",
-      input: firstCheckinDateString(-1),
-      error: "The online check in date must be today or in the future",
-    },
-  ];
-  for (const { name, input, error } of cases) {
-    await test.step(`${name} shows an error`, async () => {
-      await date.completePage(input);
-      await expect(date.errorSummary()).toContainText(error);
-      await expect(date.fieldError(error)).toBeVisible();
-    });
-  }
 });

@@ -17,7 +17,6 @@ import {
 } from "../../support/assertions/manage-online-checkins-ui/mpopHandoff";
 import { assertActiveManageCrn } from "../../support/assertions/api/supervisionPackageAPI";
 import CustomQuestionsJourney from "../../support/journeys/manage-online-checkins-ui/customQuestionsJourney";
-import { deleteAssignedQuestions } from "../../api/checkin";
 import { getToken } from "../../api/auth";
 
 // Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
@@ -43,7 +42,7 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     if (status != "INACTIVE") {
       await deactivateOffender(uuid, token);
     }
-    await deleteAssignedQuestions(crn, token);
+    await ensureActiveCheckin(crn);
   });
 
   test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE", async ({
