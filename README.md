@@ -81,6 +81,7 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Tier/setup journeys | Reuse `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`; each standard tier CRN must have its matching tier, an active supervision package, be outside the final third, and have no check-in setup. Setup date-validation tests use Tier G and do not submit setup. |
 | Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to ad hoc; `afterAll` stops and restarts it on weekly check ins through the API, so each run starts from the same state. |
 | Ad hoc validation | Reuses `TEST_ADHOC_CRN`: check-ins set up as ad hoc with nothing booked. The test never submits a valid date, so it stays that way. |
+| Layout/dashboard | Layout needs no case. Dashboard tests reuse storage state from the setup project. |
 
 The workflow requires `TEST_MANAGE_CRN`, `TEST_MPOP_STOP_RESTART_CRN`,
 `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`, `TEST_TIER_MISSING_CRN`,
