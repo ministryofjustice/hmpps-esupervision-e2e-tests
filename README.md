@@ -79,13 +79,14 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Check-in fallback | Creates and configures one offender, then creates a check-in via API. |
 | Manage workflows and validation | Reuses `TEST_MANAGE_CRN`: verified active check-ins, Email preference, a future check-in date, and no pre-existing custom questions before the custom-question suite. |
 | Tier/setup journeys | Reuse `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`; each standard tier CRN must have its matching tier, an active supervision package, be outside the final third, and have no check-in setup. Setup date-validation tests use Tier G and do not submit setup. |
-| Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. |
+| Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to adhoc; `afterAll` stops and restarts it on weekly check ins through API, sp each run starts from the same state |
+| AdHoc validation | Reuses `TEST_ADHOC_CRN`: check ins setup as adhoc with nothing booked. The test never submit a date, so it stays that way. |
 | Layout/dashboard | Layout needs no case. Dashboard tests reuse storage state from the setup project. |
 
 The workflow requires `TEST_MANAGE_CRN`, `TEST_MPOP_STOP_RESTART_CRN`,
 `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`, `TEST_TIER_MISSING_CRN`,
 `TEST_TIER_NOT_SUPERVISED_CRN`, `TEST_NO_PACKAGE_CRN`,
-`TEST_FINAL_THIRD_CRN`, and `TEST_EARLY_ENGAGEMENT_CRN`. Tests fail with a
+`TEST_FINAL_THIRD_CRN`, and `TEST_EARLY_ENGAGEMENT_CRN`,`TEST_ADHOC_CRN`. Tests fail with a
 missing-environment-variable error if any required CRN is unset. The dedicated
 early-engagement CRN must have `inEarlyEngagement: true` and remain distinct from
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag
@@ -96,7 +97,7 @@ is false.
 Run the expiry journey separately with `npm run test:missed-checkin`. It creates
 a new Tier G offender, creates a check-in due four days ago, triggers the
 `checkin-expiry` job, then verifies the check-in can be reviewed and annotated
-with sensitive updates while retaining its expired status. The general E2E
+with sensitive updates while retaining its expired status. A second test sets up an adhoc offender, expires a check in the same way and verifies nothing is booked afterwards. The general E2E
 commands (`test:e2e` and `test:e2e:headed`) exclude this test because the expiry
 job operates across the shared dev environment rather than only on the test
 check-in. Running it may expire other eligible overdue check-ins in dev.
