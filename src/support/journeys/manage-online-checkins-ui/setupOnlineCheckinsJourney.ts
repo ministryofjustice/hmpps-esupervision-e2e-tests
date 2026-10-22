@@ -407,8 +407,8 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  // Recurring to recurring keeps the date, and adhoc has no date
-  // so both go staright back to the summary page.
+  // Recurring to recurring keeps the date, and ad hoc has no date
+  // so both go straight back to the summary page.
   async changeCheckinFrequencyFromSummary(
     summary: CheckInSummaryPage,
     frequency: FrequencyOptions,

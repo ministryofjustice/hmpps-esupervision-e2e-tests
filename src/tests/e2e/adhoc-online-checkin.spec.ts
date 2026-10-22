@@ -82,7 +82,7 @@ const QUESTION: CustomQuestion = {
 };
 
 test.describe("Ad hoc online check ins", () => {
-  test("practitioner sets up ad hoc check ins, schedules a check in for tomorrow with a additional questions and reschedules it and the question is kept", async ({
+  test("practitioner sets up ad hoc check ins, schedules a check in for tomorrow with an additional questions and reschedules it and the question is kept", async ({
     page,
   }) => {
     const journey = new OnlineCheckinJourney(page);
