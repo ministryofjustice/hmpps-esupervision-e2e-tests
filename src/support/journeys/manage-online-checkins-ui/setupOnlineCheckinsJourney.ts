@@ -399,7 +399,7 @@ export default class SetupOnlineCheckinsJourney {
 
   async changeCheckInDateFromSummary(
     summary: CheckInSummaryPage,
-    opts: { date?: string; frequency?: FrequencyOptions },
+    opts: { date?: string },
   ): Promise<void> {
     await summary.clickChange("date");
     await this.pages.checkinDate.assertOnPage();
@@ -407,9 +407,9 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  // Recurring to recurring keeps the date, and ad hoc has no date
+  // Recurring to recurring keeps the date, and ad hoc has no date,
   // so both go straight back to the summary page.
-  async changeCheckinFrequencyFromSummary(
+  async changeCheckInFrequencyFromSummary(
     summary: CheckInSummaryPage,
     frequency: FrequencyOptions,
   ): Promise<void> {
@@ -419,8 +419,8 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  // Ad hoc has no date yet, so switching to recurring requires date to be provided
-  async changeAdhocToRecurringFromSummary(
+  // Ad hoc has no date yet, so switching to recurring asks for one
+  async changeAdHocToRecurringFromSummary(
     summary: CheckInSummaryPage,
     opts: { date: string; frequency: FrequencyOptions },
   ): Promise<void> {

@@ -65,7 +65,7 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in frequency from the summary", async () => {
-    await journey.changeCheckinFrequencyFromSummary(
+    await journey.changeCheckInFrequencyFromSummary(
       summary,
       FrequencyOptions.EVERY_4_WEEKS,
     );
@@ -96,7 +96,7 @@ test("practitioner changes the frequency to ad hoc and back from the setup summa
   });
 
   await test.step("Ad hoc removes the check in date from the summary", async () => {
-    await journey.changeCheckinFrequencyFromSummary(
+    await journey.changeCheckInFrequencyFromSummary(
       summary,
       FrequencyOptions.AD_HOC,
     );
@@ -107,7 +107,7 @@ test("practitioner changes the frequency to ad hoc and back from the setup summa
   });
 
   await test.step("Back to recurring asks for a date again", async () => {
-    await journey.changeAdhocToRecurringFromSummary(summary, {
+    await journey.changeAdHocToRecurringFromSummary(summary, {
       frequency: FrequencyOptions.EVERY_2_WEEKS,
       date: firstCheckinDateString(14),
     });

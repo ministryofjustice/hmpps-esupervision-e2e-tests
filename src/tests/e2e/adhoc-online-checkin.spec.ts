@@ -23,7 +23,7 @@ async function scheduleFromConfirmation(
   daysAhead: number,
   questions: CustomQuestion[] = [],
 ): Promise<void> {
-  const moci = new ManageCheckinsPages(page);
+  const pages = new ManageCheckinsPages(page);
   const confirmation = new CheckInConfirmationPage(page);
 
   await test.step("Confirmation page shows no start date and a Schedule a check in button", async () => {
@@ -35,27 +35,27 @@ async function scheduleFromConfirmation(
   });
 
   await test.step("Schedule a check in", async () => {
-    await moci.scheduleCheckInDate.assertOnPage();
-    await moci.scheduleCheckInDate.completePage(
+    await pages.scheduleCheckInDate.assertOnPage();
+    await pages.scheduleCheckInDate.completePage(
       firstCheckinDateString(daysAhead),
     );
-    await moci.scheduleCheckInQuestions.assertOnPage();
+    await pages.scheduleCheckInQuestions.assertOnPage();
     for (const { template, text } of questions) {
-      await moci.scheduleCheckInQuestions.clickAddQuestion();
-      await moci.chooseQuestion.assertOnPage();
-      await moci.chooseQuestion.selectQuestionByTemplate(template);
-      await moci.editQuestion.assertOnPage();
-      await moci.editQuestion.enterQuestion(text);
-      await moci.scheduleCheckInQuestions.assertOnPage();
+      await pages.scheduleCheckInQuestions.clickAddQuestion();
+      await pages.chooseQuestion.assertOnPage();
+      await pages.chooseQuestion.selectQuestionByTemplate(template);
+      await pages.editQuestion.assertOnPage();
+      await pages.editQuestion.enterQuestion(text);
+      await pages.scheduleCheckInQuestions.assertOnPage();
       await expect(
-        moci.scheduleCheckInQuestions.customQuestionRow(text),
+        pages.scheduleCheckInQuestions.customQuestionRow(text),
       ).toBeVisible();
     }
-    await moci.scheduleCheckInQuestions.clickCreate();
+    await pages.scheduleCheckInQuestions.clickCreate();
   });
 }
 
-async function assertBooked(
+async function assertAdHocCheckInScheduled(
   page: Page,
   offender: NewOffender,
   daysAhead: number,
@@ -82,7 +82,7 @@ const QUESTION: CustomQuestion = {
 };
 
 test.describe("Ad hoc online check ins", () => {
-  test("practitioner sets up ad hoc check ins, schedules a check in for tomorrow with an additional questions and reschedules it and the question is kept", async ({
+  test("practitioner sets up ad hoc check ins, schedules a check in for tomorrow with a custom question, then reschedules it and the question is kept", async ({
     page,
   }) => {
     const journey = new OnlineCheckinJourney(page);
@@ -91,7 +91,7 @@ test.describe("Ad hoc online check ins", () => {
     });
 
     await scheduleFromConfirmation(page, 1, [QUESTION]);
-    await assertBooked(page, offender, 1);
+    await assertAdHocCheckInScheduled(page, offender, 1);
 
     const moci = new ManageCheckinsPages(page);
     await expect(
@@ -153,7 +153,7 @@ test.describe("Ad hoc online check ins", () => {
     });
 
     await scheduleFromConfirmation(page, 0, [QUESTION]);
-    await assertBooked(page, offender, 0);
+    await assertAdHocCheckInScheduled(page, offender, 0);
 
     const manage = new ManageCheckinsPages(page).manage;
     await expect(

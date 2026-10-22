@@ -79,13 +79,13 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Check-in fallback | Creates and configures one offender, then creates a check-in via API. |
 | Manage workflows and validation | Reuses `TEST_MANAGE_CRN`: verified active check-ins, Email preference, a future check-in date, and no pre-existing custom questions before the custom-question suite. |
 | Tier/setup journeys | Reuse `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`; each standard tier CRN must have its matching tier, an active supervision package, be outside the final third, and have no check-in setup. Setup date-validation tests use Tier G and do not submit setup. |
- | Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to adhoc; `afterAll` stops and restarts it on weekly check ins through API, so each run starts from the same state |
-| Ad hoc validation | Reuses `TEST_ADHOC_CRN`: check ins set up as ad hoc with nothing booked. The test never submits a valid date, so it stays that way. |
+| Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to ad hoc; `afterAll` stops and restarts it on weekly check ins through the API, so each run starts from the same state. |
+| Ad hoc validation | Reuses `TEST_ADHOC_CRN`: check-ins set up as ad hoc with nothing booked. The test never submits a valid date, so it stays that way. |
 
 The workflow requires `TEST_MANAGE_CRN`, `TEST_MPOP_STOP_RESTART_CRN`,
 `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`, `TEST_TIER_MISSING_CRN`,
 `TEST_TIER_NOT_SUPERVISED_CRN`, `TEST_NO_PACKAGE_CRN`,
-`TEST_FINAL_THIRD_CRN`, and `TEST_EARLY_ENGAGEMENT_CRN`,`TEST_ADHOC_CRN`. Tests fail with a
+`TEST_FINAL_THIRD_CRN`, `TEST_EARLY_ENGAGEMENT_CRN`, and `TEST_ADHOC_CRN`. Tests fail with a
 missing-environment-variable error if any required CRN is unset. The dedicated
 early-engagement CRN must have `inEarlyEngagement: true` and remain distinct from
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag

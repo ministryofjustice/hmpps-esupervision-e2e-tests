@@ -167,14 +167,14 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       await expect(manage.scheduleCheckInButton()).toBeVisible();
     });
 
-    await test.step("Questions added while recurring are not shown when scheduling an ad hoc check in", async () => {
+    await test.step("Questions added while recurring are shown when scheduling an ad hoc check in", async () => {
       await manage.scheduleCheckInButton().click();
       await pages.scheduleCheckInDate.assertOnPage();
       await pages.scheduleCheckInDate.completePage(firstCheckinDateString(1));
       await pages.scheduleCheckInQuestions.assertOnPage();
       await expect(
         pages.scheduleCheckInQuestions.customQuestionRow("recovery"),
-        "The questions added on recurring should be shown so it can be kept, changed or removed",
+        "The question added on recurring should be shown so it can be kept, changed or removed",
       ).toBeVisible();
       // Cancel, so no check in is booked on this shared CRN.
       await pages.scheduleCheckInQuestions.cancelLink().click();
