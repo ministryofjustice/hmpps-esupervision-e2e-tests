@@ -397,32 +397,38 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  async changeCheckInDateAndFrequencyFromSummary(
+  async changeCheckInDateFromSummary(
     summary: CheckInSummaryPage,
     opts: { date?: string; frequency?: FrequencyOptions },
   ): Promise<void> {
-    if (opts.date === undefined && opts.frequency === undefined) {
-      throw new Error(
-        "changeCheckInDateAndFrequencyFromSummary requires at least one of date or frequency",
-      );
-    }
-    if (opts.frequency !== undefined) {
-      await summary.clickChange("frequency");
-      await this.pages.checkinFrequency.assertOnPage();
-      await this.pages.checkinFrequency.completePage(opts.frequency);
-      // only adhoc  to recurring asks for a date. Recurring to recurring skips it
-      if (
-        opts.frequency !== FrequencyOptions.AD_HOC &&
-        opts.date !== undefined
-      ) {
-        await this.pages.checkinDate.assertOnPage();
-        await this.pages.checkinDate.completePage(opts.date);
-      }
-    } else {
-      await summary.clickChange("date");
-      await this.pages.checkinDate.assertOnPage();
-      await this.pages.checkinDate.completePage(opts.date);
-    }
+    await summary.clickChange("date");
+    await this.pages.checkinDate.assertOnPage();
+    await this.pages.checkinDate.completePage(opts.date);
+    await summary.assertOnPage();
+  }
+
+  // Recurring to recurring keeps the date, and adhoc has no date
+  // so both go staright back to the summary page.
+  async changeCheckinFrequencyFromSummary(
+    summary: CheckInSummaryPage,
+    frequency: FrequencyOptions,
+  ): Promise<void> {
+    await summary.clickChange("frequency");
+    await this.pages.checkinFrequency.assertOnPage();
+    await this.pages.checkinFrequency.completePage(frequency);
+    await summary.assertOnPage();
+  }
+
+  // Ad hoc has no date yet, so switching to recurring requires date to be provided
+  async changeAdhocToRecurringFromSummary(
+    summary: CheckInSummaryPage,
+    opts: { date: string; frequency: FrequencyOptions },
+  ): Promise<void> {
+    await summary.clickChange("frequency");
+    await this.pages.checkinFrequency.assertOnPage();
+    await this.pages.checkinFrequency.completePage(opts.frequency);
+    await this.pages.checkinDate.assertOnPage();
+    await this.pages.checkinDate.completePage(opts.date);
     await summary.assertOnPage();
   }
 

@@ -53,7 +53,7 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in date from the summary", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
+    await journey.changeCheckInDateFromSummary(summary, {
       date: changedCheckin,
     });
     await expect(summary.summaryValueLocator("date")).toHaveText(
@@ -65,9 +65,10 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in frequency from the summary", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
-      frequency: FrequencyOptions.EVERY_4_WEEKS,
-    });
+    await journey.changeCheckinFrequencyFromSummary(
+      summary,
+      FrequencyOptions.EVERY_4_WEEKS,
+    );
     await expect(summary.summaryValueLocator("date")).toHaveText(
       displayedChangedCheckin,
     );
@@ -95,9 +96,10 @@ test("practitioner changes the frequency to ad hoc and back from the setup summa
   });
 
   await test.step("Ad hoc removes the check in date from the summary", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
-      frequency: FrequencyOptions.AD_HOC,
-    });
+    await journey.changeCheckinFrequencyFromSummary(
+      summary,
+      FrequencyOptions.AD_HOC,
+    );
     await expect(summary.summaryValueLocator("date")).toHaveCount(0);
     await expect(summary.summaryValueLocator("frequency")).toContainText(
       "I'll schedule them one at a time",
@@ -105,7 +107,7 @@ test("practitioner changes the frequency to ad hoc and back from the setup summa
   });
 
   await test.step("Back to recurring asks for a date again", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
+    await journey.changeAdhocToRecurringFromSummary(summary, {
       frequency: FrequencyOptions.EVERY_2_WEEKS,
       date: firstCheckinDateString(14),
     });
