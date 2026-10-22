@@ -173,9 +173,9 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       await pages.scheduleCheckInDate.completePage(firstCheckinDateString(1));
       await pages.scheduleCheckInQuestions.assertOnPage();
       await expect(
-        pages.scheduleCheckInQuestions.customQuestionsTable(),
-        "The question added on recurring should not be carried over",
-      ).toHaveCount(0);
+        pages.scheduleCheckInQuestions.customQuestionRow("recovery"),
+        "The questions added on recurring should be shown so it can be kept, changed or removed",
+      ).toBeVisible();
       // Cancel, so no check in is booked on this shared CRN.
       await pages.scheduleCheckInQuestions.cancelLink().click();
       await manage.assertOnPage();
