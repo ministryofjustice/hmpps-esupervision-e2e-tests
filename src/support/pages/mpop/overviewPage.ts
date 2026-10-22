@@ -24,7 +24,7 @@ export default class OverviewPage extends PractitionerBasePage {
   }
 
   nextCheckinValue(): Locator {
-    return this.getQA("nextCheckInValue", this.getQA("checkinCard"));
+    return this.getQA("checkinValue", this.getQA("checkinCard"));
   }
 
   async clickActivityLogTab(): Promise<void> {

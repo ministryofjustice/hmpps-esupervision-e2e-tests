@@ -40,7 +40,7 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     const newToken = await getToken();
     const { uuid, status } = await getOffenderByCrn(crn, newToken);
     if (status !== "INACTIVE") {
-      await deactivateOffender(uuid, token);
+      await deactivateOffender(uuid, newToken);
     }
     await ensureActiveCheckin(crn);
   });

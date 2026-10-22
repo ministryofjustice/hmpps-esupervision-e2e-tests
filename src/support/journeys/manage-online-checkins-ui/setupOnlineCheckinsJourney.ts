@@ -410,6 +410,7 @@ export default class SetupOnlineCheckinsJourney {
       await summary.clickChange("frequency");
       await this.pages.checkinFrequency.assertOnPage();
       await this.pages.checkinFrequency.completePage(opts.frequency);
+      // only adhoc  to recurring asks for a date. Recurring to recurring skips it
       if (
         opts.frequency !== FrequencyOptions.AD_HOC &&
         opts.date !== undefined
