@@ -219,7 +219,7 @@ test.describe("Validation errors", () => {
     });
   });
 });
-//TEST_ADHOC_CRN is set up as adhoc with nothing booked
+// TEST_ADHOC_CRN is set up as adhoc with nothing booked
 test.describe("Schedule an ad hoc check in ", () => {
   test("shows errors for an empty, wrongly formatted or past date", async ({
     page,

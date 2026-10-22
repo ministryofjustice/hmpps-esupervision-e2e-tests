@@ -37,9 +37,9 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
   // got to, so the next run starts from same place. Stopping also removes
   // any added question.
   test.afterAll(async () => {
-    const token = await getToken();
-    const { uuid, status } = await getOffenderByCrn(crn, token);
-    if (status != "INACTIVE") {
+    const newToken = await getToken();
+    const { uuid, status } = await getOffenderByCrn(crn, newToken);
+    if (status !== "INACTIVE") {
       await deactivateOffender(uuid, token);
     }
     await ensureActiveCheckin(crn);
