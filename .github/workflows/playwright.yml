@@ -45,6 +45,7 @@ jobs:
       TEST_NO_PACKAGE_CRN: ${{secrets.TEST_NO_PACKAGE_CRN }}
       TEST_FINAL_THIRD_CRN: ${{secrets.TEST_FINAL_THIRD_CRN }}
       TEST_EARLY_ENGAGEMENT_CRN: ${{secrets.TEST_EARLY_ENGAGEMENT_CRN }}
+      TEST_ADHOC_CRN: ${{secrets.TEST_ADHOC_CRN }}
 
       PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
     steps:

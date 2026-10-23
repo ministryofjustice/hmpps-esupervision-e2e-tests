@@ -7,7 +7,7 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
-import { getOffenderByCrn } from "../../api/offender";
+import { deactivateOffender, getOffenderByCrn } from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 import { Preference } from "../../data/models";
 import { absoluteUrl, urlPattern } from "../../support/utils/url";
@@ -16,6 +16,8 @@ import {
   MPOP_PATH,
 } from "../../support/assertions/manage-online-checkins-ui/mpopHandoff";
 import { assertActiveManageCrn } from "../../support/assertions/api/supervisionPackageAPI";
+import CustomQuestionsJourney from "../../support/journeys/manage-online-checkins-ui/customQuestionsJourney";
+import { getToken } from "../../api/auth";
 
 // Sole owner of TEST_MPOP_STOP_RESTART_CRN. Serial because stop -> INACTIVE is
 // the precondition for restart -> VERIFIED, which leaves the CRN as it started.
@@ -28,6 +30,19 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
   test.beforeAll(async () => {
     token = await ensureActiveCheckin(crn);
     await assertActiveManageCrn(crn);
+  });
+
+  // The ad hoc test below leaves this CRN on an adhoc with a question added.
+  // stop and restart it on weekly check ins through API, wherever the tests
+  // got to, so the next run starts from same place. Stopping also removes
+  // any added question.
+  test.afterAll(async () => {
+    const newToken = await getToken();
+    const { uuid, status } = await getOffenderByCrn(crn, newToken);
+    if (status !== "INACTIVE") {
+      await deactivateOffender(uuid, newToken);
+    }
+    await ensureActiveCheckin(crn);
   });
 
   test("practitioner stops online check ins for a set up offender -> offender becomes INACTIVE", async ({
@@ -94,8 +109,8 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     ).toContainText("Every 8 weeks");
   });
 
-  // Nothing here submits anything, so it runs last and leaves the CRN as the
-  // restart above left it.
+  // Nothing here submits anything, so it leaves the CRN as the restart above
+  // left it.
   test("Back and Cancel on the manage and stop check ins pages return to MPOP", async ({
     page,
   }) => {
@@ -116,5 +131,93 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       MPOP_PATH.overview(crn),
       () => pages.overview.assertOnPage(),
     );
+  });
+
+  // Ad hoc tests reuse this CRN rather than creating new ones. They run after
+  // the tests above; afterAll puts the CRN back on weekly check ins.
+  test("practitioner changes recurring check ins to ad hoc and back to recurring", async ({
+    page,
+  }) => {
+    const journey = new ManageCheckInsJourney(page);
+    const pages = new ManageCheckinsPages(page);
+    await journey.login();
+    const manage = await journey.openManage(crn);
+
+    await test.step("Recurring check ins have no Schedule a check in button", async () => {
+      await expect(manage.settingsNextCheckinDate()).toBeVisible();
+      await expect(manage.scheduleCheckInButton()).toBeHidden();
+    });
+
+    await new CustomQuestionsJourney(page).assignCustomQuestions(crn, [
+      { template: "How is", text: "recovery" },
+    ]);
+
+    await test.step("Recurring to ad hoc saves without asking for a date", async () => {
+      await manage.clickChangeFrequency();
+      await pages.checkinFrequency.assertOnPage();
+      await pages.checkinFrequency.completePage(FrequencyOptions.AD_HOC);
+      await manage.assertOnPage();
+      await expect(manage.settingsFrequency()).toHaveText(
+        "I'll schedule them one at a time",
+      );
+      await expect(
+        manage.settingsNextCheckinDate(),
+        "The future check in is removed",
+      ).toHaveCount(0);
+      await expect(manage.scheduleCheckInButton()).toBeVisible();
+    });
+
+    await test.step("Questions added while recurring are shown when scheduling an ad hoc check in", async () => {
+      await manage.scheduleCheckInButton().click();
+      await pages.scheduleCheckInDate.assertOnPage();
+      await pages.scheduleCheckInDate.completePage(firstCheckinDateString(1));
+      await pages.scheduleCheckInQuestions.assertOnPage();
+      await expect(
+        pages.scheduleCheckInQuestions.customQuestionRow("recovery"),
+        "The question added on recurring should be shown so it can be kept, changed or removed",
+      ).toBeVisible();
+      // Cancel, so no check in is booked on this shared CRN.
+      await pages.scheduleCheckInQuestions.cancelLink().click();
+      await manage.assertOnPage();
+    });
+
+    await test.step("Ad hoc to recurring asks for a new date, with none filled in", async () => {
+      await manage.clickChangeFrequency();
+      await pages.checkinFrequency.assertOnPage();
+      await pages.checkinFrequency.completePage(FrequencyOptions.EVERY_2_WEEKS);
+      await pages.checkinDate.assertOnPage();
+      await expect(pages.checkinDate.dateInput()).toHaveValue("");
+      await pages.checkinDate.completePage(firstCheckinDateString(14));
+      await manage.assertOnPage();
+      await expect(manage.settingsFrequency()).toContainText("Every 2 weeks");
+      await expect(manage.settingsNextCheckinDate()).toContainText(
+        displayedCheckinDatePattern(14),
+      );
+      await expect(manage.scheduleCheckInButton()).toBeHidden();
+    });
+  });
+
+  test("practitioner stops check ins and restarts them as ad hoc", async ({
+    page,
+  }) => {
+    const journey = new ManageCheckInsJourney(page);
+    await journey.login();
+    await journey.stopCheckIns(crn, "E2E restart as ad hoc");
+    // The journey also checks Back on the contact page goes to the frequency
+    // page, as an ad hoc restart has no date page.
+    await journey.restartCheckIns(crn, {
+      frequency: FrequencyOptions.AD_HOC,
+      preference: Preference.EMAIL,
+    });
+
+    const manage = await journey.openManage(crn);
+    await expect(manage.settingsFrequency()).toHaveText(
+      "I'll schedule them one at a time",
+    );
+    await expect(
+      manage.settingsNextCheckinDate(),
+      "Nothing is booked after an ad hoc restart",
+    ).toHaveCount(0);
+    await expect(manage.scheduleCheckInButton()).toBeVisible();
   });
 });

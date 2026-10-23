@@ -1,10 +1,18 @@
 import { getToken } from "../../api/auth";
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
+import ManageCheckInsJourney from "../../support/journeys/manage-online-checkins-ui/manageCheckinsJourney";
+import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
+import { getOffenderByCrn } from "../../api/offender";
+import { env } from "../../config/env";
 import { waitForAwaitingCheckinUuid } from "../../support/utils/waitForCheckin";
 import { NewOffender } from "../../data/delius/types";
-import { createEsupervisionCheckin } from "../../api/checkin";
 import {
+  createEsupervisionCheckin,
+  listOffenderCheckins,
+} from "../../api/checkin";
+import {
+  displayedCheckinDatePattern,
   dueDateString,
   today,
   firstCheckinDateString,
@@ -32,6 +40,48 @@ interface CheckinScenario {
   assertContactRoutes?: boolean;
   /** Verify review handoff and reviewed-page Back link navigation to MPOP. */
   assertMpopHandoff?: boolean;
+  /** Change to every 2 weeks while today's check in is waiting to be done. */
+  changeFrequencyWhileActive?: boolean;
+}
+
+/**
+ * A frequency change while today's check in is active keeps today's check in,
+ * asks for no date, and does not create a second check in.
+ */
+async function changeFrequencyWhileActive(
+  manageJourney: ManageCheckInsJourney,
+  crn: string,
+  token: string,
+): Promise<void> {
+  await test.step("Change frequency while today's check in is active", async () => {
+    // The journey checks the change saves straight back to the manage page,
+    // so no date page is asked for.
+    await manageJourney.changeCheckInSettings(crn, {
+      frequency: FrequencyOptions.EVERY_2_WEEKS,
+    });
+    const manage = await manageJourney.openManage(crn);
+    await expect(manage.settingsFrequency()).toContainText("Every 2 weeks");
+    await expect(
+      manage.settingsNextCheckinDate(),
+      "The new frequency runs from today's check in",
+    ).toContainText(displayedCheckinDatePattern(0));
+    await expect(
+      manage.changeNextCheckinDateLink(),
+      "An active check in cannot be moved",
+    ).toHaveCount(0);
+
+    const { uuid } = await getOffenderByCrn(crn, token);
+    const awaiting = await listOffenderCheckins(
+      env.practitionerName(),
+      uuid,
+      token,
+      "AWAITING_CHECKIN",
+    );
+    expect(
+      awaiting,
+      "Changing frequency should not create a second check in for today",
+    ).toHaveLength(1);
+  });
 }
 
 const apiCheckin = (offender: NewOffender, token: string): Promise<string> =>
@@ -45,6 +95,9 @@ const scenarios: CheckinScenario[] = [
     assertConfirmationLinks: true,
     assertContactRoutes: true,
     assertMpopHandoff: true,
+    // Covered here rather than in a spec of its own: it needs a check in due
+    // today, which this scenario already has.
+    changeFrequencyWhileActive: true,
     getCheckinUuid: (offender, token) =>
       waitForAwaitingCheckinUuid(offender.crn, token),
 
@@ -129,6 +182,13 @@ test.describe("Online check in for a new offender", () => {
       }
       const token = await getToken();
       const checkinUuid = await scenario.getCheckinUuid(offender, token);
+      if (scenario.changeFrequencyWhileActive) {
+        await changeFrequencyWhileActive(
+          new ManageCheckInsJourney(page),
+          offender.crn,
+          token,
+        );
+      }
 
       const details = await journey.completeCheckin(
         checkinUuid,
@@ -144,6 +204,19 @@ test.describe("Online check in for a new offender", () => {
       }
 
       await journey.annotateCheckin(offender.crn, scenario.annotation);
+
+      // Recurring always has a next check in. With the first check in today it
+      // moves on by the interval (a week, or 2 weeks after the frequency
+      // change); otherwise it is still the first one.
+      const interval = scenario.changeFrequencyWhileActive ? 14 : 7;
+      const nextCheckinDaysAhead =
+        scenario.firstCheckinDaysAhead > 0
+          ? scenario.firstCheckinDaysAhead
+          : interval;
+      await journey.assertOverviewNextCheckin(
+        offender.crn,
+        displayedCheckinDatePattern(nextCheckinDaysAhead),
+      );
     });
   }
 });

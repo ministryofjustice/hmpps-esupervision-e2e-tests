@@ -22,7 +22,7 @@ import {
 import { offenderUuidFrom } from "../../utils/url";
 
 export interface RestartValues {
-  date: string;
+  date?: string;
   frequency: FrequencyOptions;
   preference: Preference;
   contact?: ContactDetails;
@@ -198,14 +198,27 @@ export default class ManageCheckInsJourney {
   }
 
   async restartCheckIns(crn: string, values: RestartValues): Promise<void> {
+    const isAdHoc = values.frequency === FrequencyOptions.AD_HOC;
+    if (!isAdHoc && !values.date?.trim()) {
+      throw new Error("Date is required for recurring check ins");
+    }
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
       await this.pages.checkinFrequency.assertOnPage();
       await this.pages.checkinFrequency.completePage(values.frequency);
-      await this.pages.checkinDate.assertOnPage();
-      await this.pages.checkinDate.completePage(values.date);
+      if (!isAdHoc) {
+        await this.pages.checkinDate.assertOnPage();
+        await this.pages.checkinDate.completePage(values.date);
+      }
       await this.pages.restartContactPreference.assertOnPage();
+      await expect(
+        this.pages.restartContactPreference.backLink(),
+        "Back on the restart contact page go to previous page",
+      ).toHaveAttribute(
+        "href",
+        isAdHoc ? /\/restart-checkin$/ : /\/restart-checkin-date$/,
+      );
       await this.pages.restartContactPreference.completePage(
         values.preference,
         values.contact,

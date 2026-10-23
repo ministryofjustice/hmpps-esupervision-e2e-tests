@@ -23,6 +23,10 @@ export default class OverviewPage extends PractitionerBasePage {
     await link.click();
   }
 
+  nextCheckinValue(): Locator {
+    return this.getQA("checkinValue", this.getQA("checkinCard"));
+  }
+
   async clickActivityLogTab(): Promise<void> {
     await this.getQA("activityLogTab").getByRole("link").click();
   }

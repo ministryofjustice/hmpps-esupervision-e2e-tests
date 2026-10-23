@@ -40,7 +40,7 @@ interface ContactPreferenceValues {
 }
 
 interface SetupValues extends ContactPreferenceValues {
-  date: string;
+  date?: string;
   frequency: FrequencyOptions;
   photo: PhotoOptions;
   rationale?: string;
@@ -326,6 +326,12 @@ export default class SetupOnlineCheckinsJourney {
     crn: string,
     setup: SetupValues,
   ): Promise<CheckInSummaryPage> {
+    if (setup.frequency !== FrequencyOptions.AD_HOC && !setup.date?.trim()) {
+      throw new Error(
+        "A first check in date is required for recurring check ins",
+      );
+    }
+
     return test.step("Complete set up online check ins", async () => {
       const frequency = await this.completeSetupToFrequency(
         crn,
@@ -334,8 +340,11 @@ export default class SetupOnlineCheckinsJourney {
         setup.rationale,
       );
       await frequency.completePage(setup.frequency);
-      await this.pages.checkinDate.assertOnPage();
-      await this.pages.checkinDate.completePage(setup.date);
+      // Ad hoc has no first check in date, so the date page is skipped.
+      if (setup.frequency !== FrequencyOptions.AD_HOC) {
+        await this.pages.checkinDate.assertOnPage();
+        await this.pages.checkinDate.completePage(setup.date);
+      }
 
       await this.completeContactPreference(crn, setup);
 
@@ -388,22 +397,36 @@ export default class SetupOnlineCheckinsJourney {
     await summary.assertOnPage();
   }
 
-  async changeCheckInDateAndFrequencyFromSummary(
+  async changeCheckInDateFromSummary(
     summary: CheckInSummaryPage,
-    opts: { date?: string; frequency?: FrequencyOptions },
+    opts: { date?: string },
   ): Promise<void> {
-    if (opts.date === undefined && opts.frequency === undefined) {
-      throw new Error(
-        "changeCheckInDateAndFrequencyFromSummary requires at least one of date or frequency",
-      );
-    }
-    if (opts.frequency !== undefined) {
-      await summary.clickChange("frequency");
-      await this.pages.checkinFrequency.assertOnPage();
-      await this.pages.checkinFrequency.completePage(opts.frequency);
-    } else {
-      await summary.clickChange("date");
-    }
+    await summary.clickChange("date");
+    await this.pages.checkinDate.assertOnPage();
+    await this.pages.checkinDate.completePage(opts.date);
+    await summary.assertOnPage();
+  }
+
+  // Recurring to recurring keeps the date, and ad hoc has no date,
+  // so both go straight back to the summary page.
+  async changeCheckInFrequencyFromSummary(
+    summary: CheckInSummaryPage,
+    frequency: FrequencyOptions,
+  ): Promise<void> {
+    await summary.clickChange("frequency");
+    await this.pages.checkinFrequency.assertOnPage();
+    await this.pages.checkinFrequency.completePage(frequency);
+    await summary.assertOnPage();
+  }
+
+  // Ad hoc has no date yet, so switching to recurring asks for one
+  async changeAdHocToRecurringFromSummary(
+    summary: CheckInSummaryPage,
+    opts: { date: string; frequency: FrequencyOptions },
+  ): Promise<void> {
+    await summary.clickChange("frequency");
+    await this.pages.checkinFrequency.assertOnPage();
+    await this.pages.checkinFrequency.completePage(opts.frequency);
     await this.pages.checkinDate.assertOnPage();
     await this.pages.checkinDate.completePage(opts.date);
     await summary.assertOnPage();

@@ -53,7 +53,7 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in date from the summary", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
+    await journey.changeCheckInDateFromSummary(summary, {
       date: changedCheckin,
     });
     await expect(summary.summaryValueLocator("date")).toHaveText(
@@ -65,14 +65,57 @@ test("practitioner changes the next check in date and frequency from the setup s
   });
 
   await test.step("Change the check in frequency from the summary", async () => {
-    await journey.changeCheckInDateAndFrequencyFromSummary(summary, {
-      frequency: FrequencyOptions.EVERY_4_WEEKS,
-    });
+    await journey.changeCheckInFrequencyFromSummary(
+      summary,
+      FrequencyOptions.EVERY_4_WEEKS,
+    );
     await expect(summary.summaryValueLocator("date")).toHaveText(
       displayedChangedCheckin,
     );
     await expect(summary.summaryValueLocator("frequency")).toContainText(
       "Every 4 weeks",
+    );
+  });
+});
+
+test("practitioner changes the frequency to ad hoc and back from the setup summary", async ({
+  page,
+}) => {
+  const crn = env.tierCrn("G");
+  await assertTierCrnPreconditions(crn, "G");
+  const journey = new SetupOnlineCheckinsJourney(page);
+  await journey.login();
+  await journey.startSetup(crn);
+
+  const summary = await journey.completeSetupToSummary(crn, {
+    date: firstCheckinDateString(7),
+    frequency: FrequencyOptions.EVERY_WEEK,
+    preference: Preference.EMAIL,
+    contact: { email: TEST_CONTACT.email },
+    photo: PhotoOptions.UPLOAD,
+  });
+
+  await test.step("Ad hoc removes the check in date from the summary", async () => {
+    await journey.changeCheckInFrequencyFromSummary(
+      summary,
+      FrequencyOptions.AD_HOC,
+    );
+    await expect(summary.summaryValueLocator("date")).toHaveCount(0);
+    await expect(summary.summaryValueLocator("frequency")).toContainText(
+      "I'll schedule them one at a time",
+    );
+  });
+
+  await test.step("Back to recurring asks for a date again", async () => {
+    await journey.changeAdHocToRecurringFromSummary(summary, {
+      frequency: FrequencyOptions.EVERY_2_WEEKS,
+      date: firstCheckinDateString(14),
+    });
+    await expect(summary.summaryValueLocator("date")).toHaveText(
+      DateTime.now().plus({ days: 14 }).toFormat("d MMMM yyyy"),
+    );
+    await expect(summary.summaryValueLocator("frequency")).toContainText(
+      "Every 2 weeks",
     );
   });
 });
