@@ -5,9 +5,9 @@ test("Fred chatbot is displayed and opens on the start page", async ({
   page,
 }) => {
   const pages = new Pages(page);
+  await page.goto("/");
 
   await test.step("Chatbot button is displayed", async () => {
-    await page.goto("/");
     await expect(pages.chatbot.launcherButton()).toBeVisible();
   });
 
