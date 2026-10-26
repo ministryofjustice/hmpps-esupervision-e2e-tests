@@ -8,6 +8,7 @@
     "test:e2e": "ENV=test playwright test src/tests/e2e --workers=1 --grep-invert \"@expiry-job\"",
     "test:missed-checkin": "ENV=test playwright test src/tests/e2e/missed-checkin-expiry.spec.ts --project=checkin:dev --workers=1",
     "test:static": "playwright test src/tests/static",
+    "test:chatbot": "playwright test src/tests/checkin/chatbot",
     "test:manage-online-checkins-ui": "ENV=test playwright test src/tests/manage-online-checkins-ui --workers=1",
     "test:welsh": "ENV=test playwright test src/tests/e2e/new-offender-online-checkin-welsh.spec.ts --workers=1",
     "test:fallback-video": "ENV=test playwright test src/tests/checkin/submit-checkin-liveness-fallback-video-noMatch.spec.ts --workers=1",

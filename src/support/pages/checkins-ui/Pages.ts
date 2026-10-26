@@ -11,9 +11,11 @@ import LivenessRecordPage from "./livenessRecordPage";
 import FallbackRecordPage from "./fallbackRecordPage";
 import AdditionalQuestionPage from "./additionalQuestionPage";
 import HeaderPage from "./headerPage";
+import ChatbotPage from "./chatbotPage";
 
 export class Pages {
   readonly header: HeaderPage;
+  readonly chatbot: ChatbotPage;
   readonly homepage: HomePage;
   readonly personalDetails: PersonalDetailsPage;
   readonly mentalHealth: MentalHealthPage;
@@ -39,5 +41,6 @@ export class Pages {
     this.checkAnswers = new CheckAnswersPage(page);
     this.confirmation = new ConfirmationPage(page);
     this.additionalQuestion = new AdditionalQuestionPage(page);
+    this.chatbot = new ChatbotPage(page);
   }
 }
