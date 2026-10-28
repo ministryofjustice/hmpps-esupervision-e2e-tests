@@ -38,8 +38,6 @@ test.describe("data dashboard overall tab", () => {
   });
 
   test("feedback response counts agree with each other", async ({ page }) => {
-    test.fixme(true, "ESUP-2080: feedback response counts don't reconcile");
-
     const pages = await new DashboardJourney(page).openOverall();
     await assertFeedbackTables(pages);
   });
