@@ -32,6 +32,7 @@ npm run test:welsh                      # Welsh-language E2E journey
 npm run test:fallback-video             # liveness fallback: NO_MATCH, submit anyway
 npm run test:manage-online-checkins-ui  # Manage Online Check Ins and MPOP journeys
 npm run test:static                     # static pages
+npm run test:chatbot                    # chatbot is displayed and opens
 npm run test:dashboard                  # dashboard tests
 ```
 
