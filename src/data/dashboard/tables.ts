@@ -19,6 +19,10 @@ export const TABLE_HOW_EASY =
   "How easy was it for the person on probation to use online check ins";
 export const TABLE_GETTING_SUPPORT =
   "Does the person on probation believe they are getting the support they need from probation";
+export const TABLE_HELPS_FEEL_SUPPORTED =
+  "Do online check ins help the person feel supported by probation";
+export const TABLE_LESS_CONTACT_NEEDED =
+  "Does using online check ins mean the person needs to get in touch with their probation officer less";
 export const TABLE_IMPROVEMENTS =
   "What parts of online check ins does the person think we could improve";
 
@@ -28,6 +32,8 @@ export type TableCaption =
   | typeof TABLE_FEEDBACK_RESPONSES
   | typeof TABLE_HOW_EASY
   | typeof TABLE_GETTING_SUPPORT
+  | typeof TABLE_HELPS_FEEL_SUPPORTED
+  | typeof TABLE_LESS_CONTACT_NEEDED
   | typeof TABLE_IMPROVEMENTS;
 
 export const REGION_MATRIX_PEOPLE = TABLE_PEOPLE;
@@ -50,11 +56,9 @@ export const HOW_EASY_ROW_LABELS = [
   FEEDBACK_NOT_ANSWERED_ROW,
 ];
 
-export const GETTING_SUPPORT_ROW_LABELS = [
-  "Yes",
-  "No",
-  FEEDBACK_NOT_ANSWERED_ROW,
-];
+export const YES_NO_ROW_LABELS = ["Yes", "No", FEEDBACK_NOT_ANSWERED_ROW];
+
+export const GETTING_SUPPORT_ROW_LABELS = YES_NO_ROW_LABELS;
 
 export const IMPROVEMENTS_ROW_LABELS = [
   "Finding out about online check ins",
@@ -87,6 +91,16 @@ export const FEEDBACK_TABLE_ROWS: FeedbackTableSpec[] = [
     caption: TABLE_IMPROVEMENTS,
     rows: IMPROVEMENTS_ROW_LABELS,
     multiSelect: true,
+  },
+  {
+    caption: TABLE_HELPS_FEEL_SUPPORTED,
+    rows: YES_NO_ROW_LABELS,
+    multiSelect: false,
+  },
+  {
+    caption: TABLE_LESS_CONTACT_NEEDED,
+    rows: YES_NO_ROW_LABELS,
+    multiSelect: false,
   },
 ];
 
