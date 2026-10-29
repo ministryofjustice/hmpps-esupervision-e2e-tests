@@ -3,7 +3,7 @@ import PractitionerBasePage from "../base/practitionerBasePage";
 
 export default class EditQuestionPage extends PractitionerBasePage {
   constructor(page: Page) {
-    super(page, "What do you want to ask");
+    super(page, /What do you want to ask|Write your own question/);
   }
 
   questionInput(): Locator {

@@ -12,7 +12,7 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { NewOffender } from "../../data/delius/types";
-import { CustomQuestion } from "../../data/models";
+import { CustomQuestion, QuestionToAdd } from "../../data/models";
 
 /**
  * Confirmation page (ad hoc) -> Schedule a check in -> date -> questions ->
@@ -21,7 +21,7 @@ import { CustomQuestion } from "../../data/models";
 async function scheduleFromConfirmation(
   page: Page,
   daysAhead: number,
-  questions: CustomQuestion[] = [],
+  questions: QuestionToAdd[] = [],
 ): Promise<void> {
   const pages = new ManageCheckinsPages(page);
   const confirmation = new CheckInConfirmationPage(page);
@@ -40,12 +40,17 @@ async function scheduleFromConfirmation(
       firstCheckinDateString(daysAhead),
     );
     await pages.scheduleCheckInQuestions.assertOnPage();
-    for (const { template, text } of questions) {
+    for (const question of questions) {
+      const { text } = question;
       await pages.scheduleCheckInQuestions.clickAddQuestion();
       await pages.chooseQuestion.assertOnPage();
-      await pages.chooseQuestion.selectQuestionByTemplate(template);
-      await pages.editQuestion.assertOnPage();
-      await pages.editQuestion.enterQuestion(text);
+      if ("template" in question) {
+        await pages.chooseQuestion.selectQuestionByTemplate(question.template);
+        await pages.editQuestion.assertOnPage();
+        await pages.editQuestion.enterQuestion(text);
+      } else {
+        await pages.chooseQuestion.writeOwnQuestion(text);
+      }
       await pages.scheduleCheckInQuestions.assertOnPage();
       await expect(
         pages.scheduleCheckInQuestions.customQuestionRow(text),
@@ -77,8 +82,12 @@ async function assertAdHocCheckInScheduled(
 }
 
 const QUESTION: CustomQuestion = {
-  template: "What have you been doing at",
-  text: "home",
+  template: "How is",
+  text: "your health",
+};
+
+const BESPOKE_QUESTION: QuestionToAdd = {
+  text: "What are your plans about job hunting",
 };
 
 test.describe("Ad hoc online check ins", () => {
@@ -90,7 +99,7 @@ test.describe("Ad hoc online check ins", () => {
       frequency: FrequencyOptions.AD_HOC,
     });
 
-    await scheduleFromConfirmation(page, 1, [QUESTION]);
+    await scheduleFromConfirmation(page, 1, [QUESTION, BESPOKE_QUESTION]);
     await assertAdHocCheckInScheduled(page, offender, 1);
 
     const moci = new ManageCheckinsPages(page);
@@ -98,6 +107,10 @@ test.describe("Ad hoc online check ins", () => {
       moci.manage.questionCard(),
       "The question added while scheduling is visible",
     ).toContainText(QUESTION.text);
+    await expect(
+      moci.manage.questionCard(),
+      "The bespoke question added while scheduling is visible",
+    ).toContainText(`${BESPOKE_QUESTION.text}?`);
     await expect(
       moci.manage.changeNextCheckinDateLink(),
       "A check in still to come can be moved",
@@ -136,6 +149,10 @@ test.describe("Ad hoc online check ins", () => {
         moci.manage.questionCard(),
         "The question added while scheduling is still visible after rescheduling",
       ).toContainText(QUESTION.text);
+      await expect(
+        moci.manage.questionCard(),
+        "The bespoke question is still visible after rescheduling",
+      ).toContainText(`${BESPOKE_QUESTION.text}?`);
     });
 
     await journey.assertOverviewNextCheckin(

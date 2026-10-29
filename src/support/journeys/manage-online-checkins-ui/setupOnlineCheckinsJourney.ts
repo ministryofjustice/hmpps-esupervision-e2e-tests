@@ -8,6 +8,7 @@ import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptions
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
 import CheckInConfirmationPage from "../../pages/manage-online-checkins-ui/checkInConfirmationPage";
 import {
+  ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   ELIGIBILITY_CHECK_TITLE,
@@ -318,7 +319,13 @@ export default class SetupOnlineCheckinsJourney {
       }
     }
 
-    await assertManageCheckinsPage(this.page, crn, IS_ELIGIBLE_TITLE);
+    await assertManageCheckinsPage(
+      this.page,
+      crn,
+      answers.includes("accreditedProgramme")
+        ? ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE
+        : IS_ELIGIBLE_TITLE,
+    );
     await moci.isEligible.completePage();
   }
 

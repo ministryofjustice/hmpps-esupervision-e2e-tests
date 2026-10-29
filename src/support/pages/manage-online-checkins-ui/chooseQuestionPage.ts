@@ -14,4 +14,13 @@ export default class ChooseQuestionPage extends PractitionerBasePage {
     const row = this.templateRow(templateText);
     await this.getQA("add-question-link", row).click();
   }
+
+  bespokeQuestionInput(): Locator {
+    return this.getQA("bespoke-question-input");
+  }
+
+  async writeOwnQuestion(text: string): Promise<void> {
+    this.bespokeQuestionInput().fill(text);
+    await this.clickContinue();
+  }
 }

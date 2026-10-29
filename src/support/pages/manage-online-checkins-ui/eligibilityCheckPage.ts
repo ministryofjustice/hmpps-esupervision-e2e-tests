@@ -8,9 +8,7 @@ export default class EligibilityCheckPage extends PractitionerBasePage {
   }
 
   answerCheckbox(answer: EligibilityAnswer): Locator {
-    return this.page.locator(
-      `input[name$="[checkins][eligibility]"][value="${answer}"]`,
-    );
+    return this.page.locator(`input[name$="[eligibility]"][value="${answer}"]`);
   }
 
   cancelLink(): Locator {

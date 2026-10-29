@@ -21,15 +21,13 @@ export default class IsEligiblePage extends PractitionerBasePage {
   }
 
   discussionCheckbox(point: DiscussionPoint): Locator {
-    return this.page.locator(
-      `input[name$="[checkins][discussion]"][value="${point}"]`,
-    );
+    return this.page.locator(`input[name$="[discussion]"][value="${point}"]`);
   }
 
   /** Every discussion point except "I have not done all of these". */
   discussionPoints(): Locator {
     return this.page.locator(
-      'input[name$="[checkins][discussion]"]:not([value="notAll"])',
+      'input[name$="[discussion]"]:not([value="notAll"])',
     );
   }
 

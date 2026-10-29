@@ -9,7 +9,7 @@ export default class AddQuestionsPage extends PractitionerBasePage {
   nextCheckinDate(): Locator {
     return this.page
       .locator("p", { hasText: "next online check in on" })
-      .locator("b");
+      .locator("strong");
   }
 
   previewFeelingLink(): Locator {
@@ -18,6 +18,10 @@ export default class AddQuestionsPage extends PractitionerBasePage {
 
   previewSupportLink(): Locator {
     return this.getQA("preview-support-link");
+  }
+
+  override cancelLink(): Locator {
+    return this.getQA("cancel-link");
   }
 
   saveButton(): Locator {

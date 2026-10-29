@@ -33,6 +33,7 @@ jobs:
       DELIUS_PASSWORD: ${{secrets.DELIUS_PASSWORD }}
       TEST_MANAGE_CRN: ${{secrets.TEST_MANAGE_CRN }}
       TEST_MPOP_STOP_RESTART_CRN: ${{secrets.TEST_MPOP_STOP_RESTART_CRN }}
+      TEST_RESTART_ACCREDITED_CRN: ${{secrets.TEST_RESTART_ACCREDITED_CRN }}
       TEST_TIER_A_CRN: ${{secrets.TEST_TIER_A_CRN }}
       TEST_TIER_B_CRN: ${{secrets.TEST_TIER_B_CRN }}
       TEST_TIER_C_CRN: ${{secrets.TEST_TIER_C_CRN }}

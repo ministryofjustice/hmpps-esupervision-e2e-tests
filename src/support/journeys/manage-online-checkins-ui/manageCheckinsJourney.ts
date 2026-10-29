@@ -8,7 +8,11 @@ import {
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
-import { Preference, ContactDetails } from "../../../data/models";
+import {
+  Preference,
+  ContactDetails,
+  EligibilityAnswer,
+} from "../../../data/models";
 import {
   assertCaseBanner,
   assertManageCheckinsPage,
@@ -22,6 +26,8 @@ import {
 import { offenderUuidFrom } from "../../utils/url";
 
 export interface RestartValues {
+  eligibilityAnswers?: EligibilityAnswer[];
+  rationale?: string;
   date?: string;
   frequency: FrequencyOptions;
   preference: Preference;
@@ -205,6 +211,41 @@ export default class ManageCheckInsJourney {
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
+
+      // Restart now goes through the same eligibility pages as setup first
+      await expect(this.page).toHaveURL(/\/restart-eligibility-check$/);
+      const answers = values.eligibilityAnswers ?? ["none"];
+      const accreditedProgramme = answers.includes("accreditedProgramme");
+      await this.pages.eligibilityCheck.completePage(answers);
+      await expect(this.page).not.toHaveURL(/\/restart-eligibility-check$/, {
+        timeout: 20000,
+      });
+      const pilotYes = this.pages.pilotCheck.yesRadio();
+      const eligibleDiscussion =
+        this.pages.isEligible.discussionCheckbox("optional");
+      const notEligible = this.pages.notEligible.headingLocator();
+      await expect(
+        pilotYes.or(eligibleDiscussion).or(notEligible),
+      ).toBeVisible();
+      if (await notEligible.isVisible()) {
+        throw new Error(
+          `CRN ${crn} was ruled out not eligible when restarting - check the case meets the eligibility rules`,
+        );
+      }
+      if (await pilotYes.isVisible()) {
+        await this.pages.pilotCheck.answer(true); // tier A-C only
+      }
+      await this.pages.isEligible.completePage();
+
+      // Accredited programme (Tier A/B) adds approval and rational pages
+      if (accreditedProgramme) {
+        await this.pages.accreditedProgrammeApproval.assertOnPage();
+        await this.pages.accreditedProgrammeApproval.completePage();
+        await this.pages.rationale.assertOnPage();
+        await this.pages.rationale.completePage(
+          values.rationale ?? "E2E restart accredited progamme rationale",
+        );
+      }
       await this.pages.checkinFrequency.assertOnPage();
       await this.pages.checkinFrequency.completePage(values.frequency);
       if (!isAdHoc) {

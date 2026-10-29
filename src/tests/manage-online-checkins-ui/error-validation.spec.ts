@@ -88,13 +88,12 @@ test.describe("Validation errors", () => {
       "Shared offender needs a future check in for questions to be editable",
     ).toBeVisible();
     await manageQ.clickChangeQuestions();
-    await mpopPages.howToWriteQuestions.clickAddQuestions();
     await expect(
       mpopPages.addQuestions.addQuestionButton(),
       "TEST_MANAGE_CRN must have room for a validation question",
     ).toBeVisible();
     await mpopPages.addQuestions.clickAddQuestion();
-    await mpopPages.chooseQuestion.selectQuestionByTemplate("Do you");
+    await mpopPages.chooseQuestion.selectQuestionByTemplate("How is");
     await mpopPages.editQuestion.questionInput().fill("");
     await mpopPages.editQuestion.clickContinue();
 
@@ -103,6 +102,33 @@ test.describe("Validation errors", () => {
     );
     await expect(
       mpopPages.editQuestion.fieldError("Enter what you want to ask"),
+    ).toBeVisible();
+  });
+
+  test("shows a validation error when writing your own question with no text", async ({
+    page,
+  }) => {
+    const manage = new ManageCheckInsJourney(page);
+    await manage.login();
+    const mpopPages = new ManageCheckinsPages(page);
+
+    const manageQ = await manage.openManage(manageCrn);
+    await expect(
+      manageQ.changeQuestionsLink(),
+      "Shared offender needs a future check in for questions to be editable",
+    ).toBeVisible();
+    await manageQ.clickChangeQuestions();
+    await expect(
+      mpopPages.addQuestions.addQuestionButton(),
+      "TEST_MANAGE_CRN must have room for a validation question",
+    ).toBeEnabled();
+    await mpopPages.addQuestions.clickAddQuestion();
+    await mpopPages.chooseQuestion.writeOwnQuestion("");
+    await expect(mpopPages.chooseQuestion.errorSummary()).toContainText(
+      "Enter what you want to ask the person",
+    );
+    await expect(
+      mpopPages.chooseQuestion.fieldError("Enter what you want to ask"),
     ).toBeVisible();
   });
 

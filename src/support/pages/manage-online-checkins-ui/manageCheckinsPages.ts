@@ -18,7 +18,6 @@ import ActivityLogPage from "../mpop/activityLogPage";
 import ReviewedCheckinPage from "./reviewedCheckinPage";
 import MissedCheckinPage from "./missedCheckinPage";
 import MissedReviewedCheckinPage from "./missedReviewedCheckinPage";
-import HowToWriteQuestionsPage from "./howToWriteQuestionsPage";
 import AddQuestionsPage from "./addQuestionsPage";
 import ChooseQuestionPage from "./chooseQuestionPage";
 import QuestionPreviewPage from "./questionPreviewPage";
@@ -65,7 +64,6 @@ export class ManageCheckinsPages {
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
 
-  readonly howToWriteQuestions: HowToWriteQuestionsPage;
   readonly addQuestions: AddQuestionsPage;
   readonly chooseQuestion: ChooseQuestionPage;
   readonly editQuestion: EditQuestionPage;
@@ -113,7 +111,6 @@ export class ManageCheckinsPages {
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
 
-    this.howToWriteQuestions = new HowToWriteQuestionsPage(page);
     this.addQuestions = new AddQuestionsPage(page);
     this.chooseQuestion = new ChooseQuestionPage(page);
     this.editQuestion = new EditQuestionPage(page);

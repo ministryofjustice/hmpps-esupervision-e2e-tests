@@ -69,6 +69,12 @@ export interface CustomQuestion {
   text: string;
 }
 
+export interface BespokeQuestion {
+  text: string;
+}
+
+export type QuestionToAdd = CustomQuestion | BespokeQuestion;
+
 export interface AdditionalAnswer {
   question: string;
   answer: string;
