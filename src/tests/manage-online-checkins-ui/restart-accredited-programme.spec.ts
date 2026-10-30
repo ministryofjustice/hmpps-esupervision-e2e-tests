@@ -11,7 +11,7 @@ import {
 } from "../../support/utils/date";
 import { Preference } from "../../data/models";
 
-test.describe("restart online check ins through the accredited programme route ( existing CRN)", () => {
+test.describe("restart online check ins through the accredited programme route (existing CRN)", () => {
   const crn = env.restartAccreditedCrn();
   let token: string;
 

@@ -91,7 +91,7 @@ test.describe("Validation errors", () => {
     await expect(
       mpopPages.addQuestions.addQuestionButton(),
       "TEST_MANAGE_CRN must have room for a validation question",
-    ).toBeVisible();
+    ).toBeEnabled();
     await mpopPages.addQuestions.clickAddQuestion();
     await mpopPages.chooseQuestion.selectQuestionByTemplate("How is");
     await mpopPages.editQuestion.questionInput().fill("");

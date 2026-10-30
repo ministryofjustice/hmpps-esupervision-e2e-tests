@@ -20,7 +20,7 @@ export default class ChooseQuestionPage extends PractitionerBasePage {
   }
 
   async writeOwnQuestion(text: string): Promise<void> {
-    this.bespokeQuestionInput().fill(text);
+    await this.bespokeQuestionInput().fill(text);
     await this.clickContinue();
   }
 }

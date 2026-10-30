@@ -53,7 +53,7 @@ test.describe.serial("Manage custom check in questions", () => {
   }) => {
     const journey = new CustomQuestionsJourney(page);
     await journey.login();
-    // Folded in rather than given its own test: checking the intro page's links
+    // Folded in rather than given its own test: checking the add questions page's links
     // needs the same login and walk through the manage page as adding questions.
     await journey.assertAddQuestionsPageLinks(crn);
     await journey.addCustomQuestions(crn, CUSTOM_QUESTIONS);

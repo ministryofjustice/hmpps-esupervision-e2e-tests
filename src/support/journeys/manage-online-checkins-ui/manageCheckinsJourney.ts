@@ -4,8 +4,10 @@ import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manag
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
+  ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
+  IS_ELIGIBLE_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
 import {
@@ -216,6 +218,16 @@ export default class ManageCheckInsJourney {
       await expect(this.page).toHaveURL(/\/restart-eligibility-check$/);
       const answers = values.eligibilityAnswers ?? ["none"];
       const accreditedProgramme = answers.includes("accreditedProgramme");
+      if (
+        accreditedProgramme &&
+        !(await this.pages.eligibilityCheck
+          .answerCheckbox("accreditedProgramme")
+          .isVisible())
+      ) {
+        throw new Error(
+          `CRN ${crn} requires accredited programme eligibility: it must be a Tier A/B case`,
+        );
+      }
       await this.pages.eligibilityCheck.completePage(answers);
       await expect(this.page).not.toHaveURL(/\/restart-eligibility-check$/, {
         timeout: 20000,
@@ -235,15 +247,22 @@ export default class ManageCheckInsJourney {
       if (await pilotYes.isVisible()) {
         await this.pages.pilotCheck.answer(true); // tier A-C only
       }
+      await assertManageCheckinsPage(
+        this.page,
+        crn,
+        accreditedProgramme
+          ? ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE
+          : IS_ELIGIBLE_TITLE,
+      );
       await this.pages.isEligible.completePage();
 
-      // Accredited programme (Tier A/B) adds approval and rational pages
+      // Accredited programme (Tier A/B) adds approval and rationale pages
       if (accreditedProgramme) {
         await this.pages.accreditedProgrammeApproval.assertOnPage();
         await this.pages.accreditedProgrammeApproval.completePage();
         await this.pages.rationale.assertOnPage();
         await this.pages.rationale.completePage(
-          values.rationale ?? "E2E restart accredited progamme rationale",
+          values.rationale ?? "E2E restart accredited programme rationale",
         );
       }
       await this.pages.checkinFrequency.assertOnPage();

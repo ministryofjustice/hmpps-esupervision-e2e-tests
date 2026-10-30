@@ -76,8 +76,8 @@ export default class CustomQuestionsJourney {
     await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
   }
 
-  /** Back and Cancel on the "how to write questions" page both point back into
-   *  MPOP - Back to the manage page, Cancel to the person's overview. */
+  /** Back and Cancel on the "add questions" page both point back into
+   *  manage page the practitioner came from. */
   async assertAddQuestionsPageLinks(crn: string): Promise<void> {
     await test.step("Back and Cancel hand off to MPOP", async () => {
       const { manage } = await this.openManageForFutureCheckin(crn);
@@ -364,7 +364,7 @@ export default class CustomQuestionsJourney {
     if (questionCount >= MAX_CUSTOM_QUESTIONS) {
       await expect(
         this.pages.addQuestions.addQuestionButton(),
-        `Add question button should be gone once ${MAX_CUSTOM_QUESTIONS} questions exist`,
+        `Add question button should be disabled once ${MAX_CUSTOM_QUESTIONS} questions exist`,
       ).toBeDisabled();
     }
   }
