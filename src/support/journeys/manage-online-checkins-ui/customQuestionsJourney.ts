@@ -1,8 +1,8 @@
-import test, { expect, Page } from "@playwright/test";
+import test, { expect, Locator, Page } from "@playwright/test";
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
 import ManageCheckInsJourney from "./manageCheckinsJourney";
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
-import { QuestionToAdd } from "../../../data/models";
+import { isTemplateQuestion, QuestionToAdd } from "../../../data/models";
 import {
   FEELING_PREVIEW_OPTIONS,
   SUPPORT_PREVIEW_CHECKBOXES,
@@ -27,6 +27,17 @@ import {
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
 import { offenderUuidFrom, urlPattern } from "../../utils/url";
+
+export interface QuestionListPage {
+  clickAddQuestion(): Promise<void>;
+  assertOnPage(): Promise<void>;
+  customQuestionRow(text: string): Locator;
+}
+
+const savedBespokeText = (text: string): string => {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  return trimmed.endsWith("?") ? trimmed : `${trimmed}?`;
+};
 
 export default class CustomQuestionsJourney {
   private readonly pages: ManageCheckinsPages;
@@ -80,9 +91,7 @@ export default class CustomQuestionsJourney {
    *  manage page the practitioner came from. */
   async assertAddQuestionsPageLinks(crn: string): Promise<void> {
     await test.step("Back and Cancel return to the manage page", async () => {
-      const { manage } = await this.openManageForFutureCheckin(crn);
-      await manage.clickChangeQuestions();
-      await this.pages.addQuestions.assertOnPage();
+      await this.goToAddQuestionsPage(crn);
       const managePath = MPOP_PATH.manageCheckin(
         crn,
         offenderUuidFrom(this.page.url()),
@@ -207,7 +216,9 @@ export default class CustomQuestionsJourney {
 
       for (const edit of edits) {
         await addPage.clickEditQuestion(edit.from);
-        await this.pages.editQuestion.assertOnPage();
+        await this.pages.editQuestion.assertOnRoute(
+          edit.template ? "template" : "bespoke",
+        );
         await assertManageCheckinsPage(
           this.page,
           crn,
@@ -263,32 +274,51 @@ export default class CustomQuestionsJourney {
     crn: string,
   ): Promise<void> {
     for (const question of questions) {
-      const { text } = question;
-      await this.pages.addQuestions.clickAddQuestion();
-      await this.pages.chooseQuestion.assertOnPage();
+      await this.addQuestion(this.pages.addQuestions, question, crn);
+    }
+    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
+  }
+
+  async addQuestion(
+    listPage: QuestionListPage,
+    question: QuestionToAdd,
+    crn?: string,
+  ): Promise<void> {
+    const { text } = question;
+
+    await listPage.clickAddQuestion();
+    await this.pages.chooseQuestion.assertOnPage();
+    if (crn) {
       await assertManageCheckinsPage(this.page, crn, CHOOSE_QUESTION_TITLE);
-      if (!("template" in question)) {
-        await this.pages.chooseQuestion.writeOwnQuestion(text);
-        await this.pages.addQuestions.assertOnPage();
-        await expect(
-          this.pages.addQuestions.customQuestionRow(text),
-          "A bespoke question gets a question mark added",
-        ).toContainText(`${text}?`);
-        continue;
-      }
+    }
+
+    if (isTemplateQuestion(question)) {
       await this.pages.chooseQuestion.selectQuestionByTemplate(
         question.template,
       );
-      await this.pages.editQuestion.assertOnPage();
-      await assertManageCheckinsPage(
-        this.page,
-        crn,
-        editQuestionTitle(question.template),
-      );
+      await this.pages.editQuestion.assertOnRoute("template");
+      if (crn) {
+        await assertManageCheckinsPage(
+          this.page,
+          crn,
+          editQuestionTitle(question.template),
+        );
+      }
       await this.pages.editQuestion.enterQuestion(text);
-      await this.pages.addQuestions.assertOnPage();
+    } else {
+      await this.pages.chooseQuestion.writeOwnQuestion(text);
     }
-    await this.assertAddQuestionButtonUnavailableAtLimit(questions.length);
+
+    await listPage.assertOnPage();
+    const expected = isTemplateQuestion(question)
+      ? text
+      : savedBespokeText(text);
+    await expect(
+      listPage.customQuestionRow(expected),
+      isTemplateQuestion(question)
+        ? `Template question "${text}" should be listed`
+        : `Bespoke question should be listed as "${expected}"`,
+    ).toContainText(expected);
   }
 
   private async deleteQuestions(questions: string[]): Promise<void> {

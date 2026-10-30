@@ -2,7 +2,10 @@ import test, { expect } from "@playwright/test";
 import { getToken } from "../../api/auth";
 import { getOffenderByCrn, deactivateOffender } from "../../api/offender";
 import { env } from "../../config/env";
-import { assertPackageEligibility } from "../../support/assertions/api/supervisionPackageAPI";
+import {
+  assertPackageEligibility,
+  assertTierHeader,
+} from "../../support/assertions/api/supervisionPackageAPI";
 import ManageCheckInsJourney from "../../support/journeys/manage-online-checkins-ui/manageCheckinsJourney";
 import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
@@ -12,10 +15,13 @@ import {
 import { Preference } from "../../data/models";
 
 test.describe("restart online check ins through the accredited programme route (existing CRN)", () => {
-  const crn = env.restartAccreditedCrn();
+  let crn: string;
   let token: string;
 
   test.beforeAll(async () => {
+    crn = env.restartAccreditedCrn();
+    await assertTierHeader(crn, /^[AB]/i);
+
     await assertPackageEligibility(crn, {
       onSupervisionPackage: true,
       inFinalThird: false,

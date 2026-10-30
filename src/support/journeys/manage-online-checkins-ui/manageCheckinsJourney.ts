@@ -4,10 +4,8 @@ import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manag
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
-  ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
-  IS_ELIGIBLE_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
 import {
@@ -26,6 +24,7 @@ import {
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
 import { offenderUuidFrom } from "../../utils/url";
+import EligibilityJourney from "./eligibilityJourney";
 
 export interface RestartValues {
   eligibilityAnswers?: EligibilityAnswer[];
@@ -210,65 +209,22 @@ export default class ManageCheckInsJourney {
     if (!isAdHoc && !values.date?.trim()) {
       throw new Error("Date is required for recurring check ins");
     }
+    const accreditedProgramme =
+      values.eligibilityAnswers?.includes("accreditedProgramme") ?? false;
+    const rationale =
+      values.rationale ?? "E2E restart accredited programme rationale";
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
 
-      // Restart now goes through the same eligibility pages as setup first
-      await expect(this.page).toHaveURL(/\/restart-eligibility-check/);
+      // Restart goes through the same eligibility pages as setup first. Tier
+      // A-C cases always answer Yes to the pilot question here.
       await this.pages.eligibilityCheck.assertOnPage();
-      const answers: EligibilityAnswer[] = values.eligibilityAnswers ?? [
-        "none",
-      ];
-      const accreditedProgramme = answers.includes("accreditedProgramme");
-      if (
-        accreditedProgramme &&
-        !(await this.pages.eligibilityCheck
-          .answerCheckbox("accreditedProgramme")
-          .isVisible())
-      ) {
-        throw new Error(
-          `CRN ${crn} requires accredited programme eligibility: it must be a Tier A/B case`,
-        );
-      }
-      await this.pages.eligibilityCheck.completePage(answers);
-      await expect(this.page).not.toHaveURL(/\/restart-eligibility-check/, {
-        timeout: 20000,
+      await new EligibilityJourney(this.page).completeToFrequency(crn, {
+        route: "restart",
+        answers: values.eligibilityAnswers,
+        rationale,
       });
-      const pilotYes = this.pages.pilotCheck.yesRadio();
-      const eligibleDiscussion =
-        this.pages.isEligible.discussionCheckbox("optional");
-      const notEligible = this.pages.notEligible.headingLocator();
-      await expect(
-        pilotYes.or(eligibleDiscussion).or(notEligible),
-      ).toBeVisible();
-      if (await notEligible.isVisible()) {
-        throw new Error(
-          `CRN ${crn} was ruled not eligible when restarting - check the CRN meets the eligibility rules`,
-        );
-      }
-      if (await pilotYes.isVisible()) {
-        await this.pages.pilotCheck.answer(true); // tier A-C only
-      }
-      await assertManageCheckinsPage(
-        this.page,
-        crn,
-        accreditedProgramme
-          ? ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE
-          : IS_ELIGIBLE_TITLE,
-      );
-      await this.pages.isEligible.completePage();
-
-      // Accredited programme (Tier A/B) adds approval and rationale pages
-      if (accreditedProgramme) {
-        await this.pages.accreditedProgrammeApproval.assertOnPage();
-        await this.pages.accreditedProgrammeApproval.completePage();
-        await this.pages.rationale.assertOnPage();
-        await this.pages.rationale.completePage(
-          values.rationale ?? "E2E restart accredited programme rationale",
-        );
-      }
-      await this.pages.checkinFrequency.assertOnPage();
       await this.pages.checkinFrequency.completePage(values.frequency);
       if (!isAdHoc) {
         await this.pages.checkinDate.assertOnPage();
@@ -287,6 +243,19 @@ export default class ManageCheckInsJourney {
         values.contact,
       );
       await this.pages.restartSummary.assertOnPage();
+      const rationaleRow =
+        this.pages.restartSummary.summaryValueLocator("rationale");
+      if (accreditedProgramme) {
+        await expect(
+          rationaleRow,
+          "Restart summary should show the accredited programme rationale",
+        ).toHaveText(rationale);
+      } else {
+        await expect(
+          rationaleRow,
+          "Only the accredited programme route asks for a rationale",
+        ).toHaveCount(0);
+      }
       await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
     });

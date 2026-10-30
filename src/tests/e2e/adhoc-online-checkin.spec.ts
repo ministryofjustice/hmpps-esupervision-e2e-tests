@@ -1,6 +1,7 @@
 import { expect, Page, test } from "@playwright/test";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
 import ManageCheckInsJourney from "../../support/journeys/manage-online-checkins-ui/manageCheckinsJourney";
+import CustomQuestionsJourney from "../../support/journeys/manage-online-checkins-ui/customQuestionsJourney";
 import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-ui/manageCheckinsPages";
 import CheckInConfirmationPage from "../../support/pages/manage-online-checkins-ui/checkInConfirmationPage";
 import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
@@ -40,21 +41,12 @@ async function scheduleFromConfirmation(
       firstCheckinDateString(daysAhead),
     );
     await pages.scheduleCheckInQuestions.assertOnPage();
+    const customQuestions = new CustomQuestionsJourney(page);
     for (const question of questions) {
-      const { text } = question;
-      await pages.scheduleCheckInQuestions.clickAddQuestion();
-      await pages.chooseQuestion.assertOnPage();
-      if ("template" in question) {
-        await pages.chooseQuestion.selectQuestionByTemplate(question.template);
-        await pages.editQuestion.assertOnPage();
-        await pages.editQuestion.enterQuestion(text);
-      } else {
-        await pages.chooseQuestion.writeOwnQuestion(text);
-      }
-      await pages.scheduleCheckInQuestions.assertOnPage();
-      await expect(
-        pages.scheduleCheckInQuestions.customQuestionRow(text),
-      ).toBeVisible();
+      await customQuestions.addQuestion(
+        pages.scheduleCheckInQuestions,
+        question,
+      );
     }
     await pages.scheduleCheckInQuestions.clickCreate();
   });
