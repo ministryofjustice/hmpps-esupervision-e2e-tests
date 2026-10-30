@@ -76,10 +76,10 @@ export default class CustomQuestionsJourney {
     await this.navigateToAddQuestionsPage(manage, nextCheckinDate, crn);
   }
 
-  /** Back and Cancel on the "add questions" page both point back into
+  /** Back and Cancel on the "add questions" page both return to the
    *  manage page the practitioner came from. */
   async assertAddQuestionsPageLinks(crn: string): Promise<void> {
-    await test.step("Back and Cancel hand off to MPOP", async () => {
+    await test.step("Back and Cancel return to the manage page", async () => {
       const { manage } = await this.openManageForFutureCheckin(crn);
       await manage.clickChangeQuestions();
       await this.pages.addQuestions.assertOnPage();
@@ -97,7 +97,7 @@ export default class CustomQuestionsJourney {
       );
       await assertRelativeHref(
         this.pages.addQuestions.cancelLink(),
-        "Cancel on the add question page",
+        "Cancel on the add questions page",
         managePath,
       );
     });

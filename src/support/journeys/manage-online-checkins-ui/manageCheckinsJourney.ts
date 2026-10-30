@@ -215,7 +215,8 @@ export default class ManageCheckInsJourney {
       await manage.clickRestartCheckIns();
 
       // Restart now goes through the same eligibility pages as setup first
-      await expect(this.page).toHaveURL(/\/restart-eligibility-check$/);
+      await expect(this.page).toHaveURL(/\/restart-eligibility-check/);
+      await this.pages.eligibilityCheck.assertOnPage();
       const answers = values.eligibilityAnswers ?? ["none"];
       const accreditedProgramme = answers.includes("accreditedProgramme");
       if (
@@ -229,7 +230,7 @@ export default class ManageCheckInsJourney {
         );
       }
       await this.pages.eligibilityCheck.completePage(answers);
-      await expect(this.page).not.toHaveURL(/\/restart-eligibility-check$/, {
+      await expect(this.page).not.toHaveURL(/\/restart-eligibility-check/, {
         timeout: 20000,
       });
       const pilotYes = this.pages.pilotCheck.yesRadio();
@@ -241,7 +242,7 @@ export default class ManageCheckInsJourney {
       ).toBeVisible();
       if (await notEligible.isVisible()) {
         throw new Error(
-          `CRN ${crn} was ruled out not eligible when restarting - check the case meets the eligibility rules`,
+          `CRN ${crn} was ruled not eligible when restarting - check the CRN meets the eligibility rules`,
         );
       }
       if (await pilotYes.isVisible()) {
