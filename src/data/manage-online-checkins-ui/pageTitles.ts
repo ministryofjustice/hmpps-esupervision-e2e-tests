@@ -3,13 +3,13 @@ export const MANAGE_ONLINE_CHECKINS_UI_SERVICENAME = "Manage online check ins";
 export const manageCheckinsUiTitle = (pageTitleText: string): string =>
   `${pageTitleText} - ${MANAGE_ONLINE_CHECKINS_UI_SERVICENAME}`;
 
-export const HOW_TO_WRITE_QUESTIONS_TITLE =
-  "How to write questions for an online service";
-
 export const ADD_QUESTIONS_TITLE =
-  "Add questions to the person's next online check in";
+  "Add questions to the person's online check in";
 
-export const CHOOSE_QUESTION_TITLE = ADD_QUESTIONS_TITLE;
+export const CHOOSE_QUESTION_TITLE =
+  "Choose a question to add or write your own";
+
+export const WRITE_OWN_QUESTION_TITLE = "Write your own question";
 
 export const questionPreviewTitle = (questionText: string): string =>
   `Question preview of ${questionText}`;
@@ -33,6 +33,8 @@ export const PILOT_CHECK_TITLE =
   "Do you have one or more people who started using online check ins before 1 October 2026?";
 export const IS_ELIGIBLE_TITLE =
   "The person is eligible to use online check ins";
+export const ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE =
+  "The person is eligible to use online check ins to reduce in person appointments to monthly";
 export const NOT_ELIGIBLE_TITLE =
   "The person is not eligible to use online check ins";
 export const DISCUSS_BEFORE_SIGNUP_TITLE =
@@ -48,12 +50,10 @@ export const confirmContactDetailTitle = (
 ): string => `Confirm the person's ${detail}`;
 
 const EDIT_QUESTION_TITLES: Record<string, string> = {
-  "been going recently": "How has [insert text] been going recently?",
-  "been feeling": "How have things been feeling [insert text] recently?",
   "How is": "How is [insert text]?",
-  "Do you": "Do you [insert text]?",
-  "What have you been doing at":
-    "What have you been doing at [insert text] recently?",
+  "been going recently": "How has [insert text] been going recently?",
+  "Have you been able to": "Have you been able to [insert text]?",
+  "been feeling": "How have things been feeling [insert text] recently?",
   "Has anything changed": "Has anything changed with [insert text] recently?",
 };
 

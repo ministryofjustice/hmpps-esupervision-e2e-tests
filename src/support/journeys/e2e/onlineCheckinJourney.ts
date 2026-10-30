@@ -15,9 +15,9 @@ import {
 import {
   AdditionalAnswer,
   CompletedCheckinDetails,
-  CustomQuestion,
   EligibilityAnswer,
   Preference,
+  QuestionToAdd,
   randomAssistanceSelections,
   randomMentalHealthOption,
 } from "../../../data/models";
@@ -144,7 +144,7 @@ export default class OnlineCheckinJourney {
 
   async assignCustomQuestions(
     crn: string,
-    questions: CustomQuestion[],
+    questions: QuestionToAdd[],
   ): Promise<void> {
     await this.customQuestions.assignCustomQuestions(crn, questions);
   }

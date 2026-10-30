@@ -52,6 +52,8 @@ export const env = {
   practitionerName: (): string => required("PRACTITIONER_NAME"),
   manageCrn: (): string => requiredCrn("TEST_MANAGE_CRN"),
   mpopStopRestartCrn: (): string => requiredCrn("TEST_MPOP_STOP_RESTART_CRN"),
+  restartAccreditedCrn: (): string =>
+    requiredCrn("TEST_RESTART_ACCREDITED_CRN"),
   tierMissingCrn: (): string => requiredCrn("TEST_TIER_MISSING_CRN"),
   tierNotSupervisedCrn: (): string =>
     requiredCrn("TEST_TIER_NOT_SUPERVISED_CRN"),

@@ -8,7 +8,11 @@ import {
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
-import { Preference, ContactDetails } from "../../../data/models";
+import {
+  Preference,
+  ContactDetails,
+  EligibilityAnswer,
+} from "../../../data/models";
 import {
   assertCaseBanner,
   assertManageCheckinsPage,
@@ -20,8 +24,11 @@ import {
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
 import { offenderUuidFrom } from "../../utils/url";
+import EligibilityJourney from "./eligibilityJourney";
 
 export interface RestartValues {
+  eligibilityAnswers?: EligibilityAnswer[];
+  rationale?: string;
   date?: string;
   frequency: FrequencyOptions;
   preference: Preference;
@@ -202,10 +209,22 @@ export default class ManageCheckInsJourney {
     if (!isAdHoc && !values.date?.trim()) {
       throw new Error("Date is required for recurring check ins");
     }
+    const accreditedProgramme =
+      values.eligibilityAnswers?.includes("accreditedProgramme") ?? false;
+    const rationale =
+      values.rationale ?? "E2E restart accredited programme rationale";
     await test.step(`Restart online check ins for ${crn}`, async () => {
       const manage = await this.openManage(crn);
       await manage.clickRestartCheckIns();
-      await this.pages.checkinFrequency.assertOnPage();
+
+      // Restart goes through the same eligibility pages as setup first. Tier
+      // A-C cases always answer Yes to the pilot question here.
+      await this.pages.eligibilityCheck.assertOnPage();
+      await new EligibilityJourney(this.page).completeToFrequency(crn, {
+        route: "restart",
+        answers: values.eligibilityAnswers,
+        rationale,
+      });
       await this.pages.checkinFrequency.completePage(values.frequency);
       if (!isAdHoc) {
         await this.pages.checkinDate.assertOnPage();
@@ -224,6 +243,19 @@ export default class ManageCheckInsJourney {
         values.contact,
       );
       await this.pages.restartSummary.assertOnPage();
+      const rationaleRow =
+        this.pages.restartSummary.summaryValueLocator("rationale");
+      if (accreditedProgramme) {
+        await expect(
+          rationaleRow,
+          "Restart summary should show the accredited programme rationale",
+        ).toHaveText(rationale);
+      } else {
+        await expect(
+          rationaleRow,
+          "Only the accredited programme route asks for a rationale",
+        ).toHaveCount(0);
+      }
       await this.pages.restartSummary.submitSetUp();
       await this.pages.restartConfirmation.assertOnPage();
     });

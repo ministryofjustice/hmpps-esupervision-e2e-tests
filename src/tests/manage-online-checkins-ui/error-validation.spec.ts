@@ -37,6 +37,27 @@ const openSetupValidationFrequency = async (page: Page) => {
   return journey.completeSetupToFrequency(setupValidationCrn);
 };
 
+const openChooseQuestion = async (page: Page): Promise<ManageCheckinsPages> => {
+  const manage = new ManageCheckInsJourney(page);
+  await manage.login();
+  const mpopPages = new ManageCheckinsPages(page);
+
+  const manageQ = await manage.openManage(manageCrn);
+  // Questions are only editable if the next check in is in the future.
+  await expect(
+    manageQ.changeQuestionsLink(),
+    "Shared offender needs a future check in for questions to be editable",
+  ).toBeVisible();
+  await manageQ.clickChangeQuestions();
+  await expect(
+    mpopPages.addQuestions.addQuestionButton(),
+    "TEST_MANAGE_CRN must have room for a validation question",
+  ).toBeEnabled();
+  await mpopPages.addQuestions.clickAddQuestion();
+  await mpopPages.chooseQuestion.assertOnPage();
+  return mpopPages;
+};
+
 test.describe("Validation errors", () => {
   test.describe("Change contact details", () => {
     // Kept deliberately minimal - the manage-page contact details flow is
@@ -77,24 +98,9 @@ test.describe("Validation errors", () => {
   test("shows a validation error when adding a custom question with no question text", async ({
     page,
   }) => {
-    const manage = new ManageCheckInsJourney(page);
-    await manage.login();
-    const mpopPages = new ManageCheckinsPages(page);
-
-    const manageQ = await manage.openManage(manageCrn);
-    // Questions are only editable if the next check in is in the future.
-    await expect(
-      manageQ.changeQuestionsLink(),
-      "Shared offender needs a future check in for questions to be editable",
-    ).toBeVisible();
-    await manageQ.clickChangeQuestions();
-    await mpopPages.howToWriteQuestions.clickAddQuestions();
-    await expect(
-      mpopPages.addQuestions.addQuestionButton(),
-      "TEST_MANAGE_CRN must have room for a validation question",
-    ).toBeVisible();
-    await mpopPages.addQuestions.clickAddQuestion();
-    await mpopPages.chooseQuestion.selectQuestionByTemplate("Do you");
+    const mpopPages = await openChooseQuestion(page);
+    await mpopPages.chooseQuestion.selectQuestionByTemplate("How is");
+    await mpopPages.editQuestion.assertOnRoute("template");
     await mpopPages.editQuestion.questionInput().fill("");
     await mpopPages.editQuestion.clickContinue();
 
@@ -103,6 +109,19 @@ test.describe("Validation errors", () => {
     );
     await expect(
       mpopPages.editQuestion.fieldError("Enter what you want to ask"),
+    ).toBeVisible();
+  });
+
+  test("shows a validation error when writing your own question with no text", async ({
+    page,
+  }) => {
+    const mpopPages = await openChooseQuestion(page);
+    await mpopPages.chooseQuestion.writeOwnQuestion("");
+    await expect(mpopPages.chooseQuestion.errorSummary()).toContainText(
+      "Enter what you want to ask the person",
+    );
+    await expect(
+      mpopPages.chooseQuestion.fieldError("Enter what you want to ask"),
     ).toBeVisible();
   });
 

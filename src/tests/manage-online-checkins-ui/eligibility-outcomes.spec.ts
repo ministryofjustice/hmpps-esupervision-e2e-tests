@@ -2,6 +2,7 @@ import test, { expect } from "@playwright/test";
 import { env } from "../../config/env";
 import {
   ACCREDITED_PROGRAMME_APPROVAL_TITLE,
+  ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
   DISCUSS_BEFORE_SIGNUP_TITLE,
   IS_ELIGIBLE_TITLE,
   NOT_ELIGIBLE_TITLE,
@@ -186,7 +187,11 @@ test.describe("Tier A", () => {
 
     await moci.eligibilityCheck.completePage(["accreditedProgramme"]);
 
-    await assertManageCheckinsPage(page, crn, IS_ELIGIBLE_TITLE);
+    await assertManageCheckinsPage(
+      page,
+      crn,
+      ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
+    );
     await expect(moci.isEligible.reason()).toContainText(
       "on an accredited programme",
     );

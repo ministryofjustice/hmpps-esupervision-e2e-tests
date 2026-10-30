@@ -22,7 +22,7 @@ import {
   ReviewDecision,
 } from "../../support/journeys/manage-online-checkins-ui/reviewCheckinJourney";
 import { IdentityDecision } from "../../support/pages/manage-online-checkins-ui/reviewIdentityPage";
-import { CustomQuestion } from "../../data/models";
+import { QuestionToAdd } from "../../data/models";
 import { OffenderProfile } from "../../support/journeys/ndelius/deliusOffenderJourney";
 
 interface CheckinScenario {
@@ -30,7 +30,7 @@ interface CheckinScenario {
   firstCheckinDaysAhead: number;
   getCheckinUuid: (offender: NewOffender, token: string) => Promise<string>;
   profile?: OffenderProfile;
-  customQuestions?: CustomQuestion[];
+  customQuestions?: QuestionToAdd[];
   expectNoChangeQuestions?: boolean;
   review?: ReviewDecision;
   annotation?: Annotation;
@@ -122,9 +122,9 @@ const scenarios: CheckinScenario[] = [
     profile: "highRiskAge25",
     getCheckinUuid: apiCheckin,
     customQuestions: [
-      { template: "Do you", text: "have an update about something" },
-      { template: "What have you been doing at", text: "home" },
+      { template: "Have you been able to", text: "get to your appointments" },
       { template: "Has anything changed", text: "physical or mental health" },
+      { text: "What are you most looking forward to this week" },
     ],
     review: {
       identity: IdentityDecision.NO_MATCH,

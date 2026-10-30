@@ -58,14 +58,18 @@ export const assertPackageEligibility = async (
 
 export const assertTierHeader = async (
   crn: string,
-  expectedTier: string | null,
+  expectedTier: string | RegExp | null,
 ): Promise<void> => {
   const token = await getToken();
-  await expect
-    .poll(async () => (await getOffenderHeader(crn, token)).tierScore, {
-      message: `CRN ${crn} should have tier header ${expectedTier}`,
-    })
-    .toBe(expectedTier);
+  const tierScore = expect.poll(
+    async () => (await getOffenderHeader(crn, token)).tierScore,
+    { message: `CRN ${crn} should have tier header ${expectedTier}` },
+  );
+  if (expectedTier instanceof RegExp) {
+    await tierScore.toMatch(expectedTier);
+  } else {
+    await tierScore.toBe(expectedTier);
+  }
 };
 
 const assertTierAndPackagePreconditions = async (

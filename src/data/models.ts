@@ -69,6 +69,18 @@ export interface CustomQuestion {
   text: string;
 }
 
+export interface BespokeQuestion {
+  text: string;
+}
+
+export type QuestionToAdd = CustomQuestion | BespokeQuestion;
+
+export type QuestionKind = "template" | "bespoke";
+
+export const isTemplateQuestion = (
+  question: QuestionToAdd,
+): question is CustomQuestion => "template" in question;
+
 export interface AdditionalAnswer {
   question: string;
   answer: string;

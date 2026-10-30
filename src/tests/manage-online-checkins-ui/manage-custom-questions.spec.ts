@@ -3,16 +3,26 @@ import { env } from "../../config/env";
 import { getToken } from "../../api/auth";
 import { deleteAssignedQuestions } from "../../api/checkin";
 import CustomQuestionsJourney from "../../support/journeys/manage-online-checkins-ui/customQuestionsJourney";
-import { CustomQuestion } from "../../data/models";
+import { CustomQuestion, QuestionToAdd } from "../../data/models";
 import { assertActiveManageCrn } from "../../support/assertions/api/supervisionPackageAPI";
 
-const CUSTOM_QUESTIONS: CustomQuestion[] = [
-  { template: "been going recently", text: "apprenticeship" },
+const TEMPLATE_QUESTION_TO_EDIT: CustomQuestion = {
+  template: "been going recently",
+  text: "apprenticeship",
+};
+
+const BESPOKE_QUESTION_TO_EDIT: QuestionToAdd = {
+  text: "What are you most looking forward to this week",
+};
+
+const CUSTOM_QUESTIONS: QuestionToAdd[] = [
+  TEMPLATE_QUESTION_TO_EDIT,
   { template: "been feeling", text: "relationships with family" },
-  { template: "How is", text: "recovery" },
+  BESPOKE_QUESTION_TO_EDIT,
 ];
 const QUESTION_TEXTS = CUSTOM_QUESTIONS.map((q) => q.text);
 const EDITED_QUESTION = "training";
+const EDITED_BESPOKE_QUESTION = "What are your plans about your job search";
 
 // Serial: the second test depends on the questions the first one saves.
 test.describe.serial("Manage custom check in questions", () => {
@@ -43,9 +53,9 @@ test.describe.serial("Manage custom check in questions", () => {
   }) => {
     const journey = new CustomQuestionsJourney(page);
     await journey.login();
-    // Folded in rather than given its own test: checking the intro page's links
+    // Folded in rather than given its own test: checking the add questions page's links
     // needs the same login and walk through the manage page as adding questions.
-    await journey.assertQuestionsIntroLinks(crn);
+    await journey.assertAddQuestionsPageLinks(crn);
     await journey.addCustomQuestions(crn, CUSTOM_QUESTIONS);
   });
 
@@ -57,11 +67,14 @@ test.describe.serial("Manage custom check in questions", () => {
     const remaining = await journey.editAndDeleteCustomQuestions(
       crn,
       QUESTION_TEXTS,
-      {
-        from: QUESTION_TEXTS[0],
-        to: EDITED_QUESTION,
-        template: CUSTOM_QUESTIONS[0].template,
-      },
+      [
+        {
+          from: TEMPLATE_QUESTION_TO_EDIT.text,
+          to: EDITED_QUESTION,
+          template: TEMPLATE_QUESTION_TO_EDIT.template,
+        },
+        { from: BESPOKE_QUESTION_TO_EDIT.text, to: EDITED_BESPOKE_QUESTION },
+      ],
       QUESTION_TEXTS[1],
     );
 

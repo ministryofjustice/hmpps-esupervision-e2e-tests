@@ -81,6 +81,7 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Manage workflows and validation | Reuses `TEST_MANAGE_CRN`: verified active check-ins, Email preference, a future check-in date, and no pre-existing custom questions before the custom-question suite. |
 | Tier/setup journeys | Reuse `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`; each standard tier CRN must have its matching tier, an active supervision package, be outside the final third, and have no check-in setup. Setup date-validation tests use Tier G and do not submit setup. |
 | Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN`; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to ad hoc; `afterAll` stops and restarts it on weekly check ins through the API, so each run starts from the same state. |
+| Restart (accredited programme) | Uses `TEST_RESTART_ACCREDITED_CRN`: a Tier A/B case with check ins set up, not in early engagement, with an email address in NDelius. `beforeAll` stops it through the API if it is active, so the test can restart it through the accredited programme route. |
 | Ad hoc validation | Reuses `TEST_ADHOC_CRN`: check-ins set up as ad hoc with nothing booked. The test never submits a valid date, so it stays that way. |
 | Layout/dashboard | Layout needs no case. Dashboard tests reuse storage state from the setup project. |
 

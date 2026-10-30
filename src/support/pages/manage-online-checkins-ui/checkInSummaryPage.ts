@@ -2,7 +2,13 @@ import { Locator, Page } from "@playwright/test";
 import PractitionerBasePage from "../base/practitionerBasePage";
 
 export type SummaryField =
-  "date" | "frequency" | "contactPreference" | "mobile" | "email" | "photo";
+  | "date"
+  | "frequency"
+  | "contactPreference"
+  | "mobile"
+  | "email"
+  | "photo"
+  | "rationale";
 
 const CHANGE_LINK_QA: Record<SummaryField, string> = {
   date: "dateAction",
@@ -11,6 +17,7 @@ const CHANGE_LINK_QA: Record<SummaryField, string> = {
   mobile: "checkInMobileAction",
   email: "checkInEmailAction",
   photo: "photoUploadOptionAction",
+  rationale: "rationaleAction",
 };
 
 const VALUE_ROW_QA: Record<SummaryField, string> = {

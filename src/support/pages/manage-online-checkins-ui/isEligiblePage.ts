@@ -1,15 +1,46 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { DiscussionPoint } from "../../../data/models";
-import { IS_ELIGIBLE_TITLE } from "../../../data/manage-online-checkins-ui/pageTitles";
+import {
+  ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
+  IS_ELIGIBLE_TITLE,
+} from "../../../data/manage-online-checkins-ui/pageTitles";
+import { escapeRegExp } from "../../utils/url";
 import { eligibilityReason } from "./eligibilityReason";
 import PractitionerBasePage from "../base/practitionerBasePage";
 
-// One page object for all three variants (Tier D-G, pilot, accredited
-// programme): they differ only in the reason text and whether the
-// "programmeOnly" discussion box is shown.
+export type IsEligibleVariant = "standard" | "accreditedProgramme";
+
+const headingSuffix = (title: string): string =>
+  escapeRegExp(title.replace(/^The person/, ""));
+
+const STANDARD_SUFFIX = headingSuffix(IS_ELIGIBLE_TITLE);
+const ACCREDITED_SUFFIX = headingSuffix(ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE);
+
+const eligibleHeading = (suffix: string): RegExp =>
+  new RegExp(`^\\s*(?!Check if\\b)\\S.*?${suffix}\\s*$`);
+
+const VARIANT_HEADINGS: Record<IsEligibleVariant, RegExp> = {
+  standard: eligibleHeading(STANDARD_SUFFIX),
+  accreditedProgramme: eligibleHeading(ACCREDITED_SUFFIX),
+};
+
+const ANY_ELIGIBLE_HEADING = eligibleHeading(
+  `(?:${ACCREDITED_SUFFIX}|${STANDARD_SUFFIX})`,
+);
+
 export default class IsEligiblePage extends PractitionerBasePage {
   constructor(page: Page) {
-    super(page, IS_ELIGIBLE_TITLE);
+    super(page, ANY_ELIGIBLE_HEADING);
+  }
+
+  async assertOnVariant(
+    variant: IsEligibleVariant,
+    timeout = 10000,
+  ): Promise<void> {
+    await expect(this.getQA("pageHeading")).toContainText(
+      VARIANT_HEADINGS[variant],
+      { timeout },
+    );
   }
 
   reason(): Locator {
@@ -21,15 +52,13 @@ export default class IsEligiblePage extends PractitionerBasePage {
   }
 
   discussionCheckbox(point: DiscussionPoint): Locator {
-    return this.page.locator(
-      `input[name$="[checkins][discussion]"][value="${point}"]`,
-    );
+    return this.page.locator(`input[name$="[discussion]"][value="${point}"]`);
   }
 
   /** Every discussion point except "I have not done all of these". */
   discussionPoints(): Locator {
     return this.page.locator(
-      'input[name$="[checkins][discussion]"]:not([value="notAll"])',
+      'input[name$="[discussion]"]:not([value="notAll"])',
     );
   }
 

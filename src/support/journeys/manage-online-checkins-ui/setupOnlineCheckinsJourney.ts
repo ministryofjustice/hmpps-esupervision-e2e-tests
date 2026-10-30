@@ -11,7 +11,6 @@ import {
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   ELIGIBILITY_CHECK_TITLE,
-  IS_ELIGIBLE_TITLE,
   NOT_ELIGIBLE_TITLE,
   confirmContactDetailTitle,
 } from "../../../data/manage-online-checkins-ui/pageTitles";
@@ -30,6 +29,7 @@ import {
   followToMpop,
   MPOP_PATH,
 } from "../../assertions/manage-online-checkins-ui/mpopHandoff";
+import EligibilityJourney from "./eligibilityJourney";
 type ExpectedContactRoute = "missing" | "confirm";
 
 interface ContactPreferenceValues {
@@ -253,73 +253,14 @@ export default class SetupOnlineCheckinsJourney {
       // startSetup() already retried until this page rendered, so this is just
       // the normal on-page assertion, not extra flakiness handling.
       await assertManageCheckinsPage(this.page, crn, ELIGIBILITY_CHECK_TITLE);
-      await this.completeEligibility(crn, eligibilityAnswers, pilotAnswer);
-
-      if (eligibilityAnswers?.includes("accreditedProgramme")) {
-        await this.pages.accreditedProgrammeApproval.assertOnPage();
-        await this.pages.accreditedProgrammeApproval.completePage();
-        await this.pages.rationale.assertOnPage();
-        await this.pages.rationale.completePage(rationale);
-      }
-      await this.pages.checkinFrequency.assertOnPage();
+      await new EligibilityJourney(this.page).completeToFrequency(crn, {
+        route: "setup",
+        answers: eligibilityAnswers,
+        pilotAnswer,
+        rationale,
+      });
     });
     return this.pages.checkinFrequency;
-  }
-
-  /**
-   * Answers eligibility check questions (default: "None of these apply") and follows
-   * the tier-dependent route through the eligibility wizard. Tier determines which
-   * questions appear and which pages are shown:
-   * - Tier A/B/C: Show pilot question
-   * - Tier D-G: Skip pilot, go directly to is-eligible
-   * - Tier A/B: Show accredited programme and youth sentence questions
-   * - Tier C-G: Do not show accredited programme and youth sentence
-   */
-  private async completeEligibility(
-    crn: string,
-    answers: EligibilityAnswer[] = ["none"],
-    pilotAnswer: boolean = true,
-  ): Promise<void> {
-    const moci = this.pages;
-    for (const answer of answers) {
-      if (answer === "accreditedProgramme" || answer === "youthSentence") {
-        const checkbox = moci.eligibilityCheck.answerCheckbox(answer);
-        if (!(await checkbox.isVisible())) {
-          throw new Error(
-            `CRN ${crn} cannot answer ${answer}: this question is not available on its eligibility route`,
-          );
-        }
-      }
-    }
-    await moci.eligibilityCheck.completePage(answers);
-
-    const notEligibleHeading = moci.notEligible.headingLocator();
-    const pilotYes = moci.pilotCheck.yesRadio();
-    const eligibleDiscussion = moci.isEligible.discussionCheckbox("optional");
-    await expect(
-      notEligibleHeading.or(pilotYes).or(eligibleDiscussion),
-    ).toBeVisible();
-
-    if (await notEligibleHeading.isVisible()) {
-      await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
-      throw new Error(
-        `CRN ${crn} was ruled not eligible during setup eligibility checks`,
-      );
-    }
-
-    if (await pilotYes.isVisible()) {
-      await moci.pilotCheck.answer(pilotAnswer);
-      // If pilot was answered "No", person is disqualified
-      if (!pilotAnswer) {
-        await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
-        throw new Error(
-          `CRN ${crn} was ruled not eligible because the pilot answer was No`,
-        );
-      }
-    }
-
-    await assertManageCheckinsPage(this.page, crn, IS_ELIGIBLE_TITLE);
-    await moci.isEligible.completePage();
   }
 
   async completeSetupToSummary(
