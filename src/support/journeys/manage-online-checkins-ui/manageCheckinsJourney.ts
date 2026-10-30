@@ -217,7 +217,9 @@ export default class ManageCheckInsJourney {
       // Restart now goes through the same eligibility pages as setup first
       await expect(this.page).toHaveURL(/\/restart-eligibility-check/);
       await this.pages.eligibilityCheck.assertOnPage();
-      const answers = values.eligibilityAnswers ?? ["none"];
+      const answers: EligibilityAnswer[] = values.eligibilityAnswers ?? [
+        "none",
+      ];
       const accreditedProgramme = answers.includes("accreditedProgramme");
       if (
         accreditedProgramme &&
