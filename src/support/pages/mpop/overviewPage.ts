@@ -10,7 +10,7 @@ export default class OverviewPage extends PractitionerBasePage {
     await this.page.goto(`${env.mpopUrl()}/case/${crn}/`);
   }
   caseHeaderDetails(): Locator {
-    return this.page.locator(".pop-header__details");
+    return this.page.locator(".person-header");
   }
   caseHeaderFields(): Locator {
     return this.caseHeaderDetails().locator("h1, li");

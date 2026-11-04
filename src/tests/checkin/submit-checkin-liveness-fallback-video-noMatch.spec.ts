@@ -6,14 +6,10 @@ import {
 import CheckinJourney from "../../support/journeys/checkins-ui/checkinJourney";
 import { label } from "../../data/labels";
 import { getToken } from "../../api/auth";
-import { createEsupervisionCheckin } from "../../api/checkin";
-import {
-  dueDateString,
-  today,
-  firstCheckinDateString,
-} from "../../support/utils/date";
+import { firstCheckinDateString } from "../../support/utils/date";
 import { Pages } from "../../support/pages/checkins-ui/Pages";
 import OnlineCheckinJourney from "../../support/journeys/e2e/onlineCheckinJourney";
+import { waitForAwaitingCheckinUuid } from "../../support/utils/waitForCheckin";
 
 // Randomised per run, the chosen values are logged below so
 // a failing run can be reproduced manually
@@ -34,11 +30,7 @@ test("video fallback: no match, submit anyway, checkin completes", async ({
   );
 
   const token = await getToken();
-  const uuid = await createEsupervisionCheckin(
-    offender.crn,
-    dueDateString(today),
-    token,
-  );
+  const uuid = await waitForAwaitingCheckinUuid(offender.crn, token);
   console.log(`uuid=${uuid} feelingQuestion=${mentalHealth}
     support=${assistance.map((a) => a.option).join("+")}`);
 

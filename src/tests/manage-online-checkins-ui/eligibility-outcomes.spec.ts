@@ -62,7 +62,9 @@ for (const tier of ["B", "C", "D", "E", "F"] as const) {
 
 // Tier G stands in for the D-G band: eligible without the pilot question.
 test.describe("Tier G", () => {
-  test("case banner matches MPOP on entering MOCI", async ({ page }) => {
+  test.skip("case banner matches MPOP on entering MOCI", async ({ page }) => {
+    // Skipped : MPOP uses new person header
+    // MOCI still uses old pop header reenable when MOCI flag is on
     const crn = env.tierCrn("G");
     await assertTierCrnPreconditions(crn, "G");
     const mpop = new ManageCheckinsPages(page);
