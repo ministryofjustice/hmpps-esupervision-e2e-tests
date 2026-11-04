@@ -8,9 +8,9 @@ export default class Header {
   }
 
   userName(): Locator {
-    return this.header().locator(
-      '[data-qa="probation-common-header-user-name"]',
-    );
+    return this.accountMenuToggle()
+      .locator(".probation-common-header__menu-toggle-label")
+      .filter({ hasNotText: /^Account$/ });
   }
 
   accountMenuToggle(): Locator {
