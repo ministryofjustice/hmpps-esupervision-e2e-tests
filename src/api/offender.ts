@@ -133,19 +133,20 @@ export const deactivateOffender = async (
 
 /** DEV only- tests not configured to run in any other environment. Deletes the person and all their data from the API
  * The API refuses until the case has been deleted in NDelius, so call this after that
- * A 404 means there is nothing to delete, so it counts as done.
+ * Returns false for a 404: there was nothing to delete
  */
 
 export const deleteOffenderRecord = async (
   crn: string,
   token: string,
-): Promise<void> =>
+): Promise<boolean> =>
   withApiContext(async (ctx) => {
     const response = await ctx.delete(`/v2/test-support/offenders/crn/${crn}`, {
       headers: authHeader(token),
     });
     if (response.status() === 404) {
-      return;
+      return false;
     }
     await assertOk(response, `Delete offender record for ${crn}`);
+    return true;
   });

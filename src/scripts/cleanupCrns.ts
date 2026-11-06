@@ -57,12 +57,17 @@ const deleteAll = async (crns: string[]): Promise<string[]> => {
 const deleteOffenderRecords = async (
   crns: string[],
   token: string,
-): Promise<string[]> => {
+): Promise<{ deleted: string[]; failed: string[] }> => {
   const failed: string[] = [];
+  const deleted: string[] = [];
   for (const crn of crns) {
     try {
-      await deleteOffenderRecord(crn, token);
-      console.log(`Deleted offender record for ${crn}`);
+      if (await deleteOffenderRecord(crn, token)) {
+        deleted.push(crn);
+        console.log(`Deleted offender record for ${crn}`);
+      } else {
+        console.log(`No offender record found for ${crn}`);
+      }
     } catch (error) {
       failed.push(crn);
       console.log(
@@ -70,7 +75,7 @@ const deleteOffenderRecords = async (
       );
     }
   }
-  return failed;
+  return { failed, deleted };
 };
 
 // Imported by e2e teardown
@@ -79,8 +84,13 @@ export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
   const token = await findToken();
   if (token) await deactivateAll(crns, token);
   const deliusFailed = await deleteAll(crns);
-  const apiFailed = token ? await deleteOffenderRecords(crns, token) : crns;
-  return [...new Set([...deliusFailed, ...apiFailed])];
+  const api = token
+    ? await deleteOffenderRecords(crns, token)
+    : { failed: crns, deleted: [] as string[] };
+  const stillinDelius = deliusFailed.filter(
+    (crn) => !api.deleted.includes(crn),
+  );
+  return [...new Set([...stillinDelius, ...api.failed])];
 };
 
 // Run as a script - not when imported by a test
