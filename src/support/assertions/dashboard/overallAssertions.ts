@@ -125,19 +125,17 @@ export const assertFeedbackTables = async (
       .innerText(),
   );
 
-  for (const { caption, multiSelect } of FEEDBACK_TABLE_ROWS) {
+  for (const { caption, multiSelect, newQuestion } of FEEDBACK_TABLE_ROWS) {
     await test.step(`"${caption}" answers agree with the number of responses`, async () => {
       const rows = await pages.overall.table(caption).rowValues();
       const notAnswered = parseCount(
         rowNamed(rows, FEEDBACK_NOT_ANSWERED_ROW, caption).total,
       );
       const answered = answeredDenominator(rows, FEEDBACK_NOT_ANSWERED_ROW);
-
       for (const row of rows) {
         if (row.label === FEEDBACK_NOT_ANSWERED_ROW) continue;
         assertPercentageMatchesCount(row, answered, caption);
       }
-
       if (multiSelect) {
         expect(
           answered + notAnswered,
@@ -145,8 +143,13 @@ export const assertFeedbackTables = async (
         ).toBeGreaterThanOrEqual(responses);
         expect(
           answered,
-          `${caption} counts add up to more answers than there are options to give`,
+          `${caption} counts add up to  more answers than there are options to give`,
         ).toBeLessThanOrEqual(responses * (rows.length - 1));
+      } else if (newQuestion) {
+        expect(
+          answered + notAnswered,
+          `${caption} counts add up to more than the number of responses`,
+        ).toBeLessThanOrEqual(responses);
       } else {
         expect(
           answered + notAnswered,

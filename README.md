@@ -114,11 +114,12 @@ are treated as orphans and deleted. Older entries already in the file at run
 start are left for manual cleanup. Failed deletions remain in the file for a
 later retry.
 
+Each CRN is deactivated in the esupervision API, deleted in NDelius, then deleted from the API
+
 ```bash
 npm run cleanup:crns
 CRNS=X123456,X654321 npm run cleanup:crns
 ```
-
 To resolve secrets through 1Password:
 
 ```bash
