@@ -43,14 +43,15 @@ export default defineConfig({
       testIgnore: ["**/dashboard/**"],
       // Specs share a single Delius account and pre-existing CRNs
       workers: 1,
-      // NDelius test pages can take longer than the 5s
+      // NDelius test pages can take longer than the 5s default.
       expect: { timeout: 15000 },
       // One retry for OASys/NDelius steps that occasionally hang on slow pages
       retries: 1,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.PROBATION_CHECK_IN_URL,
-        //Fail a stuck click or fill after 30s instead of waiting for test timeout
+        // Fail a stuck click or fill after 30s instead of waiting for test timeout
+        actionTimeout: 30000,
         ...(headed ? { viewport: null } : {}),
       },
     },

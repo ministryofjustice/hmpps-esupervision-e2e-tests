@@ -135,7 +135,6 @@ export const deactivateOffender = async (
  * The API refuses until the case has been deleted in NDelius, so call this after that
  * Returns false for a 404: there was nothing to delete
  */
-
 export const deleteOffenderRecord = async (
   crn: string,
   token: string,

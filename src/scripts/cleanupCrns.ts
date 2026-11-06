@@ -87,10 +87,10 @@ export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
   const api = token
     ? await deleteOffenderRecords(crns, token)
     : { failed: crns, deleted: [] as string[] };
-  const stillinDelius = deliusFailed.filter(
+  const stillInDelius = deliusFailed.filter(
     (crn) => !api.deleted.includes(crn),
   );
-  return [...new Set([...stillinDelius, ...api.failed])];
+  return [...new Set([...stillInDelius, ...api.failed])];
 };
 
 // Run as a script - not when imported by a test
