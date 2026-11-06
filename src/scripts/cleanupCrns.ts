@@ -1,6 +1,10 @@
 import { chromium } from "@playwright/test";
 import { getToken } from "../api/auth";
-import { deactivateOffender, findOffenderByCrn } from "../api/offender";
+import {
+  deactivateOffender,
+  deleteOffenderRecord,
+  findOffenderByCrn,
+} from "../api/offender";
 import DeliusOffenderJourney from "../support/journeys/ndelius/deliusOffenderJourney";
 import {
   readCreatedCrns,
@@ -8,17 +12,16 @@ import {
 } from "../support/utils/createdCrns";
 import { loadEnv } from "../config/loadEnv";
 
-const deactivateAll = async (crns: string[]): Promise<void> => {
-  let token: string;
+const findToken = async (): Promise<string | undefined> => {
   try {
-    token = await getToken();
+    return await getToken();
   } catch (error) {
-    console.log(
-      `Skipping deactivation (no token) :${(error as Error).message}`,
-    );
-    return;
+    console.log(`Failed to get token: ${(error as Error).message}`);
+    return undefined;
   }
+};
 
+const deactivateAll = async (crns: string[], token: string): Promise<void> => {
   for (const crn of crns) {
     try {
       const offender = await findOffenderByCrn(crn, token);
@@ -51,11 +54,43 @@ const deleteAll = async (crns: string[]): Promise<string[]> => {
   }
 };
 
+const deleteOffenderRecords = async (
+  crns: string[],
+  token: string,
+): Promise<{ deleted: string[]; failed: string[] }> => {
+  const failed: string[] = [];
+  const deleted: string[] = [];
+  for (const crn of crns) {
+    try {
+      if (await deleteOffenderRecord(crn, token)) {
+        deleted.push(crn);
+        console.log(`Deleted offender record for ${crn}`);
+      } else {
+        console.log(`No offender record found for ${crn}`);
+      }
+    } catch (error) {
+      failed.push(crn);
+      console.log(
+        `Failed to delete offender record for ${crn}: ${(error as Error).message}`,
+      );
+    }
+  }
+  return { failed, deleted };
+};
+
 // Imported by e2e teardown
 export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
   if (crns.length === 0) return [];
-  await deactivateAll(crns);
-  return deleteAll(crns);
+  const token = await findToken();
+  if (token) await deactivateAll(crns, token);
+  const deliusFailed = await deleteAll(crns);
+  const api = token
+    ? await deleteOffenderRecords(crns, token)
+    : { failed: crns, deleted: [] as string[] };
+  const stillInDelius = deliusFailed.filter(
+    (crn) => !api.deleted.includes(crn),
+  );
+  return [...new Set([...stillInDelius, ...api.failed])];
 };
 
 // Run as a script - not when imported by a test
@@ -72,8 +107,7 @@ if (process.argv[1]?.includes("cleanupCrns")) {
       return;
     }
 
-    await deactivateAll(crns);
-    const failed = await deleteAll(crns);
+    const failed = await cleanupCrns(crns);
     if (fromEnv.length === 0) {
       writeCreatedCrns(failed);
     }
