@@ -143,7 +143,7 @@ export const assertFeedbackTables = async (
         ).toBeGreaterThanOrEqual(responses);
         expect(
           answered,
-          `${caption} counts add up to  more answers than there are options to give`,
+          `${caption} counts add up to more answers than there are options to give`,
         ).toBeLessThanOrEqual(responses * (rows.length - 1));
       } else if (newQuestion) {
         expect(

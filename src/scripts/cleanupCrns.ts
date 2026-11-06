@@ -54,7 +54,7 @@ const deleteAll = async (crns: string[]): Promise<string[]> => {
   }
 };
 
-const deleteCheckinRecords = async (
+const deleteOffenderRecords = async (
   crns: string[],
   token: string,
 ): Promise<string[]> => {
@@ -62,14 +62,11 @@ const deleteCheckinRecords = async (
   for (const crn of crns) {
     try {
       await deleteOffenderRecord(crn, token);
-      console.log(`Deleted check-in records for ${crn}`);
+      console.log(`Deleted offender record for ${crn}`);
     } catch (error) {
-      console.log(
-        `Failed to delete check-in records for ${crn}: ${(error as Error).message}`,
-      );
       failed.push(crn);
       console.log(
-        `Failed to delete check-in records for ${crn}: ${(error as Error).message}`,
+        `Failed to delete offender record for ${crn}: ${(error as Error).message}`,
       );
     }
   }
@@ -82,8 +79,8 @@ export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
   const token = await findToken();
   if (token) await deactivateAll(crns, token);
   const deliusFailed = await deleteAll(crns);
-  const apiFailed = token ? await deleteCheckinRecords(crns, token) : crns;
-  return [...deliusFailed, ...apiFailed];
+  const apiFailed = token ? await deleteOffenderRecords(crns, token) : crns;
+  return [...new Set([...deliusFailed, ...apiFailed])];
 };
 
 // Run as a script - not when imported by a test

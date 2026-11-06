@@ -132,8 +132,8 @@ export const deactivateOffender = async (
   });
 
 /** DEV only- tests not configured to run in any other environment. Deletes the person and all their data from the API
- * The refuses until the case has been deleted in NDelius, so call this after that
- * A 404 means there is nothing to delete, so it counts as done
+ * The API refuses until the case has been deleted in NDelius, so call this after that
+ * A 404 means there is nothing to delete, so it counts as done.
  */
 
 export const deleteOffenderRecord = async (
@@ -147,5 +147,5 @@ export const deleteOffenderRecord = async (
     if (response.status() === 404) {
       return;
     }
-    assertOk(response, `Delete offender record for ${crn}`);
+    await assertOk(response, `Delete offender record for ${crn}`);
   });
