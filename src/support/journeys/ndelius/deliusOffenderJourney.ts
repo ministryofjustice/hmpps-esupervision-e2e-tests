@@ -222,7 +222,7 @@ export default class DeliusOffenderJourney {
           throw new Error(`${crn} is still in NDelius after delete`);
         }
         if (!(await this.nationalSearchPage.noRecordsMessage().isVisible())) {
-          throw new Error(`Could not confirm ${crn} was deleted in NDelius `);
+          throw new Error(`Could not confirm ${crn} was deleted in NDelius`);
         }
       } catch (error) {
         notDeleted.push(crn);
@@ -249,7 +249,7 @@ export default class DeliusOffenderJourney {
     await this.nationalSearchPage.searchButton().click();
 
     const viewLink = this.nationalSearchPage.viewLinkForCrn(crn);
-    // Wait for the search to finish - either the CRN's row or 'No records found"
+    // Wait for the search to finish - either the CRN's row or "No records found"
     // so a missing CRN returns straight away instead of after the full timeout.
     const found = await viewLink
       .or(this.nationalSearchPage.noRecordsMessage())

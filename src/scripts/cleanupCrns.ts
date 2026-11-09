@@ -87,6 +87,7 @@ export const cleanupCrns = async (crns: string[]): Promise<string[]> => {
   const api = token
     ? await deleteOffenderRecords(crns, token)
     : { failed: crns, deleted: [] as string[] };
+  // The API only deletes once NDelius returns 404 for the CRN
   const stillInDelius = deliusFailed.filter(
     (crn) => !api.deleted.includes(crn),
   );
