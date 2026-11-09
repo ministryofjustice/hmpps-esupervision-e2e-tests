@@ -219,7 +219,10 @@ export default class DeliusOffenderJourney {
         }
         await this.deleteCurrentOffender();
         if (await this.openOffenderForDeletion(crn)) {
-          throw new Error(`Failed to delete offender with CRN ${crn}`);
+          throw new Error(`${crn} is still in NDelius after delete`);
+        }
+        if (!(await this.nationalSearchPage.noRecordsMessage().isVisible())) {
+          throw new Error(`Could not confirm ${crn} was deleted in NDelius `);
         }
       } catch (error) {
         notDeleted.push(crn);
