@@ -26,6 +26,12 @@ export default class NationalSearchPage {
       .first();
   }
 
+  noRecordsMessage(): Locator {
+    return this.page.locator(".noRecordsFound", {
+      hasText: "No records found",
+    });
+  }
+
   resultsTable(): Locator {
     return this.page.locator("#offendersTable");
   }

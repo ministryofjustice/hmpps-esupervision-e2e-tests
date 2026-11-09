@@ -208,6 +208,11 @@ export default class DeliusOffenderJourney {
       try {
         const opened = await this.openOffenderForDeletion(crn);
         if (!opened) {
+          // "No records found" confirms the CRN is gone (e.g. deleted on an earlier run)
+          if (await this.nationalSearchPage.noRecordsMessage().isVisible()) {
+            console.log(`${crn} is not in NDelius - already deleted`);
+            continue;
+          }
           notDeleted.push(crn);
           console.log(`No record found for ${crn} - skipping`);
           continue;
@@ -241,10 +246,13 @@ export default class DeliusOffenderJourney {
     await this.nationalSearchPage.searchButton().click();
 
     const viewLink = this.nationalSearchPage.viewLinkForCrn(crn);
-
+    // Wait for the search to finish - either the CRN's row or 'No records found"
+    // so a missing CRN returns straight away instead of after the full timeout.
     const found = await viewLink
+      .or(this.nationalSearchPage.noRecordsMessage())
+      .first()
       .waitFor({ state: "visible", timeout: 15000 })
-      .then(() => true)
+      .then(() => viewLink.isVisible())
       .catch(() => false);
     if (!found) {
       return false;
