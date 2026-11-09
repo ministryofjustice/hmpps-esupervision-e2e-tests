@@ -213,6 +213,9 @@ export default class DeliusOffenderJourney {
           continue;
         }
         await this.deleteCurrentOffender();
+        if (await this.openOffenderForDeletion(crn)) {
+          throw new Error(`Failed to delete offender with CRN ${crn}`);
+        }
       } catch (error) {
         notDeleted.push(crn);
         console.log(`Failed to delete ${crn}: ${(error as Error).message}`);
@@ -224,7 +227,7 @@ export default class DeliusOffenderJourney {
 
   async openOffenderForDeletion(crn: string): Promise<boolean> {
     await this.nationalSearchPage.link().click();
-    await expect(this.page).toHaveTitle(/National Search/);
+    await expect(this.page).toHaveTitle(/National Search/, { timeout: 30000 });
     await this.page.waitForLoadState("networkidle");
     await selectOption(
       this.page,
