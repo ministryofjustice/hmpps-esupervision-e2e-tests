@@ -208,11 +208,22 @@ export default class DeliusOffenderJourney {
       try {
         const opened = await this.openOffenderForDeletion(crn);
         if (!opened) {
+          // "No records found" confirms the CRN is gone (e.g. deleted on an earlier run)
+          if (await this.nationalSearchPage.noRecordsMessage().isVisible()) {
+            console.log(`${crn} is not in NDelius - already deleted`);
+            continue;
+          }
           notDeleted.push(crn);
           console.log(`No record found for ${crn} - skipping`);
           continue;
         }
         await this.deleteCurrentOffender();
+        if (await this.openOffenderForDeletion(crn)) {
+          throw new Error(`${crn} is still in NDelius after delete`);
+        }
+        if (!(await this.nationalSearchPage.noRecordsMessage().isVisible())) {
+          throw new Error(`Could not confirm ${crn} was deleted in NDelius`);
+        }
       } catch (error) {
         notDeleted.push(crn);
         console.log(`Failed to delete ${crn}: ${(error as Error).message}`);
@@ -224,7 +235,7 @@ export default class DeliusOffenderJourney {
 
   async openOffenderForDeletion(crn: string): Promise<boolean> {
     await this.nationalSearchPage.link().click();
-    await expect(this.page).toHaveTitle(/National Search/);
+    await expect(this.page).toHaveTitle(/National Search/, { timeout: 30000 });
     await this.page.waitForLoadState("networkidle");
     await selectOption(
       this.page,
@@ -238,10 +249,13 @@ export default class DeliusOffenderJourney {
     await this.nationalSearchPage.searchButton().click();
 
     const viewLink = this.nationalSearchPage.viewLinkForCrn(crn);
-
+    // Wait for the search to finish - either the CRN's row or "No records found"
+    // so a missing CRN returns straight away instead of after the full timeout.
     const found = await viewLink
+      .or(this.nationalSearchPage.noRecordsMessage())
+      .first()
       .waitFor({ state: "visible", timeout: 15000 })
-      .then(() => true)
+      .then(() => viewLink.isVisible())
       .catch(() => false);
     if (!found) {
       return false;

@@ -78,6 +78,7 @@ export interface FeedbackTableSpec {
   caption: TableCaption;
   rows: string[];
   multiSelect: boolean;
+  newQuestion?: boolean;
 }
 
 export const FEEDBACK_TABLE_ROWS: FeedbackTableSpec[] = [
@@ -96,11 +97,13 @@ export const FEEDBACK_TABLE_ROWS: FeedbackTableSpec[] = [
     caption: TABLE_HELPS_FEEL_SUPPORTED,
     rows: YES_NO_ROW_LABELS,
     multiSelect: false,
+    newQuestion: true,
   },
   {
     caption: TABLE_LESS_CONTACT_NEEDED,
     rows: YES_NO_ROW_LABELS,
     multiSelect: false,
+    newQuestion: true,
   },
 ];
 
