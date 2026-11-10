@@ -1,10 +1,23 @@
 import { expect, Page, test } from "@playwright/test";
+import { getToken as getIntegrationToken } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/api/auth/get-token.mjs";
+import {
+  createAndBookPrisoner,
+  releasePrisoner,
+  updateCustodyDates,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/api/dps/prison-api.mjs";
+import { login as loginToDelius } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/login.mjs";
+import { createRelease } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/release/create-release.mjs";
+import { assertOk, authHeader } from "../../../api/apiHelper";
+import { getToken } from "../../../api/auth";
+import { findSupervisionPackageStatus } from "../../../api/offender";
+import { env } from "../../../config/env";
 import { NewOffender } from "../../../data/delius/types";
 import OverviewPage from "../../pages/mpop/overviewPage";
 import { TEST_CONTACT } from "../../../data/manage-online-checkins-ui/testData";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import { PhotoOptions } from "../../pages/manage-online-checkins-ui/photoOptionsPage";
 import DeliusOffenderJourney, {
+  CreatedDeliusOffender,
   OffenderProfile,
 } from "../ndelius/deliusOffenderJourney";
 import OasysAssessmentJourney from "../oasys/oasysAssessmentJourney";
@@ -31,6 +44,7 @@ import ReviewCheckinJourney, {
 } from "../manage-online-checkins-ui/reviewCheckinJourney";
 import CustomQuestionsJourney from "../manage-online-checkins-ui/customQuestionsJourney";
 import SetupOnlineCheckinsJourney from "../manage-online-checkins-ui/setupOnlineCheckinsJourney";
+import { finalThirdDates } from "../../utils/finalThirdDates";
 
 export default class OnlineCheckinJourney {
   private readonly customQuestions: CustomQuestionsJourney;
@@ -39,6 +53,152 @@ export default class OnlineCheckinJourney {
   constructor(private readonly page: Page) {
     this.customQuestions = new CustomQuestionsJourney(page);
     this.review = new ReviewCheckinJourney(page);
+  }
+
+  /** Create a final-third case for eligibility tests, without setting up check ins. */
+  async createOffenderInFinalThird(): Promise<CreatedDeliusOffender> {
+    test.info().setTimeout(test.info().timeout + 25 * 60 * 1000);
+    return test.step("Create a CRN currently in its final third", async () => {
+      const required = [
+        "DELIUS_URL",
+        "DELIUS_USERNAME",
+        "DELIUS_PASSWORD",
+        "OASYS_URL",
+        "OASYS_USERNAME",
+        "OASYS_PASSWORD",
+        "AUTH_URL",
+        "AUTH_CLIENT_ID",
+        "AUTH_CLIENT_SECRET",
+        "ESUPERVISION_API_URL",
+        "PRISON_API",
+        "DPS_USERNAME",
+        "HMPPS_AUTH_CLIENT_ID",
+        "HMPPS_AUTH_CLIENT_SECRET",
+        "CUSTODY_KEY_DATES_API_URL",
+        "SUPERVISION_PACKAGES_API_URL",
+      ];
+      const missing = required.filter((name) => !process.env[name]?.trim());
+      expect(
+        missing,
+        "Set the required final-third setup environment variables",
+      ).toEqual([]);
+      for (const [name, origin] of Object.entries({
+        DELIUS_URL: "https://ndelius.test.probation.service.justice.gov.uk",
+        OASYS_URL: "https://t2.oasys.service.justice.gov.uk",
+        AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk",
+        ESUPERVISION_API_URL:
+          "https://esupervision-api-dev.hmpps.service.justice.gov.uk",
+        PRISON_API: "https://prison-api-dev.prison.service.justice.gov.uk",
+        CUSTODY_KEY_DATES_API_URL:
+          "https://custody-key-dates-and-delius-dev.hmpps.service.justice.gov.uk",
+        SUPERVISION_PACKAGES_API_URL:
+          "https://supervision-packages-api-dev.hmpps.service.justice.gov.uk",
+      })) {
+        expect(
+          new URL(process.env[name]!).origin,
+          `${name} must target dev/test`,
+        ).toBe(origin);
+      }
+      env.requireOasys();
+      const integrationToken = await getIntegrationToken();
+      expect(
+        integrationToken,
+        "Integration client must obtain an access token",
+      ).toEqual(expect.any(String));
+      expect(integrationToken).not.toBe("");
+      const token = await getToken();
+      const dates = finalThirdDates();
+      const offender = await new DeliusOffenderJourney(
+        this.page,
+      ).createTestOffender({
+        profile: "custodialAge25",
+        convictionDate: dates.sentenceDate.toJSDate(),
+      });
+      console.log(`Created final-third candidate CRN: ${offender.crn}`);
+
+      const { nomisId, bookingId } = await createAndBookPrisoner(
+        this.page,
+        offender.crn,
+        offender.deliusPerson,
+      );
+      expect(
+        nomisId,
+        "A single valid NOMIS ID is required for the refresh",
+      ).toMatch(/^[A-Z]\d{4}[A-Z]{2}$/);
+      try {
+        await test.info().attach("final-third-custody", {
+          body: JSON.stringify({ crn: offender.crn, nomisId, bookingId }),
+          contentType: "application/json",
+        });
+        await updateCustodyDates(bookingId, {
+          sentenceExpiryDate: dates.expiryDate.toISODate(),
+          licenceExpiryDate: dates.expiryDate.toISODate(),
+          conditionalReleaseDate: dates.releaseDate.toISODate(),
+        });
+        await loginToDelius(this.page);
+        await createRelease(
+          this.page,
+          offender.crn,
+          1,
+          false,
+          dates.releaseDate.toJSDate(),
+        );
+        const response = await this.page.request.post(
+          `${process.env.CUSTODY_KEY_DATES_API_URL}/update-custody-dates?dryRun=false`,
+          {
+            headers: authHeader(integrationToken),
+            // Never omit this list: the endpoint can otherwise request a bulk update.
+            data: [nomisId],
+          },
+        );
+        await assertOk(
+          response,
+          "Request derived custody dates for the new CRN",
+        );
+      } finally {
+        await releasePrisoner(nomisId);
+      }
+
+      await new OasysAssessmentJourney(this.page).assessOffender(
+        offender,
+        SETUP_ASSESSMENT,
+      );
+
+      await expect
+        .poll(
+          async () => {
+            const response = await this.page.request.get(
+              `${process.env.SUPERVISION_PACKAGES_API_URL}/frontend-context/${offender.crn}`,
+              { headers: authHeader(integrationToken) },
+            );
+            await assertOk(response, "Get the new CRN's supervision phase");
+            return {
+              frontend: await response.json(),
+              esupervision: await findSupervisionPackageStatus(
+                offender.crn,
+                token,
+              ),
+            };
+          },
+          {
+            timeout: 7 * 60 * 1000,
+            intervals: [5000, 10000],
+            message:
+              "The CRN must reach FTHRD, not merely be eligible. Check its FTHRD " +
+              "Throughcare date, the calculate-key-dates-from-delius flag, tier, " +
+              "release, and any FTHNA/NSD/ISC exclusions if this times out.",
+          },
+        )
+        .toMatchObject({
+          frontend: {
+            currentPhase: { phase: { code: "FTHRD" } },
+            context: { finalThirdEligibility: { eligible: true } },
+          },
+          esupervision: { onSupervisionPackage: true, inFinalThird: true },
+        });
+
+      return offender;
+    });
   }
 
   /**

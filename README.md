@@ -94,6 +94,55 @@ early-engagement CRN must have `inEarlyEngagement: true` and remain distinct fro
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag
 is false.
 
+### Create a final-third CRN
+
+Use the existing CRN setup journey from a Playwright test:
+
+```typescript
+const offender = await new OnlineCheckinJourney(page).createOffenderInFinalThird();
+// Use offender.crn to test final-third eligibility.
+```
+
+The method returns the same created-offender details as the Delius journey,
+after verifying that the case is in its final third. It does not set up online
+check ins. Like other created test cases, the CRN is attached to the calling
+test and recorded in `created-crns.txt`: normal cleanup deletes passing cases
+and retains failing cases for investigation.
+
+In addition to the existing Delius, OASys and eSupervision API credentials,
+configure the optional setup variables in `.env.example`. `DPS_USERNAME`
+and `HMPPS_AUTH_CLIENT_ID` / `HMPPS_AUTH_CLIENT_SECRET` are used by the shared
+Prison API helpers. That integration client needs permission to create, book,
+update custody dates and release synthetic prisoners, plus:
+
+- `PROBATION_API__CUSTODY_DATES__RW`
+- `PROBATION_API__SUPERVISION_PACKAGE__READ`
+
+The method validates that service URLs target dev/test before creating data.
+It reuses the shared Delius and Prison API helpers, creates a six-month
+`Adult Custody < 12m` sentence starting five months ago, records release after
+three months, requests derived key dates **only for its new NOMIS ID**, then
+completes our OASys/tier journey. The dev custody-date integration must have
+`calculate-key-dates-from-delius` enabled: the new prison booking need not
+have a matching Delius booking reference, so final-third derivation relies
+on the Delius sentence dates.
+
+Success requires both Supervision Packages' current phase to be `FTHRD` and
+eSupervision to report `onSupervisionPackage: true, inFinalThird: true`.
+Eligibility alone is not enough. The sentence expires about a month after creation.
+The combined setup still needs to be proven against dev services.
+
+The linked synthetic NOMIS record is retained; its booking
+is released when the custody setup finishes, including if that step fails.
+The method does not retry creation itself; any retry of the calling test creates
+a new CRN, just like the other setup journeys. Manual cleanup can delete a
+failed case's Delius/eSupervision records, but does not delete the NOMIS record.
+Date-planning tests can be run without creating any data:
+
+```bash
+npm run test:unit
+```
+
 ## Missed Check-in Expiry
 
 Run the expiry journey separately with `npm run test:missed-checkin`. It creates

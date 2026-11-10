@@ -19,6 +19,7 @@
     "test:dashboard:headed": "playwright test --project=dashboard --headed",
     "cleanup:crns": "ENV=test tsx src/scripts/cleanupCrns.ts",
     "cleanup:crns:headed": "ENV=test HEADED=true tsx src/scripts/cleanupCrns.ts",
+    "test:unit": "tsx --test src/support/utils/*.test.ts",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

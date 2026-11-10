@@ -102,8 +102,10 @@ export default class DeliusOffenderJourney {
 
   async createTestOffender({
     profile,
+    convictionDate = Yesterday.toJSDate(),
   }: {
     profile?: OffenderProfile;
+    convictionDate?: Date;
   } = {}): Promise<CreatedDeliusOffender> {
     const profileConfig = profile ? OFFENDER_PROFILES[profile] : undefined;
     const person = deliusPerson(profileConfig?.person);
@@ -129,7 +131,6 @@ export default class DeliusOffenderJourney {
     // Attach before setup so failures retain this CRN for investigation.
     await attachCreatedCrn(test.info(), crn);
 
-    const convictionDate = Yesterday.toJSDate();
     // Failure here is an unpopulated allocation dropdown, which happens before the
     // transfer is submitted - so retrying the whole thing can't double-transfer.
     await expect(async () => {
