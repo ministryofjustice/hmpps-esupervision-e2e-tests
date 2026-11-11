@@ -91,6 +91,7 @@ export default class OnlineCheckinJourney {
       eligibilityAnswers,
       pilotAnswer,
     });
+    await expect(summary.summaryValueLocator("sentence")).toHaveCount(0);
     if (assertContactRoutes) {
       await setup.changeContactPreferenceFromSummary(offender.crn, summary, {
         preference: Preference.EMAIL,

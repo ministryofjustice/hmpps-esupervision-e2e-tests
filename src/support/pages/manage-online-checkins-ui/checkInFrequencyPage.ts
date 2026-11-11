@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import PractitionerBasePage from "../base/practitionerBasePage";
 
 export enum FrequencyOptions {
@@ -16,6 +16,10 @@ export default class CheckInFrequencyPage extends PractitionerBasePage {
 
   override async assertOnPage(timeout = 10000): Promise<void> {
     await this.assertHeadingOnPage(timeout);
+  }
+
+  headingLocator(): Locator {
+    return this.page.getByRole("heading", { level: 1, name: this.heading });
   }
 
   async completePage(frequency?: FrequencyOptions): Promise<void> {

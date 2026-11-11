@@ -41,6 +41,8 @@ export const DISCUSS_BEFORE_SIGNUP_TITLE =
   "You should speak to the person about online check ins before you sign them up";
 export const ACCREDITED_PROGRAMME_APPROVAL_TITLE =
   "Confirm you’ve discussed this case with the accredited programme treatment manager";
+export const SENTENCE_SELECTION_TITLE =
+  "Which sentence do you want to add online check ins to?";
 
 export const errorTitle = (pageTitleText: string): string =>
   `Error: ${pageTitleText}`;
