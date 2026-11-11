@@ -110,7 +110,10 @@ test.describe("Tier G", () => {
     ]);
     await expect(moci.isEligible.discussionPoints()).toHaveCount(4);
     await moci.isEligible.completePage();
-    await new ManageCheckinsPages(page).checkinFrequency.assertOnPage();
+    // TEST_TIER_G_CRN has 2 sentences, so sentence selection comes before frequency.
+    await moci.sentenceSelection.assertOnPage();
+    await moci.sentenceSelection.completePage();
+    await moci.checkinFrequency.assertOnPage();
   });
 
   test("a disqualifying answer makes them not eligible", async ({ page }) => {

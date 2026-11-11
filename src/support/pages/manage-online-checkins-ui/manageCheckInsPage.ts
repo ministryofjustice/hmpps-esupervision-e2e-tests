@@ -83,4 +83,19 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
   questionCard(): Locator {
     return this.getQA("checkinQuestionsCard");
   }
+
+  sentenceCard(): Locator {
+    return this.getQA("sentenceCard");
+  }
+
+  sentenceDescription(): Locator {
+    return this.getQA("sentenceDescription", this.sentenceCard());
+  }
+
+  changeSentenceLink(): Locator {
+    return this.getQA("changeSentenceAction");
+  }
+  async clickChangeSentence(): Promise<void> {
+    await this.changeSentenceLink().click();
+  }
 }

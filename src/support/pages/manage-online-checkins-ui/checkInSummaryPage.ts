@@ -8,7 +8,8 @@ export type SummaryField =
   | "mobile"
   | "email"
   | "photo"
-  | "rationale";
+  | "rationale"
+  | "sentence";
 
 const CHANGE_LINK_QA: Record<SummaryField, string> = {
   date: "dateAction",
@@ -18,6 +19,7 @@ const CHANGE_LINK_QA: Record<SummaryField, string> = {
   email: "checkInEmailAction",
   photo: "photoUploadOptionAction",
   rationale: "rationaleAction",
+  sentence: "sentenceAction",
 };
 
 const VALUE_ROW_QA: Record<SummaryField, string> = {

@@ -16,6 +16,8 @@ export interface EligibilityOptions {
   pilotAnswer?: boolean;
   /** Only used on the accredited programme route. */
   rationale: string;
+  /** Only used when the person has 2+ sentences. */
+  stopAtSentenceSelection?: boolean;
 }
 
 const ELIGIBILITY_OUTCOME_TIMEOUT = 20000;
@@ -94,6 +96,19 @@ export default class EligibilityJourney {
       await moci.rationale.assertOnPage();
       await moci.rationale.completePage(opts.rationale);
     }
-    await moci.checkinFrequency.assertOnPage();
+    // Only shown when the person has 2+ sentences. Keeps a sentence that is already
+    // selected (restart selects the previous one), otherwise picks the first.
+    const sentenceSelection = moci.sentenceSelection.headingLocator();
+    await expect(
+      sentenceSelection.or(moci.checkinFrequency.headingLocator()),
+    ).toBeVisible();
+    if (await sentenceSelection.isVisible()) {
+      if (opts.stopAtSentenceSelection) return;
+      if (await moci.sentenceSelection.selectedOptionLabel().count()) {
+        await moci.sentenceSelection.clickContinue();
+      } else {
+        await moci.sentenceSelection.completePage();
+      }
+    }
   }
 }

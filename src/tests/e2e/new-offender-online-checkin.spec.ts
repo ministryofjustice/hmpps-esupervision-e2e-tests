@@ -69,7 +69,10 @@ async function changeFrequencyWhileActive(
       manage.changeNextCheckinDateLink(),
       "An active check in cannot be moved",
     ).toHaveCount(0);
-
+    await expect(
+      manage.changeSentenceLink(),
+      "A person with 1 sentence has no sentence to change",
+    ).toHaveCount(0);
     const { uuid } = await getOffenderByCrn(crn, token);
     const awaiting = await listOffenderCheckins(
       env.practitionerName(),

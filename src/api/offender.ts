@@ -5,6 +5,7 @@ import { assertOk, authHeader, withApiContext } from "./apiHelper";
 export interface Offender {
   uuid: string;
   status: string;
+  currentEvent?: number | null;
 }
 
 export const findOffenderByCrn = async (
@@ -148,4 +149,45 @@ export const deleteOffenderRecord = async (
     }
     await assertOk(response, `Delete offender record for ${crn}`);
     return true;
+  });
+
+export interface ActiveSentence {
+  eventNumber: number;
+  description: string;
+  expectedEndDate: string | null;
+}
+
+interface PersonalDetailsResponse {
+  events?: {
+    number: number;
+    sentence: { description: string; expectedEndDate?: string | null } | null;
+  }[];
+}
+
+export const getActiveSentences = async (
+  crn: string,
+  token: string,
+): Promise<ActiveSentence[]> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.get(
+      `/v2/offenders/crn/${crn}/personal-details`,
+      { headers: authHeader(token) },
+    );
+    await assertOk(response, `Get personal details ${crn}`);
+    const body = (await response.json()) as PersonalDetailsResponse;
+    return (body.events ?? [])
+      .flatMap(({ number, sentence }) =>
+        sentence
+          ? [
+              {
+                eventNumber: number,
+                description: sentence.description,
+                expectedEndDate: sentence.expectedEndDate ?? null,
+              },
+            ]
+          : [],
+      )
+      .sort((a, b) =>
+        (b.expectedEndDate ?? "").localeCompare(a.expectedEndDate ?? ""),
+      );
   });
