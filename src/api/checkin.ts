@@ -15,6 +15,19 @@ export const createEsupervisionCheckin = async (
     return (await response.json()).uuid;
   });
 
+export const cancelCheckin = async (
+  uuid: string,
+  reason: string,
+  token: string,
+): Promise<void> =>
+  withApiContext<void>(async (ctx) => {
+    const response = await ctx.post(`/v2/offender_checkins/${uuid}/cancel`, {
+      headers: authHeader(token),
+      data: { cancelledBy: env.practitionerName(), reason },
+    });
+    await assertOk(response, `Cancel checkin ${uuid}`);
+  });
+
 export interface CheckinSummary {
   uuid: string;
   crn: string;

@@ -22,6 +22,8 @@ export const MISSED_REVIEWED_CHECK_IN_TITLE =
   "Online check in missed and reviewed";
 
 export const STOP_CHECKINS_TITLE = "Stop online check ins for the person";
+export const CANCEL_CHECKIN_TITLE =
+  "Cancel upcoming online check in for the person";
 export const CONTACT_PREFERENCE_TITLE =
   "How does the person want us to send a link to the service?";
 
