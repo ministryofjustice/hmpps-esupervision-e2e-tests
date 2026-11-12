@@ -60,7 +60,9 @@ export default class CustomQuestionsJourney {
       manage.changeQuestionsLink(),
       "Change questions link should be present for a future check in",
     ).toBeVisible();
-
+    // Future check ins (ESUP-2233) OFF: no cancel link should be present for future check ins
+    // When ESUP-2223 is on, this flips to to BeVisible()
+    await expect(manage.cancelCheckInLink()).toHaveCount(0);
     const nextCheckinDate =
       (await manage.nextCheckinDate().textContent())?.trim() ?? "";
     return { manage, nextCheckinDate };

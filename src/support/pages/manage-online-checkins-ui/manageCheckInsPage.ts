@@ -80,6 +80,10 @@ export default class ManageCheckInsPage extends PractitionerBasePage {
     return this.getQA("updateBanner");
   }
 
+  cancelCheckInLink(): Locator {
+    return this.getQA("cancel-checkin-link");
+  }
+
   questionCard(): Locator {
     return this.getQA("checkinQuestionsCard");
   }
