@@ -8,14 +8,14 @@ import OverviewPage from "../../support/pages/mpop/overviewPage";
 import { Pages as CheckinPages } from "../../support/pages/checkins-ui/Pages";
 import { assertActiveManageCrn } from "../../support/assertions/api/supervisionPackageAPI";
 import {
-  cancelCheckinDueToday,
-  ensureCheckinDueToday,
+  cancelOpenCheckins,
+  openNewCheckinDueToday,
 } from "../../support/utils/activeCheckin";
 
 // Uses TEST_ADHOC_CRN: ad hoc, nothing booked. Future check ins (ESUP-2223) off,
-// so only an open check in (link sent) can be cancelled. The test opens one for
-// today and cancels it; afterAll cancels it through the API if the test failed
-// first, so the ad hoc validation test still finds nothing booked.
+// so only an open check in (link sent) can be cancelled. beforeAll cancels
+// anything left open and opens a new one for today; afterAll cancels any open
+// check in, so the ad hoc validation test still finds nothing booked.
 test.describe("cancel an open check in (existing CRN)", () => {
   const crn = env.adhocCrn();
   let token: string;
@@ -24,11 +24,15 @@ test.describe("cancel an open check in (existing CRN)", () => {
   test.beforeAll(async () => {
     await assertActiveManageCrn(crn);
     token = await getToken();
-    checkinUuid = await ensureCheckinDueToday(crn, token);
+    checkinUuid = await openNewCheckinDueToday(crn, token);
   });
 
   test.afterAll(async () => {
-    await cancelCheckinDueToday(crn, await getToken());
+    await cancelOpenCheckins(
+      crn,
+      await getToken(),
+      "E2E clean-up after cancel test",
+    );
   });
 
   test("practitioner cancels an open check in -> nothing booked, person told it is cancelled", async ({

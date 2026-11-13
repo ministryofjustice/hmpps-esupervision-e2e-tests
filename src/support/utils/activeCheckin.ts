@@ -34,33 +34,30 @@ export const ensureActiveCheckin = async (crn: string): Promise<string> => {
   return token;
 };
 
-const checkinDueToday = async (
-  crn: string,
-  token: string,
-): Promise<string | undefined> => {
+const openCheckins = async (crn: string, token: string) => {
   const offender = await getOffenderByCrn(crn, token);
-  const open = await listOffenderCheckins(
+  return listOffenderCheckins(
     env.practitionerName(),
     offender.uuid,
     token,
     "AWAITING_CHECKIN",
   );
-  return open.find((c) => c.dueDate === today.toISODate())?.uuid;
 };
 
-export const ensureCheckinDueToday = async (
+export const cancelOpenCheckins = async (
   crn: string,
   token: string,
-): Promise<string> =>
-  (await checkinDueToday(crn, token)) ??
-  (await createEsupervisionCheckin(crn, dueDateString(today), token));
-
-export const cancelCheckinDueToday = async (
-  crn: string,
-  token: string,
+  reason: string,
 ): Promise<void> => {
-  const uuid = await checkinDueToday(crn, token);
-  if (uuid) {
-    await cancelCheckin(uuid, "E2E clean-up after a failed run", token);
+  for (const checkin of await openCheckins(crn, token)) {
+    await cancelCheckin(checkin.uuid, reason, token);
   }
+};
+
+export const openNewCheckinDueToday = async (
+  crn: string,
+  token: string,
+): Promise<string> => {
+  await cancelOpenCheckins(crn, token, "E2E clean-up before cancel test");
+  return createEsupervisionCheckin(crn, dueDateString(today), token);
 };
