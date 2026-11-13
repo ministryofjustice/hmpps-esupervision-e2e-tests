@@ -12,6 +12,7 @@ import FallbackRecordPage from "./fallbackRecordPage";
 import AdditionalQuestionPage from "./additionalQuestionPage";
 import HeaderPage from "./headerPage";
 import ChatbotPage from "./chatbotPage";
+import CancelledPage from "./cancelledPage";
 
 export class Pages {
   readonly header: HeaderPage;
@@ -27,6 +28,7 @@ export class Pages {
   readonly checkAnswers: CheckAnswersPage;
   readonly confirmation: ConfirmationPage;
   readonly additionalQuestion: AdditionalQuestionPage;
+  readonly cancelled: CancelledPage;
 
   constructor(page: Page) {
     this.header = new HeaderPage(page);
@@ -42,5 +44,6 @@ export class Pages {
     this.confirmation = new ConfirmationPage(page);
     this.additionalQuestion = new AdditionalQuestionPage(page);
     this.chatbot = new ChatbotPage(page);
+    this.cancelled = new CancelledPage(page);
   }
 }

@@ -38,6 +38,7 @@ import AccreditedProgrammeApprovalPage from "./accreditedProgrammeApprovalPage";
 
 import ScheduleCheckInDatePage from "./scheduleCheckInDatePage";
 import ScheduleCheckInQuestionsPage from "./scheduleCheckInQuestionsPage";
+import CancelCheckinPage from "./cancelCheckinPage";
 
 export class ManageCheckinsPages {
   readonly header: Header;
@@ -65,6 +66,7 @@ export class ManageCheckinsPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
+  readonly cancelCheckin: CancelCheckinPage;
 
   readonly addQuestions: AddQuestionsPage;
   readonly chooseQuestion: ChooseQuestionPage;
@@ -113,6 +115,7 @@ export class ManageCheckinsPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+    this.cancelCheckin = new CancelCheckinPage(page);
 
     this.addQuestions = new AddQuestionsPage(page);
     this.chooseQuestion = new ChooseQuestionPage(page);

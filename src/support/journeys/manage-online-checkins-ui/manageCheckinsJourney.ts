@@ -4,6 +4,7 @@ import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manag
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
+  CANCEL_CHECKIN_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
@@ -120,6 +121,27 @@ export default class ManageCheckInsJourney {
     await test.step(`Stop online check ins for ${crn}`, async () => {
       await this.openStopCheckIns(crn);
       await this.pages.stop.completePage(reason);
+    });
+  }
+
+  async openCancelCheckIn(crn: string): Promise<void> {
+    await test.step(`Open cancel check in for ${crn}`, async () => {
+      const manage = await this.openManage(crn);
+      await expect(
+        manage.cancelCheckInLink(),
+        "Cancel check in should be on the upcoming check in card while a check in is open",
+      ).toBeVisible();
+      await manage.cancelCheckInLink().click();
+      await this.pages.cancelCheckin.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, CANCEL_CHECKIN_TITLE);
+    });
+  }
+
+  async cancelCheckIn(crn: string, reason: string): Promise<void> {
+    await test.step(`Cancel the open check in for ${crn}`, async () => {
+      await this.openCancelCheckIn(crn);
+      await this.pages.cancelCheckin.completePage(reason);
+      await this.pages.manage.assertOnPage();
     });
   }
 
