@@ -179,6 +179,7 @@ test.describe("Ad hoc online check ins", () => {
 
     await journey.reviewCheckin(
       offender.crn,
+      checkinUuid,
       {
         identity: IdentityDecision.MATCH,
         riskManagement: false,

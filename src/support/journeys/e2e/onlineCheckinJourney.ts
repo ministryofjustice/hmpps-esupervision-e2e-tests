@@ -157,19 +157,36 @@ export default class OnlineCheckinJourney {
   /** `assertMpopHandoff` - see reviewCompletedCheckin for what it turns on. */
   async reviewCheckin(
     crn: string,
+    checkinUuid: string,
     decision?: ReviewDecision,
     details?: CompletedCheckinDetails,
     options?: { assertMpopHandoff?: boolean },
   ): Promise<void> {
-    await this.review.reviewCompletedCheckin(crn, decision, details, options);
+    await this.review.reviewCompletedCheckin(
+      crn,
+      checkinUuid,
+      decision,
+      details,
+      options,
+    );
   }
 
-  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
-    await this.review.assertReviewedCheckinBackLinkLandsInMpop(crn);
+  async assertReviewedCheckinBackLinkLandsInMpop(
+    crn: string,
+    checkinUuid: string,
+  ): Promise<void> {
+    await this.review.assertReviewedCheckinBackLinkLandsInMpop(
+      crn,
+      checkinUuid,
+    );
   }
 
-  async annotateCheckin(crn: string, annotation?: Annotation): Promise<void> {
-    await this.review.annotateReviewedCheckin(crn, annotation);
+  async annotateCheckin(
+    crn: string,
+    checkinUuid: string,
+    annotation?: Annotation,
+  ): Promise<void> {
+    await this.review.annotateReviewedCheckin(crn, checkinUuid, annotation);
   }
 
   async reviewMissedCheckin(
