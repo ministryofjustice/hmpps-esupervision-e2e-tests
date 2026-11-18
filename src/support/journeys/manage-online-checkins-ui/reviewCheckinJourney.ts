@@ -73,6 +73,7 @@ export default class ReviewCheckinJourney {
    */
   async reviewCompletedCheckin(
     crn: string,
+    checkinUuid: string,
     decision: ReviewDecision = {},
     details?: CompletedCheckinDetails,
     { assertMpopHandoff = false } = {},
@@ -85,7 +86,7 @@ export default class ReviewCheckinJourney {
     } = decision;
 
     // Review the check in: Identity page, then the review notes page
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, checkinUuid);
     await this.pages.reviewIdentity.assertOnPage();
     await assertManageCheckinsPage(this.page, crn, REVIEW_IDENTITY_TITLE);
     if (assertMpopHandoff) {
@@ -129,7 +130,7 @@ export default class ReviewCheckinJourney {
     }
 
     // Re-open the check in and verify the review was saved
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, checkinUuid);
     await this.pages.reviewedCheckin.assertOnPage();
     await assertManageCheckinsPage(this.page, crn, REVIEWED_CHECK_IN_TITLE);
     await this.assertReviewIdentityTag(identity);
@@ -142,9 +143,12 @@ export default class ReviewCheckinJourney {
 
   /** Opens a reviewed check in and follows Back, which should land on the
    *  activity log in MPOP. */
-  async assertReviewedCheckinBackLinkLandsInMpop(crn: string): Promise<void> {
+  async assertReviewedCheckinBackLinkLandsInMpop(
+    crn: string,
+    checkinUuid: string,
+  ): Promise<void> {
     await test.step("Back returns to the activity log in MPOP", async () => {
-      await this.openCheckinContact(crn);
+      await this.openCheckinContact(crn, checkinUuid);
       await this.pages.reviewedCheckin.assertOnPage();
       await followToMpop(
         this.page,
@@ -191,15 +195,16 @@ export default class ReviewCheckinJourney {
 
   async annotateReviewedCheckin(
     crn: string,
+    checkinUuid: string,
     annotation: Annotation = {},
   ): Promise<void> {
     const { note = "E2E automated annotation", sensitive = false } = annotation;
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, checkinUuid);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.pages.reviewedCheckin.addNote(note, sensitive);
 
     // Re-open and verify the note was saved
-    await this.openCheckinContact(crn);
+    await this.openCheckinContact(crn, checkinUuid);
     await this.pages.reviewedCheckin.assertOnPage();
     await this.assertReviewSummaryShows(note);
   }
@@ -397,15 +402,21 @@ export default class ReviewCheckinJourney {
     ).toHaveCount(shown ? 1 : 0);
   }
 
-  private async openCheckinContact(crn: string): Promise<void> {
+  /** By check in, as the activity log can also list the next (scheduled) one. */
+  private async openCheckinContact(
+    crn: string,
+    checkinUuid: string,
+  ): Promise<void> {
     await expect(async () => {
       await this.pages.overview.goTo(crn);
       await this.pages.overview.clickActivityLogTab();
       await this.pages.activityLog.assertOnPage();
-      await expect(this.pages.activityLog.manageCheckinLink()).toBeVisible({
+      await expect(
+        this.pages.activityLog.manageCheckinLink(checkinUuid),
+      ).toBeVisible({
         timeout: 5000,
       });
     }).toPass({ timeout: 60000, intervals: [3000, 5000, 10000] });
-    await this.pages.activityLog.openCheckinReview();
+    await this.pages.activityLog.openCheckinReview(checkinUuid);
   }
 }

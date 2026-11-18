@@ -199,14 +199,27 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details, {
-        assertMpopHandoff: scenario.assertMpopHandoff,
-      });
+      await journey.reviewCheckin(
+        offender.crn,
+        checkinUuid,
+        scenario.review,
+        details,
+        {
+          assertMpopHandoff: scenario.assertMpopHandoff,
+        },
+      );
       if (scenario.assertMpopHandoff) {
-        await journey.assertReviewedCheckinBackLinkLandsInMpop(offender.crn);
+        await journey.assertReviewedCheckinBackLinkLandsInMpop(
+          offender.crn,
+          checkinUuid,
+        );
       }
 
-      await journey.annotateCheckin(offender.crn, scenario.annotation);
+      await journey.annotateCheckin(
+        offender.crn,
+        checkinUuid,
+        scenario.annotation,
+      );
 
       // Recurring always has a next check in. With the first check in today it
       // moves on by the interval (a week, or 2 weeks after the frequency
