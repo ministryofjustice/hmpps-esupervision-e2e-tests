@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { env } from "../../../config/env";
-import SignInPage from "../../pages/base/signInPage";
+import SignInPage, { retryFailedSignIn } from "../../pages/base/signInPage";
 import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manageCheckinsPages";
 
 export default class SignInJourney {
@@ -16,6 +16,7 @@ export default class SignInJourney {
     await test.step("Sign in to the manage online check ins UI", async () => {
       await this.page.goto(target);
       await new SignInPage(this.page).completeSignIn();
+      await retryFailedSignIn(this.page, target);
       await expect(this.pages.header.userName()).toBeVisible();
     });
     return this.pages;
