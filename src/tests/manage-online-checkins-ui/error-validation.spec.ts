@@ -224,6 +224,10 @@ test.describe("Validation errors", () => {
     test("shows a validation error when the pilot question is not answered", async ({
       page,
     }) => {
+      test.skip(
+        env.eligibilityEndpoint(),
+        "useEligibilityEndpoint removes the pilot question",
+      );
       const { crn, moci } = await openExistingTierSetup(page, "A");
       const message =
         "Select if you have one or more people who started using online check ins before 1 October 2026";

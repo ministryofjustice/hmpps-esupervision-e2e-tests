@@ -63,4 +63,13 @@ export const env = {
   tierCrn: (tier: ExistingTier): string =>
     requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
   adhocCrn: (): string => requiredCrn("TEST_ADHOC_CRN"),
+  /**
+   * Whether MOCI's `useEligibilityEndpoint` flag is on in the environment under test, so the ESUP
+   * API decides eligibility: no Recalled box, no pilot question. On unless ELIGIBILITY_ENDPOINT is
+   * "off" - set that while the flag is off, until the old journey's tests are removed.
+   */
+  eligibilityEndpoint: (): boolean =>
+    !["off", "false"].includes(
+      (process.env.ELIGIBILITY_ENDPOINT ?? "on").trim().toLowerCase(),
+    ),
 };

@@ -49,6 +49,8 @@ jobs:
       TEST_ADHOC_CRN: ${{secrets.TEST_ADHOC_CRN }}
 
       PRACTITIONER_NAME: ${{secrets.PRACTITIONER_NAME }}
+      # "off" while MOCI's useEligibilityEndpoint flag is off in dev
+      ELIGIBILITY_ENDPOINT: ${{ vars.ELIGIBILITY_ENDPOINT }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
