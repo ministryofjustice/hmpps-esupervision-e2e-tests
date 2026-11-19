@@ -23,6 +23,8 @@ import { urlPathPattern } from "../../support/utils/url";
 import {
   assertEligibility,
   practitionerHasPilotCase,
+  requirePilotPractitioner,
+  resetPilotCase,
 } from "../../support/assertions/api/eligibilityAPI";
 import { openExistingTierSetup } from "../../support/fixtures/existingTierCase";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
@@ -41,8 +43,9 @@ import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-
 // "off") the ESUP API decides: there is no Recalled box and no pilot question,
 // and the API's reason is shown. Tier C, and Tier A/B off an accredited
 // programme, are eligible only if the practitioner has ever had a pilot case.
-// Nothing sets that in dev, so those tests read it from the API and skip the
-// half that doesn't apply. Tests marked OLD_JOURNEY go when the flag does.
+// Those tests mark TEST_PILOT_CASE_CRN as a pilot case, or not, through the
+// API's test support, and skip when that can't give what they need. Tests
+// marked OLD_JOURNEY go when the flag does.
 
 const OLD_JOURNEY =
   "The pilot question and Recalled box are only asked while useEligibilityEndpoint is off";
@@ -52,8 +55,8 @@ const skipNewJourney = () =>
     !env.eligibilityEndpoint(),
     "Only while useEligibilityEndpoint is on",
   );
-const NO_PILOT_CASE = "The e2e practitioner has never had a pilot case in dev";
-const HAS_PILOT_CASE = "The e2e practitioner has had a pilot case in dev";
+
+test.afterEach(resetPilotCase);
 
 const NOT_ON_PROGRAMME_REASON =
   "is not eligible for online check ins because they are in Tier A or B, and are not on accredited programme";
@@ -84,7 +87,7 @@ test.describe("Tier A to C without an accredited programme", () => {
       page,
     }) => {
       skipNewJourney();
-      test.skip(!(await practitionerHasPilotCase()), NO_PILOT_CASE);
+      await requirePilotPractitioner(true);
       const { crn, moci } = await openExistingTierSetup(page, tier);
 
       await moci.eligibilityCheck.completePage(["none"]);
@@ -103,7 +106,7 @@ test.describe("Tier A to C without an accredited programme", () => {
       page,
     }) => {
       skipNewJourney();
-      test.skip(await practitionerHasPilotCase(), HAS_PILOT_CASE);
+      await requirePilotPractitioner(false);
       const { crn, moci } = await openExistingTierSetup(page, tier);
 
       await moci.eligibilityCheck.completePage(["none"]);

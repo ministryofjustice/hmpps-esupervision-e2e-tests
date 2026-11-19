@@ -24,7 +24,10 @@ import {
 import { IdentityDecision } from "../../support/pages/manage-online-checkins-ui/reviewIdentityPage";
 import { QuestionToAdd } from "../../data/models";
 import { OffenderProfile } from "../../support/journeys/ndelius/deliusOffenderJourney";
-import { practitionerHasPilotCase } from "../../support/assertions/api/eligibilityAPI";
+import {
+  requirePilotPractitioner,
+  resetPilotCase,
+} from "../../support/assertions/api/eligibilityAPI";
 
 interface CheckinScenario {
   name: string;
@@ -162,17 +165,16 @@ const scenarios: CheckinScenario[] = [
 // a failure in one test does not skip the other test
 
 test.describe("Online check in for a new offender", () => {
+  test.afterEach(resetPilotCase);
+
   for (const scenario of scenarios) {
     test(`Create offender and setup online checkin and Completes a checkin when ${scenario.name} -> complete check in`, async ({
       page,
     }) => {
-      // Tier C is only eligible for a practitioner who has had a pilot case, which nothing sets in dev
-      test.skip(
-        scenario.profile === "tierCAge25" &&
-          env.eligibilityEndpoint() &&
-          !(await practitionerHasPilotCase()),
-        "Tier C needs a practitioner who has had a pilot case, and the e2e practitioner has none in dev",
-      );
+      // Tier C is only eligible for a practitioner who has had a pilot case
+      if (scenario.profile === "tierCAge25" && env.eligibilityEndpoint()) {
+        await requirePilotPractitioner(true);
+      }
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),

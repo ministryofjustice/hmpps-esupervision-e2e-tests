@@ -64,6 +64,12 @@ export const env = {
     requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
   adhocCrn: (): string => requiredCrn("TEST_ADHOC_CRN"),
   /**
+   * Optional. A person set up by the e2e practitioner and past INITIAL, which the tests mark as a
+   * pilot case to make the practitioner a pilot practitioner, and unmark afterwards.
+   */
+  pilotCaseCrn: (): string | undefined =>
+    process.env.TEST_PILOT_CASE_CRN?.trim() || undefined,
+  /**
    * Whether MOCI's `useEligibilityEndpoint` flag is on in the environment under test, so the ESUP
    * API decides eligibility: no Recalled box, no pilot question. On unless ELIGIBILITY_ENDPOINT is
    * "off" - set that while the flag is off, until the old journey's tests are removed.
