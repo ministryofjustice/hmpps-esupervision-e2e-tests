@@ -171,8 +171,13 @@ test.describe("Online check in for a new offender", () => {
     test(`Create offender and setup online checkin and Completes a checkin when ${scenario.name} -> complete check in`, async ({
       page,
     }) => {
-      // Tier C is only eligible for a practitioner who has had a pilot case
-      if (scenario.profile === "tierCAge25" && env.eligibilityEndpoint()) {
+      // A new Tier C person, and a new Tier A/B one (in early engagement, so not eligible through an
+      // accredited programme), are only eligible for a practitioner who has had a pilot case
+      if (
+        (scenario.profile === "tierCAge25" ||
+          scenario.profile === "highRiskAge25") &&
+        env.eligibilityEndpoint()
+      ) {
         await requirePilotPractitioner(true);
       }
       const journey = new OnlineCheckinJourney(page);
