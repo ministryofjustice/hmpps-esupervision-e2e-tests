@@ -54,7 +54,6 @@ export const env = {
   mpopStopRestartCrn: (): string => requiredCrn("TEST_MPOP_STOP_RESTART_CRN"),
   restartAccreditedCrn: (): string =>
     requiredCrn("TEST_RESTART_ACCREDITED_CRN"),
-  tierMissingCrn: (): string => requiredCrn("TEST_TIER_MISSING_CRN"),
   tierNotSupervisedCrn: (): string =>
     requiredCrn("TEST_TIER_NOT_SUPERVISED_CRN"),
   noPackageCrn: (): string => requiredCrn("TEST_NO_PACKAGE_CRN"),

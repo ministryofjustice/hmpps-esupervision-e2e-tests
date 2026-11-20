@@ -20,6 +20,9 @@ import {
   MPOP_PATH,
 } from "../../support/assertions/manage-online-checkins-ui/mpopHandoff";
 import { urlPathPattern } from "../../support/utils/url";
+import DeliusOffenderJourney from "../../support/journeys/ndelius/deliusOffenderJourney";
+import { checkEligibility } from "../../api/eligibility";
+import { getToken } from "../../api/auth";
 import {
   assertEligibility,
   practitionerHasPilotCase,
@@ -404,47 +407,66 @@ test.describe("Tier A", () => {
   });
 });
 
-for (const { status, crn, tierText, headerTier } of [
-  {
-    status: "Missing",
-    crn: env.tierMissingCrn(),
-    tierText: /Tier:\s*Missing\b/i,
-    headerTier: null,
-  },
-  {
-    status: "Not_supervised",
-    crn: env.tierNotSupervisedCrn(),
-    tierText: /Tier:\s*Not[_ ]supervised\b/i,
-    headerTier: "NOT_SUPERVISED",
-  },
-]) {
-  test(`Tier ${status} is ruled out before the eligibility questions`, async ({
-    page,
-  }) => {
-    await assertTierHeader(crn, headerTier);
-    if (env.eligibilityEndpoint()) {
-      // The API rules out in its own order, so a CRN ruled out sooner would show another reason
-      await assertEligibility(crn, null, {
-        outcome: "INELIGIBLE",
-        ruleCode: status === "Missing" ? "IS_TIER_MISSING" : "HAS_ACTIVE_EVENT",
-      });
-    }
-    const journey = new SetupOnlineCheckinsJourney(page);
-    await journey.login();
-    await journey.startSetupExpectingNotEligible(crn);
+// A new person in NDelius is on a supervision package but has no tier until an OASys assessment,
+// which this deliberately skips - so they reach the missing tier rule rather than being ruled
+// out sooner, as a long-lived CRN can drift into.
+test("Tier Missing is ruled out before the eligibility questions", async ({
+  page,
+}) => {
+  const { crn } =
+    await test.step("Create a person in NDelius with no OASys assessment", () =>
+      new DeliusOffenderJourney(page).createTestOffender());
+  await assertTierHeader(crn, null);
+  if (env.eligibilityEndpoint()) {
+    await expect
+      .poll(
+        async () =>
+          (await checkEligibility(crn, null, await getToken())).ruleCode,
+        {
+          message: `New person ${crn} should be ruled out by the missing tier rule`,
+          timeout: 60000,
+        },
+      )
+      .toBe("IS_TIER_MISSING");
+  }
+  const journey = new SetupOnlineCheckinsJourney(page);
+  await journey.login();
+  await journey.startSetupExpectingNotEligible(crn);
 
-    await assertTier(page, crn, tierText);
-    const moci = new ManageCheckinsPages(page);
-    if (status === "Missing") {
-      await expect(moci.notEligible.missingTierReason()).toBeVisible();
-    }
-    await assertRelativeHref(
-      moci.notEligible.backLink(),
-      "Back on the not eligible page",
-      MPOP_PATH.overview(crn),
-    );
-  });
-}
+  await assertTier(page, crn, /Tier:\s*Missing\b/i);
+  const moci = new ManageCheckinsPages(page);
+  await expect(moci.notEligible.missingTierReason()).toBeVisible();
+  await assertRelativeHref(
+    moci.notEligible.backLink(),
+    "Back on the not eligible page",
+    MPOP_PATH.overview(crn),
+  );
+});
+
+test("Tier Not_supervised is ruled out before the eligibility questions", async ({
+  page,
+}) => {
+  const crn = env.tierNotSupervisedCrn();
+  await assertTierHeader(crn, "NOT_SUPERVISED");
+  if (env.eligibilityEndpoint()) {
+    // The API rules out in its own order, so a CRN ruled out sooner would show another reason
+    await assertEligibility(crn, null, {
+      outcome: "INELIGIBLE",
+      ruleCode: "HAS_ACTIVE_EVENT",
+    });
+  }
+  const journey = new SetupOnlineCheckinsJourney(page);
+  await journey.login();
+  await journey.startSetupExpectingNotEligible(crn);
+
+  await assertTier(page, crn, /Tier:\s*Not[_ ]supervised\b/i);
+  const moci = new ManageCheckinsPages(page);
+  await assertRelativeHref(
+    moci.notEligible.backLink(),
+    "Back on the not eligible page",
+    MPOP_PATH.overview(crn),
+  );
+});
 
 test("a case without a supervision package is not eligible", async ({
   page,
