@@ -2,6 +2,18 @@ name: Playwright Tests
 on:
   # Run manually via GitHub API / Action tab
   workflow_dispatch:
+    inputs:
+      target:
+        description: Environment whose check ins UI, API and check in UI to test (MPOP, NDelius and OASys are always dev)
+        type: choice
+        options:
+          - dev
+          - test
+        default: dev
+      specs:
+        description: Spec files or folders to run, space separated (default all)
+        type: string
+        default: ""
   schedule:
     - cron: "30 7 * * 1-5"
 concurrency:
@@ -14,12 +26,12 @@ jobs:
     env:
       TZ: Europe/London
        # URLs
-      ESUPERVISION_API_URL: https://esupervision-api-dev.hmpps.service.justice.gov.uk
-      PROBATION_CHECK_IN_URL: https://probation-check-in-dev.hmpps.service.justice.gov.uk
+      ESUPERVISION_API_URL: ${{ inputs.target == 'test' && 'https://esupervision-api-test.hmpps.service.justice.gov.uk' || 'https://esupervision-api-dev.hmpps.service.justice.gov.uk' }}
+      PROBATION_CHECK_IN_URL: ${{ inputs.target == 'test' && 'https://probation-check-in-test.hmpps.service.justice.gov.uk' || 'https://probation-check-in-dev.hmpps.service.justice.gov.uk' }}
       AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
       MPOP_URL: https://manage-people-on-probation-dev.hmpps.service.justice.gov.uk
       DELIUS_URL: https://ndelius.test.probation.service.justice.gov.uk
-      MANAGE_CHECKINS_UI_URL: https://manage-online-check-ins-ui-dev.hmpps.service.justice.gov.uk
+      MANAGE_CHECKINS_UI_URL: ${{ inputs.target == 'test' && 'https://manage-online-check-ins-test.hmpps.service.justice.gov.uk' || 'https://manage-online-check-ins-ui-dev.hmpps.service.justice.gov.uk' }}
       OASYS_URL: https://t2.oasys.service.justice.gov.uk/eor/f?p=100:101
 
       # Credentials
@@ -63,7 +75,9 @@ jobs:
         run: npx playwright install
       - name: Run Playwright tests
         id: tests
-        run: npm run test
+        env:
+          SPECS: ${{ inputs.specs }}
+        run: npm run test -- $SPECS
       - name: Publish JUnit report
         if: always()
         uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386
