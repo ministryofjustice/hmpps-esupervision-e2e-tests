@@ -20,22 +20,24 @@ export default class OverviewPage extends PractitionerBasePage {
       name: "Set up online check ins",
     });
     await expect(link).toBeVisible();
-    // MPOP has no test environment, so against the test environment its link still points at the
-    // dev check ins UI: go to the same page on the configured one instead.
+    // MPOP has no test environment, so against the test environment its link (via MPOP's redirect)
+    // lands on the dev check ins UI. Start the same journey on the configured one instead.
     const href = await link.getAttribute("href");
-    const target = href ? new URL(href, this.page.url()) : null;
+    const start = href ? new URL(href, this.page.url()) : null;
+    await link.click();
     const configured = new URL(env.manageCheckinsUiUrl());
+    // Every setup page, on MPOP or a check ins UI, is under .../check-in/
+    await this.page.waitForURL((url) => url.pathname.includes("/check-in/"));
+    const landed = new URL(this.page.url());
     if (
-      target &&
-      target.host !== configured.host &&
-      target.host !== new URL(env.mpopUrl()).host
+      start &&
+      landed.host !== configured.host &&
+      landed.host !== new URL(env.mpopUrl()).host
     ) {
       await this.page.goto(
-        `${configured.origin}${target.pathname}${target.search}`,
+        `${configured.origin}${start.pathname}${start.search}`,
       );
-      return;
     }
-    await link.click();
   }
 
   nextCheckinValue(): Locator {
