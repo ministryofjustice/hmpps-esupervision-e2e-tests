@@ -22,8 +22,7 @@
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "postinstall": "patch-package"
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -40,8 +39,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "1.329.0",
-    "@playwright/test": "1.65.0",
+    "@ministryofjustice/hmpps-probation-integration-e2e-tests": "1.331.0",
+    "@playwright/test": "1.65.1",
     "@types/luxon": "^3.4.2",
     "@types/node": "^25.9.2",
     "@typescript-eslint/eslint-plugin": "^8.0.1",
@@ -51,7 +50,6 @@
     "eslint-plugin-prettier": "^5.5.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
-    "patch-package": "^8.0.1",
     "prettier": "^3.8.3",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3"
