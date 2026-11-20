@@ -7,6 +7,8 @@ import {
   IS_ELIGIBLE_TITLE,
   NOT_ELIGIBLE_TITLE,
   PILOT_CHECK_TITLE,
+  ELIGIBILITY_CHECK_TITLE,
+  errorTitle,
 } from "../../data/manage-online-checkins-ui/pageTitles";
 import { assertManageCheckinsPage } from "../../support/assertions/manage-online-checkins-ui/manageCheckinsAssertions";
 import {
@@ -244,6 +246,30 @@ test.describe("Tier G", () => {
     await expect(
       moci.eligibilityCheck.answerCheckbox("recalled"),
       "Recall comes from NDelius when the ESUP API decides",
+    ).toHaveCount(0);
+  });
+
+  // U1 on the error page too. error-validation.spec.ts checks the same, but its setup needs
+  // TEST_MANAGE_CRN, which only exists in dev.
+  test("submitting nothing shows the error, still without a Recalled box", async ({
+    page,
+  }) => {
+    skipNewJourney();
+    const { crn, moci } = await openExistingTierSetup(page, "G");
+
+    await moci.eligibilityCheck.completePage([]);
+
+    await assertManageCheckinsPage(
+      page,
+      crn,
+      errorTitle(ELIGIBILITY_CHECK_TITLE),
+    );
+    await expect(moci.eligibilityCheck.errorSummary()).toContainText(
+      "Select if any of these apply to the person",
+    );
+    await expect(
+      moci.eligibilityCheck.answerCheckbox("recalled"),
+      "Recall isn't asked when the ESUP API decides",
     ).toHaveCount(0);
   });
 
