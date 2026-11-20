@@ -219,6 +219,11 @@ test.describe("Validation errors", () => {
         crn,
         errorTitle(ELIGIBILITY_CHECK_TITLE),
       );
+      // U1: the error page keeps the new journey's questions
+      await expect(
+        moci.eligibilityCheck.answerCheckbox("recalled"),
+        "Recall isn't asked when the ESUP API decides, on the error page too",
+      ).toHaveCount(env.eligibilityEndpoint() ? 0 : 1);
     });
 
     test("shows a validation error when the pilot question is not answered", async ({

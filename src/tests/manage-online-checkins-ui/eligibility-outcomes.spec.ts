@@ -25,7 +25,6 @@ import { checkEligibility } from "../../api/eligibility";
 import { getToken } from "../../api/auth";
 import {
   assertEligibility,
-  practitionerHasPilotCase,
   requirePilotPractitioner,
   resetPilotCase,
 } from "../../support/assertions/api/eligibilityAPI";
@@ -63,6 +62,8 @@ test.afterEach(resetPilotCase);
 
 const NOT_ON_PROGRAMME_REASON =
   "is not eligible for online check ins because they are in Tier A or B, and are not on accredited programme";
+const DEVICE_RESTRICTION_REASON =
+  "because they have sentence conditions that mean they can't use a device or internet";
 const TIER_C_REASON =
   "is not eligible for online check ins because they are in Tier C";
 
@@ -119,6 +120,36 @@ test.describe("Tier A to C without an accredited programme", () => {
         tier === "C" ? TIER_C_REASON : NOT_ON_PROGRAMME_REASON,
       );
       await expect(moci.notEligible.additionalTierInformation()).toBeVisible();
+      await expect(
+        moci.notEligible.backLink(),
+        "Decided after the questions, so Back revisits them",
+      ).toHaveAttribute("href", /\/eligibility-check$/);
+    });
+  }
+
+  // S9 beyond Tier G: the device restriction answer rules out every tier, ahead of the Tier A/B
+  // programme questions and the pilot.
+  for (const tier of ["A", "C"] as const) {
+    test(`Tier ${tier} with a device restriction is not eligible, whatever the pilot`, async ({
+      page,
+    }) => {
+      skipNewJourney();
+      const { crn, moci } = await openExistingTierSetup(page, tier);
+
+      await moci.eligibilityCheck.completePage(
+        tier === "A"
+          ? ["accreditedProgramme", "deviceRestriction"]
+          : ["deviceRestriction"],
+      );
+
+      await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
+      await expect(moci.notEligible.apiReason()).toContainText(
+        DEVICE_RESTRICTION_REASON,
+      );
+      await expect(
+        moci.notEligible.backLink(),
+        "Decided by an answer, so Back revisits the check",
+      ).toHaveAttribute("href", /\/eligibility-check$/);
     });
   }
 });
@@ -236,9 +267,13 @@ test.describe("Tier G", () => {
     await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
     await expect(moci.notEligible.reason()).toContainText(
       env.eligibilityEndpoint()
-        ? "because they have sentence conditions that mean they can't use a device or internet"
+        ? DEVICE_RESTRICTION_REASON
         : "has restrictions that mean they cannot use a device or the internet",
     );
+    await expect(
+      moci.notEligible.backLink(),
+      "Decided by an answer, so Back revisits the check",
+    ).toHaveAttribute("href", /\/eligibility-check$/);
   });
 
   test("changing an answer after being found eligible makes them not eligible", async ({
@@ -372,24 +407,88 @@ test.describe("Tier A", () => {
     );
   });
 
-  test("youth sentence alone counts only on an accredited programme", async ({
+  // S19 and S18: a youth sentence alone is decided as if nothing were ticked - by the pilot
+  test("youth sentence alone is eligible with a pilot practitioner", async ({
     page,
   }) => {
     skipNewJourney();
-    const pilot = await practitionerHasPilotCase();
+    await requirePilotPractitioner(true);
     const { crn, moci } = await openExistingTierSetup(page, "A");
 
     await moci.eligibilityCheck.completePage(["youthSentence"]);
 
-    // Decided as if nothing were ticked: by the pilot
-    if (pilot) {
-      await assertManageCheckinsPage(page, crn, IS_ELIGIBLE_TITLE);
-    } else {
-      await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
-      await expect(moci.notEligible.apiReason()).toContainText(
-        NOT_ON_PROGRAMME_REASON,
+    await assertManageCheckinsPage(page, crn, IS_ELIGIBLE_TITLE);
+  });
+
+  test("youth sentence alone is not eligible without a pilot practitioner", async ({
+    page,
+  }) => {
+    skipNewJourney();
+    await requirePilotPractitioner(false);
+    const { crn, moci } = await openExistingTierSetup(page, "A");
+
+    await moci.eligibilityCheck.completePage(["youthSentence"]);
+
+    await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
+    await expect(moci.notEligible.apiReason()).toContainText(
+      NOT_ON_PROGRAMME_REASON,
+    );
+  });
+
+  // S16: on an accredited programme the pilot doesn't apply, so a youth sentence still rules them out
+  test("accredited programme with a youth sentence is not eligible even with a pilot practitioner", async ({
+    page,
+  }) => {
+    skipNewJourney();
+    await requirePilotPractitioner(true);
+    const { crn, moci } = await openExistingTierSetup(page, "A");
+
+    await moci.eligibilityCheck.completePage([
+      "accreditedProgramme",
+      "youthSentence",
+    ]);
+
+    await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
+    await expect(moci.notEligible.reason()).toContainText(
+      /on an accredited programme, but are on a youth sentence/,
+    );
+  });
+
+  // U2: the pilot question has gone, so its page sends you on to wherever the check leads
+  test("the pilot question page can't be reached", async ({ page }) => {
+    skipNewJourney();
+    const { crn, moci } = await openExistingTierSetup(page, "A");
+    const setupUrl = new URL(page.url());
+    setupUrl.pathname = setupUrl.pathname.replace(
+      /\/eligibility-check$/,
+      "/pilot-check",
+    );
+    setupUrl.search = "";
+    const pilotCheckUrl = setupUrl.toString();
+    expect(
+      pilotCheckUrl,
+      "Setup should open on the eligibility check",
+    ).not.toBe(page.url());
+
+    await test.step("Before answering, back to the eligibility check", async () => {
+      await page.goto(pilotCheckUrl);
+      await moci.eligibilityCheck.assertOnPage();
+    });
+
+    await test.step("Once eligible, on to the eligible page", async () => {
+      await moci.eligibilityCheck.completePage(["accreditedProgramme"]);
+      await assertManageCheckinsPage(
+        page,
+        crn,
+        ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
       );
-    }
+      await page.goto(pilotCheckUrl);
+      await assertManageCheckinsPage(
+        page,
+        crn,
+        ACCREDITED_PROGRAMME_IS_ELIGIBLE_TITLE,
+      );
+    });
   });
 
   test("youth sentence alone is eligible when the pilot answer is Yes", async ({
@@ -578,4 +677,30 @@ test("an accredited programme in early engagement is not eligible", async ({
     cancelLink.click(),
   ]);
   await moci.overview.assertOnPage();
+});
+
+// S20: early engagement only counts on an accredited programme, so off one the pilot decides
+test("in early engagement but not on a programme, eligible with a pilot practitioner", async ({
+  page,
+}) => {
+  skipNewJourney();
+  await requirePilotPractitioner(true);
+  const crn = env.earlyEngagementCrn();
+  await assertEligibility(
+    crn,
+    {
+      accreditedProgramme: false,
+      deviceRestriction: false,
+      youthSentence: false,
+    },
+    { outcome: "ELIGIBLE", ruleCode: "PRACTITIONER_HAS_PILOT_CASE_TIER_A_B" },
+  );
+  const journey = new SetupOnlineCheckinsJourney(page);
+  await journey.login();
+  await journey.startSetup(crn);
+  const moci = new ManageCheckinsPages(page);
+
+  await moci.eligibilityCheck.completePage(["none"]);
+
+  await assertManageCheckinsPage(page, crn, IS_ELIGIBLE_TITLE);
 });
