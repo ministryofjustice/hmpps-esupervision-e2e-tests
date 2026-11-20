@@ -151,6 +151,34 @@ export const deleteOffenderRecord = async (
     return true;
   });
 
+export interface PilotCase {
+  crn: string;
+  inPilot: boolean;
+  practitionerId: string;
+  status: string;
+}
+
+/**
+ * DEV only. Marks a person as a pilot case (in online check ins before 1 October 2026), or not.
+ * Returns null for a 404: the endpoint isn't deployed, or the API doesn't know the CRN.
+ */
+export const setPilotCase = async (
+  crn: string,
+  inPilot: boolean,
+  token: string,
+): Promise<PilotCase | null> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.put(
+      `/v2/test-support/offenders/crn/${crn}/pilot`,
+      { headers: authHeader(token), data: { inPilot } },
+    );
+    if (response.status() === 404) {
+      return null;
+    }
+    await assertOk(response, `Set pilot case for ${crn}`);
+    return (await response.json()) as PilotCase;
+  });
+
 export interface ActiveSentence {
   eventNumber: number;
   description: string;
