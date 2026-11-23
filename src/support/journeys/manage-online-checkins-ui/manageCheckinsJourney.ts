@@ -231,8 +231,6 @@ export default class ManageCheckInsJourney {
     if (!isAdHoc && !values.date?.trim()) {
       throw new Error("Date is required for recurring check ins");
     }
-    const accreditedProgramme =
-      values.eligibilityAnswers?.includes("accreditedProgramme") ?? false;
     const rationale =
       values.rationale ?? "E2E restart accredited programme rationale";
     await test.step(`Restart online check ins for ${crn}`, async () => {
@@ -240,9 +238,12 @@ export default class ManageCheckInsJourney {
       await manage.clickRestartCheckIns();
 
       // Restart goes through the same eligibility pages as setup first. Tier
-      // A-C cases always answer Yes to the pilot question here.
+      // A-C cases answer Yes to the pilot question while it is asked.
       await this.pages.eligibilityCheck.assertOnPage();
-      await new EligibilityJourney(this.page).completeToFrequency(crn, {
+      // The route taken, which for a pilot person on a programme is the standard one
+      const { accreditedProgramme } = await new EligibilityJourney(
+        this.page,
+      ).completeToFrequency(crn, {
         route: "restart",
         answers: values.eligibilityAnswers,
         rationale,

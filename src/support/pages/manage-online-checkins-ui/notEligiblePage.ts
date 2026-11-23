@@ -22,6 +22,16 @@ export default class NotEligiblePage extends PractitionerBasePage {
     return this.page.locator('[data-qa="reasonBullets"] li');
   }
 
+  /** The ESUP API's reason, shown while useEligibilityEndpoint is on. */
+  apiReason(): Locator {
+    return this.page.locator('[data-qa="apiReason"]');
+  }
+
+  /** How the Tier rules and the pilot work, after a Tier reason. */
+  additionalTierInformation(): Locator {
+    return this.page.locator('[data-qa="additionalTierInformation"]');
+  }
+
   missingTierReason(): Locator {
     return this.page.locator('[data-qa="missingTier"]');
   }

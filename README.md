@@ -87,7 +87,7 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Layout/dashboard | Layout needs no case. Dashboard tests reuse storage state from the setup project. |
 
 The workflow requires `TEST_MANAGE_CRN`, `TEST_MPOP_STOP_RESTART_CRN`,
-`TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`, `TEST_TIER_MISSING_CRN`,
+`TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`,
 `TEST_TIER_NOT_SUPERVISED_CRN`, `TEST_NO_PACKAGE_CRN`,
 `TEST_FINAL_THIRD_CRN`, `TEST_EARLY_ENGAGEMENT_CRN`, and `TEST_ADHOC_CRN`. Tests fail with a
 missing-environment-variable error if any required CRN is unset. The dedicated
