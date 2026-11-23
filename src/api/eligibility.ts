@@ -1,4 +1,3 @@
-import { env } from "../config/env";
 import { EligibilityAnswer } from "../data/models";
 import { assertOk, authHeader, withApiContext } from "./apiHelper";
 
@@ -33,23 +32,19 @@ export const toEligibilityAnswers = (
 });
 
 /**
- * POST /v2/offenders/crn/{crn}/eligibility - the check MOCI makes when useEligibilityEndpoint is on.
- * MOCI sends the allocated practitioner; this sends the e2e practitioner, who is allocated every
- * CRN the suite uses.
+ * POST /v2/offenders/crn/{crn}/eligibility - the check the manage check ins UI makes when
+ * useEligibilityEndpoint is on. No practitioner is sent: the API judges the one the person is
+ * allocated to in NDelius.
  */
 export const checkEligibility = async (
   crn: string,
   answers: EligibilityAnswers | null,
   token: string,
-  practitionerId: string = env.practitionerName(),
 ): Promise<EligibilityCheck> =>
   withApiContext(async (ctx) => {
     const response = await ctx.post(`/v2/offenders/crn/${crn}/eligibility`, {
       headers: authHeader(token),
-      data: {
-        practitionerId,
-        ...(answers ? { eligibilityAnswers: answers } : {}),
-      },
+      data: answers ? { eligibilityAnswers: answers } : {},
     });
     await assertOk(response, `Check eligibility for ${crn}`);
     return (await response.json()) as EligibilityCheck;
