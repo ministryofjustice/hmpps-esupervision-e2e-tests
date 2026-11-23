@@ -16,6 +16,8 @@ export default class CaseBanner {
   }
 
   tierLink(): Locator {
-    return this.page.locator('[data-qa="tierLink"]');
+    return this.page
+      .locator(".person-header")
+      .getByRole("link", { name: /tier/i });
   }
 }
