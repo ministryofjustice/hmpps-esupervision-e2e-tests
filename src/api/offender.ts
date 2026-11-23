@@ -154,6 +154,8 @@ export const deleteOffenderRecord = async (
 export interface PilotCase {
   crn: string;
   inPilot: boolean;
+  /** The value before this change */
+  previousInPilot: boolean;
   practitionerId: string;
   status: string;
 }

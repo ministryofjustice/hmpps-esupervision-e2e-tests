@@ -45,52 +45,52 @@ export const practitionerHasPilotCase = (): Promise<boolean> => {
   return pilotPractitioner;
 };
 
-let pilotCaseMarked = false;
+// TEST_MANAGE_CRN's own pilot value before a test changed it, so the reset puts back what was there
+// rather than wiping a genuine pilot case. Undefined while nothing has been changed.
+let originalInPilot: boolean | undefined;
 
 /**
- * Makes the e2e practitioner a pilot practitioner, or not, by marking TEST_PILOT_CASE_CRN as a
- * pilot case through the API's dev-only test support. Skips the test when that can't give what it
- * needs: no TEST_PILOT_CASE_CRN, the endpoint not deployed, or - for want = false - another of
- * the practitioner's cases in dev being a pilot case. Call resetPilotCase after each test.
+ * Makes the e2e practitioner a pilot practitioner, or not, by marking TEST_MANAGE_CRN - an active
+ * person of theirs that no test stops or restarts - as a pilot case through the API's dev-only test
+ * support. Skips the test when that can't give what it needs: the endpoint isn't deployed (as in
+ * test), or - for want = false - another of the practitioner's people is a pilot case. Call
+ * resetPilotCase after each test.
  */
 export const requirePilotPractitioner = async (
   want: boolean,
 ): Promise<void> => {
-  const crn = env.pilotCaseCrn();
-  let unavailable = "set TEST_PILOT_CASE_CRN to choose";
-  if (crn) {
-    const pilotCase = await setPilotCase(crn, want, await getToken());
-    if (pilotCase) {
-      pilotCaseMarked = want;
-      pilotPractitioner = undefined;
-      if (
-        pilotCase.practitionerId.toUpperCase() !==
-          env.practitionerName().toUpperCase() ||
-        pilotCase.status === "INITIAL"
-      ) {
-        throw new Error(
-          `TEST_PILOT_CASE_CRN ${crn} must belong to the e2e practitioner and be past INITIAL, but is ${pilotCase.practitionerId} and ${pilotCase.status}`,
-        );
-      }
-    } else {
-      unavailable = `the API couldn't mark ${crn} as a pilot case - is the test support endpoint deployed to dev?`;
+  const crn = env.manageCrn();
+  let unavailable = "";
+  const pilotCase = await setPilotCase(crn, want, await getToken());
+  if (pilotCase) {
+    originalInPilot ??= pilotCase.previousInPilot;
+    pilotPractitioner = undefined;
+    if (
+      pilotCase.practitionerId.toUpperCase() !==
+        env.practitionerName().toUpperCase() ||
+      pilotCase.status === "INITIAL"
+    ) {
+      throw new Error(
+        `TEST_MANAGE_CRN ${crn} must belong to the e2e practitioner and be past INITIAL to mark as a pilot case, but is ${pilotCase.practitionerId} and ${pilotCase.status}`,
+      );
     }
+  } else {
+    unavailable = ` (the API couldn't mark ${crn} as a pilot case - the test support endpoint is dev only)`;
   }
   const has = await practitionerHasPilotCase();
   test.skip(
     has !== want,
     want
-      ? `Needs the e2e practitioner to have had a pilot case, and they haven't (${unavailable})`
-      : `Needs the e2e practitioner never to have had a pilot case, and they have${crn ? " another pilot case in dev" : ` (${unavailable})`}`,
+      ? `Needs the e2e practitioner to have had a pilot case, and they haven't${unavailable}`
+      : `Needs the e2e practitioner never to have had a pilot case, and they have${unavailable || " another pilot case"}`,
   );
 };
 
-/** Puts TEST_PILOT_CASE_CRN back to not being a pilot case, if a test marked it. */
+/** Puts TEST_MANAGE_CRN's pilot value back, if a test changed it. */
 export const resetPilotCase = async (): Promise<void> => {
-  const crn = env.pilotCaseCrn();
-  if (!crn || !pilotCaseMarked) return;
-  await setPilotCase(crn, false, await getToken());
-  pilotCaseMarked = false;
+  if (originalInPilot === undefined) return;
+  await setPilotCase(env.manageCrn(), originalInPilot, await getToken());
+  originalInPilot = undefined;
   pilotPractitioner = undefined;
 };
 

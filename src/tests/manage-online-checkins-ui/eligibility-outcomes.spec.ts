@@ -47,7 +47,7 @@ import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-
 // "off") the ESUP API decides: there is no Recalled box and no pilot question,
 // and the API's reason is shown. Tier C, and Tier A/B off an accredited
 // programme, are eligible only if the practitioner has ever had a pilot case.
-// Those tests mark TEST_PILOT_CASE_CRN as a pilot case, or not, through the
+// Those tests mark TEST_MANAGE_CRN as a pilot case, or not, through the
 // API's test support, and skip when that can't give what they need. Tests
 // marked OLD_JOURNEY go when the flag does.
 
