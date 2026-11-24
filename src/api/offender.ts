@@ -77,6 +77,12 @@ export interface CheckinScheduleOpts {
   firstCheckin?: string;
   checkinInterval?: string;
   contactPreference?: "PHONE" | "EMAIL";
+  /** Restart now runs the eligibility check, which needs these answers */
+  eligibilityAnswers?: {
+    accreditedProgramme: boolean;
+    deviceRestriction: boolean;
+    youthSentence: boolean;
+  };
 }
 
 export const reactivateOffender = async (
@@ -93,10 +99,18 @@ export const reactivateOffender = async (
         data: {
           requestedBy,
           reason: "E2E test",
-          checkInSchedule: {
+          checkinSchedule: {
             requestedBy,
             firstCheckin: opts.firstCheckin ?? isoDateString(today),
             checkinInterval: opts.checkinInterval ?? "WEEKLY",
+            // restore weekly check ins for the next run, even if a test left this CRN on ad hoc
+            mode: "SCHEDULED",
+          },
+          // Default: no programme, no device restriction, no youth sentence
+          eligibilityAnswers: opts.eligibilityAnswers ?? {
+            accreditedProgramme: false,
+            deviceRestriction: false,
+            youthSentence: false,
           },
           ...(opts.contactPreference
             ? {
