@@ -55,6 +55,13 @@ interface SetupValues extends ContactPreferenceValues {
 // while.
 const OPEN_SETUP_TIMEOUT = 60000;
 
+// Retries the whole navigation: the service can briefly show its error page for a new offender.
+const retryOpening = (open: () => Promise<void>): Promise<void> =>
+  expect(open).toPass({
+    timeout: OPEN_SETUP_TIMEOUT,
+    intervals: [2000, 5000, 10000, 20000],
+  });
+
 export default class SetupOnlineCheckinsJourney {
   private readonly pages: ManageCheckinsPages;
   private onFileContact?: string;
@@ -197,32 +204,36 @@ export default class SetupOnlineCheckinsJourney {
   }
 
   /** For a CRN MOCI rules out before asking anything, e.g. with no tier. */
-  async startSetupExpectingNotEligible(crn: string): Promise<void> {
-    await this.openSetup(crn, () =>
-      assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE),
-    );
+  async startSetupExpectingNotEligible(
+    crn: string,
+    mpopReason: string | RegExp,
+  ): Promise<void> {
+    // MPOP hides the setup link, so check the card, then open MOCI directly
+    await test.step(`MPOP card shows ${crn} as not eligible, with no setup link`, () =>
+      retryOpening(async () => {
+        await this.pages.overview.goTo(crn);
+        await this.pages.overview.assertOnPage();
+        await this.pages.overview.assertCheckinCardNotEligible(mpopReason);
+      }));
+    await test.step(`Open MOCI's not eligible page for ${crn} directly`, () =>
+      retryOpening(async () => {
+        await this.pages.overview.openSetupDirectly(crn);
+        await assertManageCheckinsPage(this.page, crn, NOT_ELIGIBLE_TITLE);
+      }));
   }
 
   private async openSetup(
     crn: string,
     assertLanding: () => Promise<void>,
   ): Promise<void> {
-    await test.step(`Open setup online check ins for ${crn}`, async () => {
-      // The service intermittently shows its generic error page right after the
-      // offender is created (eligibility page's name lookup isn't ready yet) -
-      // retry the whole navigation, not just wait longer, since the error page
-      // itself never turns into the eligibility page.
-      await expect(async () => {
+    await test.step(`Open setup online check ins for ${crn}`, () =>
+      retryOpening(async () => {
         await this.pages.overview.goTo(crn);
         await this.pages.overview.assertOnPage();
         await this.pages.overview.clickSetupOnlineCheckIns();
         // MPOP either shows the wizard itself or redirects to MOCI - this assertion covers both.
         await assertLanding();
-      }).toPass({
-        timeout: OPEN_SETUP_TIMEOUT,
-        intervals: [2000, 5000, 10000, 20000],
-      });
-    });
+      }));
   }
 
   async completePhotoSteps(photo: PhotoOptions): Promise<void> {

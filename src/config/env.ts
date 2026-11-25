@@ -62,6 +62,13 @@ export const env = {
   tierCrn: (tier: ExistingTier): string =>
     requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
   adhocCrn: (): string => requiredCrn("TEST_ADHOC_CRN"),
+  noActiveSentenceCrn: (): string | undefined =>
+    requiredCrn("TEST_NO_ACTIVE_SENTENCE_CRN"),
+  inResetCrn: (): string | undefined => requiredCrn("TEST_IN_RESET_CRN"),
+  recalledCrn: (): string | undefined => requiredCrn("TEST_RECALLED_CRN"),
+  provisionalTierCrn: (): string | undefined =>
+    requiredCrn("TEST_PROVISIONAL_TIER_CRN"),
+  unallocatedCrn: (): string | undefined => requiredCrn("TEST_UNALLOCATED_CRN"),
   /**
    * Whether MOCI's `useEligibilityEndpoint` flag is on in the environment under test, so the ESUP
    * API decides eligibility: no Recalled box, no pilot question. On unless ELIGIBILITY_ENDPOINT is
