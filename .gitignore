@@ -15,3 +15,11 @@ junit.xml
 created-crns.txt
 .env
 
+
+# Editor swap files - vim leaves one next to .env.test while it is open
+*.swp
+*.swo
+*~
+.env.*
+!.env.example
+!.env.1password

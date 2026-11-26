@@ -202,7 +202,7 @@ test.describe("Validation errors", () => {
 
   test.describe("Setup wizard - eligibility", () => {
     // The validation checks reuse existing CRNs.
-    // The no-tier case is covered by TEST_TIER_MISSING_CRN test (lines ~250+).
+    // The no-tier case is covered in eligibility-outcomes.spec.ts, with a new person.
 
     test("shows a validation error when no eligibility answer is selected", async ({
       page,
@@ -219,11 +219,20 @@ test.describe("Validation errors", () => {
         crn,
         errorTitle(ELIGIBILITY_CHECK_TITLE),
       );
+      // U1: the error page keeps the new journey's questions
+      await expect(
+        moci.eligibilityCheck.answerCheckbox("recalled"),
+        "Recall isn't asked when the ESUP API decides, on the error page too",
+      ).toHaveCount(env.eligibilityEndpoint() ? 0 : 1);
     });
 
     test("shows a validation error when the pilot question is not answered", async ({
       page,
     }) => {
+      test.skip(
+        env.eligibilityEndpoint(),
+        "useEligibilityEndpoint removes the pilot question",
+      );
       const { crn, moci } = await openExistingTierSetup(page, "A");
       const message =
         "Select if you have one or more people who started using online check ins before 1 October 2026";

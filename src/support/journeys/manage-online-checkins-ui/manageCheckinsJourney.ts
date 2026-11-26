@@ -4,6 +4,7 @@ import { ManageCheckinsPages } from "../../pages/manage-online-checkins-ui/manag
 import ManageCheckInsPage from "../../pages/manage-online-checkins-ui/manageCheckInsPage";
 import { FrequencyOptions } from "../../pages/manage-online-checkins-ui/checkInFrequencyPage";
 import {
+  CANCEL_CHECKIN_TITLE,
   CONTACT_PREFERENCE_TITLE,
   EDIT_CONTACT_DETAILS_TITLE,
   STOP_CHECKINS_TITLE,
@@ -123,6 +124,27 @@ export default class ManageCheckInsJourney {
     });
   }
 
+  async openCancelCheckIn(crn: string): Promise<void> {
+    await test.step(`Open cancel check in for ${crn}`, async () => {
+      const manage = await this.openManage(crn);
+      await expect(
+        manage.cancelCheckInLink(),
+        "Cancel check in should be on the upcoming check in card while a check in is open",
+      ).toBeVisible();
+      await manage.cancelCheckInLink().click();
+      await this.pages.cancelCheckin.assertOnPage();
+      await assertManageCheckinsPage(this.page, crn, CANCEL_CHECKIN_TITLE);
+    });
+  }
+
+  async cancelCheckIn(crn: string, reason: string): Promise<void> {
+    await test.step(`Cancel the open check in for ${crn}`, async () => {
+      await this.openCancelCheckIn(crn);
+      await this.pages.cancelCheckin.completePage(reason);
+      await this.pages.manage.assertOnPage();
+    });
+  }
+
   async changeContactDetails(
     crn: string,
     opts: {
@@ -209,8 +231,6 @@ export default class ManageCheckInsJourney {
     if (!isAdHoc && !values.date?.trim()) {
       throw new Error("Date is required for recurring check ins");
     }
-    const accreditedProgramme =
-      values.eligibilityAnswers?.includes("accreditedProgramme") ?? false;
     const rationale =
       values.rationale ?? "E2E restart accredited programme rationale";
     await test.step(`Restart online check ins for ${crn}`, async () => {
@@ -218,9 +238,12 @@ export default class ManageCheckInsJourney {
       await manage.clickRestartCheckIns();
 
       // Restart goes through the same eligibility pages as setup first. Tier
-      // A-C cases always answer Yes to the pilot question here.
+      // A-C cases answer Yes to the pilot question while it is asked.
       await this.pages.eligibilityCheck.assertOnPage();
-      await new EligibilityJourney(this.page).completeToFrequency(crn, {
+      // The route taken, which for a pilot person on a programme is the standard one
+      const { accreditedProgramme } = await new EligibilityJourney(
+        this.page,
+      ).completeToFrequency(crn, {
         route: "restart",
         answers: values.eligibilityAnswers,
         rationale,

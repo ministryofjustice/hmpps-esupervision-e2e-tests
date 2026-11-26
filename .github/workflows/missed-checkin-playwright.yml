@@ -26,6 +26,8 @@ jobs:
       OASYS_USERNAME: ${{ secrets.OASYS_USERNAME }}
       OASYS_PASSWORD: ${{ secrets.OASYS_PASSWORD }}
       PRACTITIONER_NAME: ${{ secrets.PRACTITIONER_NAME }}
+      # "off" while MOCI's useEligibilityEndpoint flag is off in dev
+      ELIGIBILITY_ENDPOINT: ${{ vars.ELIGIBILITY_ENDPOINT }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

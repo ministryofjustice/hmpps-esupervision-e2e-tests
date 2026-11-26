@@ -13,6 +13,10 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { Preference } from "../../data/models";
+import {
+  ACCREDITED_PROGRAMME_RULE,
+  checkEligibility,
+} from "../../api/eligibility";
 
 test.describe("restart online check ins through the accredited programme route (existing CRN)", () => {
   let crn: string;
@@ -42,6 +46,30 @@ test.describe("restart online check ins through the accredited programme route (
   test("practitioner restarts a Tier A/B accredited programme case -> offender returns to VERIFIED", async ({
     page,
   }) => {
+    if (env.eligibilityEndpoint()) {
+      // A person in the pilot (in online check ins before 1 October 2026) is eligible before the
+      // programme rules, so restarts the standard way and doesn't test this route
+      const check = await checkEligibility(
+        crn,
+        {
+          accreditedProgramme: true,
+          deviceRestriction: false,
+          youthSentence: false,
+        },
+        token,
+      );
+      test.skip(
+        check.ruleCode === "IS_PILOT_USER",
+        `${crn} is a pilot person, so the ESUP API makes them eligible without the accredited programme route`,
+      );
+      expect(
+        check,
+        `The ESUP API's eligibility check for ${crn}`,
+      ).toMatchObject({
+        outcome: "ELIGIBLE",
+        ruleCode: ACCREDITED_PROGRAMME_RULE,
+      });
+    }
     const journey = new ManageCheckInsJourney(page);
     await journey.login();
     await journey.restartCheckIns(crn, {
