@@ -17,6 +17,7 @@
     "test:manage-online-checkins-ui:headed": "ENV=test playwright test src/tests/manage-online-checkins-ui --workers=1 --headed",
     "test:dashboard": "playwright test --project=dashboard",
     "test:dashboard:headed": "playwright test --project=dashboard --headed",
+    "create:final-third-crn": "ENV=test tsx src/scripts/createCrns.ts final-third",
     "cleanup:crns": "ENV=test tsx src/scripts/cleanupCrns.ts",
     "cleanup:crns:headed": "ENV=test HEADED=true tsx src/scripts/cleanupCrns.ts",
     "test:unit": "tsx --test src/support/utils/*.test.ts",

@@ -7,6 +7,23 @@ loadEnv();
 
 const headed = process.argv.includes("--headed");
 
+// Creates test data on demand; never part of a test run.
+const dataSetupProject = {
+  name: "data-setup",
+  testDir: "./src/data-setup",
+  testMatch: /.*\.setup\.ts/,
+  workers: 1,
+  // As checkin:dev: retry once past flaky OASys/Delius pages. A retry creates
+  // a fresh CRN; the failed attempt's CRN stays in created-crns.txt.
+  retries: 1,
+  expect: { timeout: 15000 },
+  use: {
+    ...devices["Desktop Chrome"],
+    actionTimeout: 30000,
+    ...(headed ? { viewport: null } : {}),
+  },
+};
+
 export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -55,6 +72,8 @@ export default defineConfig({
         ...(headed ? { viewport: null } : {}),
       },
     },
+    // Only when asked for (npm run create:*), so no test run creates data.
+    ...(process.env.DATA_SETUP ? [dataSetupProject] : []),
     {
       name: "dashboard-setup",
       testDir: "./src/tests/dashboard",

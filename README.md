@@ -96,7 +96,24 @@ is false.
 
 ### Create a final-third CRN
 
-Use the existing CRN setup journey from a Playwright test:
+From the command line (needs the variables below in `.env.test`):
+
+```bash
+npm run create:final-third-crn
+# Several at once:
+npm run create:final-third-crn -- --count 3
+# Watch it run:
+npm run create:final-third-crn -- --headed
+```
+
+It prints `final-third CRN ready: <CRN>` for each case. Other options, such as
+`--headed`, are passed to Playwright. The command uses the line reporter only,
+so the automatic cleanup does not run and the CRNs are kept; they are still
+recorded in `created-crns.txt` for later `npm run cleanup:crns`.
+A failed attempt is retried once with a new CRN; the failed CRN stays in that
+file too.
+
+Or use the setup journey from a Playwright test:
 
 ```typescript
 const offender = await new OnlineCheckinJourney(page).createOffenderInFinalThird();
