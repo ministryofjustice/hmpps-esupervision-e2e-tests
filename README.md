@@ -83,13 +83,18 @@ waits for tier calculation; this requires `OASYS_URL`, `OASYS_USERNAME`, and
 | Stop/restart | Uses `TEST_MPOP_STOP_RESTART_CRN` which needs 2+ active sentences; the fixture ensures the check-in is active before stopping and restarting it. The ad hoc tests in this spec switch the CRN to ad hoc; `afterAll` stops and restarts it on weekly check ins through the API, so each run starts from the same state. |
 | Restart (accredited programme) | Uses `TEST_RESTART_ACCREDITED_CRN`: a Tier A/B case with check ins set up, not in early engagement, with an email address in NDelius. `beforeAll` stops it through the API if it is active, so the test can restart it through the accredited programme route. |
 | Ad hoc validation and cancellation | Reuses `TEST_ADHOC_CRN`: configured for ad hoc check-ins with nothing booked. Validation tests never submit a valid date. `cancel-checkin.spec.ts` cancels stale open check-ins, creates and cancels one due today, and uses `afterAll` to cancel any remaining open check-ins through the API, leaving nothing booked. |
+| Eligibility (not eligible on data) | `TEST_NO_ACTIVE_SENTENCE_CRN`, `TEST_IN_RESET_CRN`, `TEST_RECALLED_CRN`, `TEST_PROVISIONAL_TIER_CRN` and `TEST_UNALLOCATED_CRN`: each in that state (no active sentence, contact suspended, recalled, provisional tier, no practitioner allocated) and never set up. |
+| Eligibility (pilot practitioner) | `TEST_NO_PILOT_TIER_A_CRN` and `TEST_NO_PILOT_TIER_C_CRN`: Tier A and C, allocated to a practitioner (with an NDelius username) who has never had a pilot case, and never set up. The "pilot practitioner" tests mark `TEST_MANAGE_CRN` as a pilot case through a test support endpoint, so they only run in dev, and put it back afterwards. |
 | Sentence selection | Reuses `TEST_TIER_G_CRN` and `TEST_MANAGE_CRN`; both need 2+ active sentences with different end dates. Setup is never submitted, and the manage test puts the original sentence back. |
 | Layout/dashboard | Layout needs no case. Dashboard tests reuse storage state from the setup project. |
 
 The workflow requires `TEST_MANAGE_CRN`, `TEST_MPOP_STOP_RESTART_CRN`,
 `TEST_TIER_A_CRN` through `TEST_TIER_G_CRN`,
 `TEST_TIER_NOT_SUPERVISED_CRN`, `TEST_NO_PACKAGE_CRN`,
-`TEST_FINAL_THIRD_CRN`, `TEST_EARLY_ENGAGEMENT_CRN`, and `TEST_ADHOC_CRN`. Tests fail with a
+`TEST_FINAL_THIRD_CRN`, `TEST_EARLY_ENGAGEMENT_CRN`, `TEST_ADHOC_CRN`,
+`TEST_NO_ACTIVE_SENTENCE_CRN`, `TEST_IN_RESET_CRN`, `TEST_RECALLED_CRN`,
+`TEST_PROVISIONAL_TIER_CRN`, `TEST_UNALLOCATED_CRN`, `TEST_NO_PILOT_TIER_A_CRN` and
+`TEST_NO_PILOT_TIER_C_CRN`. Tests fail with a
 missing-environment-variable error if any required CRN is unset. The dedicated
 early-engagement CRN must have `inEarlyEngagement: true` and remain distinct from
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag

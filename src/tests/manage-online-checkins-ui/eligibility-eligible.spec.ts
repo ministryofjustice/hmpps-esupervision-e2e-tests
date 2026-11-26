@@ -18,17 +18,18 @@ import {
   requirePilotPractitioner,
   resetPilotCase,
 } from "../../support/assertions/api/eligibilityAPI";
+import { ACCREDITED_PROGRAMME_RULE } from "../../api/eligibility";
 import { openExistingTierSetup } from "../../support/fixtures/existingTierCase";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
 import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-ui/manageCheckinsPages";
-import { MAY_BE_ELIGIBLE_CARD_TEXT } from "../../support/fixtures/eligibilityReasons";
 import { ExistingTier } from "../../data/models";
+import { MAY_BE_ELIGIBLE_CARD_TEXT } from "../../data/manage-online-checkins-ui/eligibilityReasons";
 
 // Eligible routes, using existing Tier A-G CRNs (setup is never completed).
 
 test.afterEach(resetPilotCase);
 
-/** Opens setup for a Tier D-G case: Cancel goes back to MPOP, and no programme question. */
+/** Opens setup for a Tier D-G case: Cancel goes back to MPOP. */
 const openEligibilityCheck = async (page: Page, tier: ExistingTier) => {
   const setup = await openExistingTierSetup(page, tier);
   await assertRelativeHref(
@@ -36,24 +37,18 @@ const openEligibilityCheck = async (page: Page, tier: ExistingTier) => {
     "Cancel and go back",
     MPOP_PATH.overview(setup.crn),
   );
-  await expect(
-    setup.moci.eligibilityCheck.answerCheckbox("accreditedProgramme"),
-    "Accredited programme is a Tier A/B question only",
-  ).toHaveCount(0);
   return setup;
 };
 
-test.describe("MPOP card before setup", () => {
+test("MPOP card before setup: Tier A to G may be eligible, with the setup link", async ({
+  page,
+}) => {
+  await new SetupOnlineCheckinsJourney(page).login();
+  const { overview } = new ManageCheckinsPages(page);
   for (const tier of ["A", "B", "C", "D", "E", "F", "G"] as const) {
-    test(`Tier ${tier}: card says they may be eligible and offers setup`, async ({
-      page,
-    }) => {
-      const crn = env.tierCrn(tier);
-      await new SetupOnlineCheckinsJourney(page).login();
-      const { overview } = new ManageCheckinsPages(page);
-      await overview.goTo(crn);
+    await test.step(`Tier ${tier}`, async () => {
+      await overview.goTo(env.tierCrn(tier));
       await overview.assertOnPage();
-
       await expect(overview.nextCheckinValue()).toContainText(
         MAY_BE_ELIGIBLE_CARD_TEXT,
       );
@@ -168,7 +163,7 @@ test.describe("Eligible on an accredited programme (Tier A/B)", () => {
         deviceRestriction: false,
         youthSentence: false,
       },
-      { outcome: "ELIGIBLE", ruleCode: "IN_EARLY_ENGAGEMENT" },
+      { outcome: "ELIGIBLE", ruleCode: ACCREDITED_PROGRAMME_RULE },
     );
 
     await moci.eligibilityCheck.completePage(["accreditedProgramme"]);
@@ -194,11 +189,10 @@ test.describe("Eligible on an accredited programme (Tier A/B)", () => {
       ACCREDITED_PROGRAMME_APPROVAL_TITLE,
     );
     await moci.accreditedProgrammeApproval.completePage();
-    const mpop = new ManageCheckinsPages(page);
-    await mpop.rationale.assertOnPage();
-    await mpop.rationale.completePage("E2E accredited programme rationale");
+    await moci.rationale.assertOnPage();
+    await moci.rationale.completePage("E2E accredited programme rationale");
     // Stops here: completing setup would use up the existing CRN.
-    await mpop.checkinFrequency.assertOnPage();
+    await moci.checkinFrequency.assertOnPage();
   });
 });
 

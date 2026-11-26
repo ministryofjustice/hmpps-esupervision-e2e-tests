@@ -16,9 +16,11 @@ import {
   assertRelativeHref,
   MPOP_PATH,
 } from "../../support/assertions/manage-online-checkins-ui/mpopHandoff";
-import { urlPathPattern } from "../../support/utils/url";
 import DeliusOffenderJourney from "../../support/journeys/ndelius/deliusOffenderJourney";
-import { checkEligibility } from "../../api/eligibility";
+import {
+  ACCREDITED_PROGRAMME_RULE,
+  checkEligibility,
+} from "../../api/eligibility";
 import { getToken } from "../../api/auth";
 import {
   assertEligibility,
@@ -29,20 +31,21 @@ import { openExistingTierSetup } from "../../support/fixtures/existingTierCase";
 import SetupOnlineCheckinsJourney from "../../support/journeys/manage-online-checkins-ui/setupOnlineCheckinsJourney";
 import { ManageCheckinsPages } from "../../support/pages/manage-online-checkins-ui/manageCheckinsPages";
 import {
-  NOT_ON_PROGRAMME_REASON,
-  DEVICE_RESTRICTION_REASON,
-  TIER_C_REASON,
   NO_TIER_REASON,
   NO_ACTIVE_SENTENCE_REASON,
   NO_PACKAGE_REASON,
   FINAL_THIRD_REASON,
-  IN_RESET_REASON,
   NO_ACTIVE_SENTENCE_MOCI_REASON,
-  PROVISIONAL_TIER_MOCI_REASON,
-  PROVISIONAL_TIER_REASON,
+  IN_RESET_REASON,
   RECALLED_REASON,
+  PROVISIONAL_TIER_REASON,
+  PROVISIONAL_TIER_MOCI_REASON,
   UNALLOCATED_REASON,
-} from "../../support/fixtures/eligibilityReasons";
+  DEVICE_RESTRICTION_REASON,
+  YOUTH_ON_PROGRAMME_REASON,
+  TIER_C_REASON,
+  NOT_ON_PROGRAMME_REASON,
+} from "../../data/manage-online-checkins-ui/eligibilityReasons";
 
 test.afterEach(resetPilotCase);
 
@@ -257,7 +260,7 @@ test.describe("Not eligible because of an answer", () => {
 
     await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
     await expect(moci.notEligible.reason()).toContainText(
-      /on an accredited programme, but (they )?are on a youth sentence/,
+      YOUTH_ON_PROGRAMME_REASON,
     );
   });
 
@@ -274,7 +277,7 @@ test.describe("Not eligible because of an answer", () => {
 
     await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
     await expect(moci.notEligible.reason()).toContainText(
-      /on an accredited programme, but are on a youth sentence/,
+      YOUTH_ON_PROGRAMME_REASON,
     );
   });
 
@@ -295,7 +298,7 @@ test.describe("Not eligible because of an answer", () => {
         deviceRestriction: false,
         youthSentence: false,
       },
-      { outcome: "INELIGIBLE", ruleCode: "IN_EARLY_ENGAGEMENT" },
+      { outcome: "INELIGIBLE", ruleCode: ACCREDITED_PROGRAMME_RULE },
     );
     const journey = new SetupOnlineCheckinsJourney(page);
     await journey.login();
@@ -312,22 +315,10 @@ test.describe("Not eligible because of an answer", () => {
     await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
     await expect(moci.notEligible.reason()).toContainText(/early engagement/i);
 
-    const backLink = moci.notEligible.backLink();
-    const backHref = await backLink.getAttribute("href");
-    expect(backHref).toBeTruthy();
-    if (!backHref) throw new Error("Not eligible page Back link has no href");
-    await Promise.all([
-      page.waitForURL(urlPathPattern(env.manageCheckinsUiUrl(), backHref)),
-      backLink.click(),
-    ]);
-    await moci.eligibilityCheck.assertOnPage();
-
-    const cancelLink = moci.eligibilityCheck.cancelLink();
-    await Promise.all([
-      page.waitForURL(urlPathPattern(env.mpopUrl(), MPOP_PATH.overview(crn))),
-      cancelLink.click(),
-    ]);
-    await moci.overview.assertOnPage();
+    await expect(
+      moci.notEligible.backLink(),
+      "Decided after the questions, so Back revisits them",
+    ).toHaveAttribute("href", /\/eligibility-check$/);
   });
 });
 

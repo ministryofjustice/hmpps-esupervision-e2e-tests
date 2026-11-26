@@ -25,5 +25,8 @@ export const PROVISIONAL_TIER_MOCI_REASON =
 export const NO_ACTIVE_SENTENCE_MOCI_REASON =
   /No active sentence\.|This is because they are not currently being supervised\./;
 
+export const YOUTH_ON_PROGRAMME_REASON =
+  /on an accredited programme, but (they )?are on a youth sentence/;
+
 export const MAY_BE_ELIGIBLE_CARD_TEXT =
   "may be eligible for online check ins.";
