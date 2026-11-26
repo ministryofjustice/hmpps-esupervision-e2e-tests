@@ -27,6 +27,10 @@ import { MAY_BE_ELIGIBLE_CARD_TEXT } from "../../data/manage-online-checkins-ui/
 
 // Eligible routes, using existing Tier A-G CRNs (setup is never completed).
 
+test.skip(
+  !env.eligibilityEndpoint(),
+  "Needs MOCI's useEligibilityEndpoint flag on",
+);
 test.afterEach(resetPilotCase);
 
 /** Opens setup for a Tier D-G case: Cancel goes back to MPOP. */

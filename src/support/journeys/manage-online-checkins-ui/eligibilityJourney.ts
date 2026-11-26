@@ -14,7 +14,6 @@ import {
   toEligibilityAnswers,
 } from "../../../api/eligibility";
 import { env } from "../../../config/env";
-
 export type EligibilityRoute = "setup" | "restart";
 
 export interface EligibilityOptions {
@@ -62,8 +61,7 @@ export default class EligibilityJourney {
       }
     }
     // With useEligibilityEndpoint on the ESUP API decides, so ask it first: a CRN whose data has
-    // changed then fails with the API's reason, and the accredited programme route is the one the
-    // API took rather than the box ticked - a pilot person on a programme goes the standard way.
+    // changed then fails with the API's reason, and the route is the one the API took.
     let accreditedProgramme = answers.includes("accreditedProgramme");
     if (env.eligibilityEndpoint()) {
       const tierAB = await moci.eligibilityCheck

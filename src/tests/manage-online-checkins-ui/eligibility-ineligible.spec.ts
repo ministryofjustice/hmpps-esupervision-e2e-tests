@@ -17,10 +17,7 @@ import {
   MPOP_PATH,
 } from "../../support/assertions/manage-online-checkins-ui/mpopHandoff";
 import DeliusOffenderJourney from "../../support/journeys/ndelius/deliusOffenderJourney";
-import {
-  ACCREDITED_PROGRAMME_RULE,
-  checkEligibility,
-} from "../../api/eligibility";
+import { checkEligibility } from "../../api/eligibility";
 import { getToken } from "../../api/auth";
 import {
   assertEligibility,
@@ -46,7 +43,10 @@ import {
   TIER_C_REASON,
   NOT_ON_PROGRAMME_REASON,
 } from "../../data/manage-online-checkins-ui/eligibilityReasons";
-
+test.skip(
+  !env.eligibilityEndpoint(),
+  "Needs MOCI's useEligibilityEndpoint flag on",
+);
 test.afterEach(resetPilotCase);
 
 /** Opens setup from MPOP for a person ruled out on data: checks the card, then MOCI's page. */
@@ -298,7 +298,7 @@ test.describe("Not eligible because of an answer", () => {
         deviceRestriction: false,
         youthSentence: false,
       },
-      { outcome: "INELIGIBLE", ruleCode: ACCREDITED_PROGRAMME_RULE },
+      { outcome: "INELIGIBLE", ruleCode: "IN_EARLY_ENGAGEMENT" },
     );
     const journey = new SetupOnlineCheckinsJourney(page);
     await journey.login();
