@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 
 // npm run create:<kind>-crn -- [--count <n>] [other Playwright options, e.g. --headed]
 // Each kind is a src/data-setup/create-<kind>-crn.setup.ts file.
-const KINDS = ["final-third"] as const;
+const KINDS = ["final-third", "recalled"] as const;
 
 const [kind, ...args] = process.argv.slice(2);
 if (!KINDS.includes(kind as (typeof KINDS)[number])) {

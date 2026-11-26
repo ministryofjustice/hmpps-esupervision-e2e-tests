@@ -1,6 +1,9 @@
 import { expect, Page, test } from "@playwright/test";
 import { DateTime } from "luxon";
-import { findCustodyForEventByCRN } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/event/find-events.mjs";
+import {
+  findCustodyForEventByCRN,
+  findEventByCRN,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/event/find-events.mjs";
 import { login as loginToDelius } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/login.mjs";
 import { deliusPerson } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/person.mjs";
 import { createOffender } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/create-offender.mjs";
@@ -225,6 +228,69 @@ export default class DeliusOffenderJourney {
         .getByRole("button", { name: "Save", exact: true })
         .click();
       await expect(this.page).toHaveTitle(/Throughcare Details/);
+    });
+  }
+
+  /**
+   * Records a standard recall through Throughcare's **Add Return To Custody**
+   * form, leaving custody status Recalled (C).
+   *
+   * Delius sets Recalled only when the person is recalled but not held: a
+   * prison as the location gives In Custody (D) instead, which eSupervision
+   * does not report as recalled. Unlawfully at Large also gives Recalled, but
+   * eSupervision excludes it, so the default location is "Unknown".
+   */
+  async recordRecall(
+    crn: string,
+    date: Date,
+    { location = "Unknown" }: { location?: string } = {},
+  ): Promise<void> {
+    await test.step(`Record a recall to custody for ${crn} in Delius`, async () => {
+      await findEventByCRN(this.page, crn, 1);
+      await this.page.getByRole("button", { name: "Throughcare" }).click();
+      await expect(this.page.locator("h1")).toContainText(
+        "Throughcare Details",
+      );
+      await this.page
+        .getByRole("button", { name: "Add Return To Custody", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Add Return To Custody/);
+
+      const formatted = DeliusDateFormatter(date);
+      await this.page
+        .locator('[id="statusChangeDate:datePicker"]')
+        .fill(formatted);
+      await selectOption(
+        this.page,
+        "#status\\:selectOneMenu",
+        "Standard Recall",
+      );
+      await selectOption(this.page, "#location\\:selectOneMenu", location);
+      await this.page
+        .getByRole("button", { name: "Save", exact: true })
+        .click();
+      // Delius warns that licence conditions will be auto-terminated and
+      // only saves the return to custody once that is confirmed.
+      await expect(this.page.getByText("Select Confirm to save")).toBeVisible();
+      await this.page
+        .getByRole("button", { name: "Confirm", exact: true })
+        .click();
+      await expect(this.page).not.toHaveTitle(/Add Return To Custody/);
+
+      await findEventByCRN(this.page, crn, 1);
+      await this.page.getByRole("button", { name: "Throughcare" }).click();
+      const details = this.page.locator("form").filter({
+        hasText: "THROUGHCARE DETAILS",
+      });
+      await expect(details, "Custody status should be Recalled").toContainText(
+        /Current Status:\s*Recalled/,
+      );
+      await expect(details).toContainText(
+        new RegExp(
+          `Current Location:\\s*${location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+        ),
+      );
+      await expect(details).toContainText(formatted);
     });
   }
 
