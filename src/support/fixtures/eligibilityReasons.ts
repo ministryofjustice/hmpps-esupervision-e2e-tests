@@ -13,7 +13,7 @@ export const IN_RESET_REASON =
   "is not eligible for online check ins because they are suspended (in reset) in NDelius.";
 export const NO_PACKAGE_REASON =
   "is not eligible for online check ins because they are not on a supervision package.";
-export const RECALLED_REASON = "has been recalled to prison.";
+export const RECALLED_REASON = "have been recalled to prison.";
 export const PROVISIONAL_TIER_REASON =
   "is not eligible for online check ins because they are in a provisional tier.";
 export const FINAL_THIRD_REASON =

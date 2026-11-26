@@ -253,10 +253,14 @@ test.describe("Not eligible because of an answer", () => {
     await assertManageCheckinsPage(page, crn, NOT_ELIGIBLE_TITLE);
   });
 
-  test("Tier A: accredited programme with a youth sentence is not eligible", async ({
+  test("Tier A: accredited programme with a youth sentence is not eligible without a pilot practitioner", async ({
     page,
   }) => {
-    const { crn, moci } = await openExistingTierSetup(page, "A");
+    const { crn, moci } = await openExistingTierSetup(
+      page,
+      "A",
+      env.noPilotTierCrn("A"),
+    );
 
     await moci.eligibilityCheck.completePage([
       "accreditedProgramme",
@@ -339,13 +343,16 @@ test.describe("Not eligible because of an answer", () => {
   });
 });
 
-test.describe("Not eligible without a pilot practitioner (Tier A to C off an accredited programme)", () => {
-  for (const tier of ["A", "B", "C"] as const) {
+test.describe("Not eligible without a pilot practitioner (Tier A and C off an accredited programme)", () => {
+  for (const tier of ["A", "C"] as const) {
     test(`Tier ${tier} is not eligible when the practitioner has never had a pilot case`, async ({
       page,
     }) => {
-      await requirePilotPractitioner(false);
-      const { crn, moci } = await openExistingTierSetup(page, tier);
+      const { crn, moci } = await openExistingTierSetup(
+        page,
+        tier,
+        env.noPilotTierCrn(tier),
+      );
 
       await moci.eligibilityCheck.completePage(["none"]);
 
@@ -364,8 +371,11 @@ test.describe("Not eligible without a pilot practitioner (Tier A to C off an acc
   test("Tier A: youth sentence alone is not eligible without a pilot practitioner", async ({
     page,
   }) => {
-    await requirePilotPractitioner(false);
-    const { crn, moci } = await openExistingTierSetup(page, "A");
+    const { crn, moci } = await openExistingTierSetup(
+      page,
+      "A",
+      env.noPilotTierCrn("A"),
+    );
 
     await moci.eligibilityCheck.completePage(["youthSentence"]);
 

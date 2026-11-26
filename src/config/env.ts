@@ -12,6 +12,12 @@ const EXISTING_TIER_CRN_ENV: Record<ExistingTier, string> = {
   G: "TEST_TIER_G_CRN",
 };
 
+/** Tier A to C CRNs allocated to a practitioner who has never had a pilot case. */
+const NO_PILOT_TIER_CRN_ENV: Record<"A" | "C", string> = {
+  A: "TEST_NO_PILOT_TIER_A_CRN",
+  C: "TEST_NO_PILOT_TIER_C_CRN",
+};
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -61,6 +67,8 @@ export const env = {
   earlyEngagementCrn: (): string => requiredCrn("TEST_EARLY_ENGAGEMENT_CRN"),
   tierCrn: (tier: ExistingTier): string =>
     requiredCrn(EXISTING_TIER_CRN_ENV[tier]),
+  noPilotTierCrn: (tier: "A" | "C"): string =>
+    requiredCrn(NO_PILOT_TIER_CRN_ENV[tier]),
   adhocCrn: (): string => requiredCrn("TEST_ADHOC_CRN"),
   noActiveSentenceCrn: (): string | undefined =>
     requiredCrn("TEST_NO_ACTIVE_SENTENCE_CRN"),
