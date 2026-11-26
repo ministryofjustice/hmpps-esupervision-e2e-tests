@@ -95,6 +95,93 @@ early-engagement CRN must have `inEarlyEngagement: true` and remain distinct fro
 the standard Tier A/B CRNs; standard CRN preconditions do not assume that flag
 is false.
 
+### Create a final-third CRN
+
+From the command line (needs the variables below in `.env.test`):
+
+```bash
+npm run create:final-third-crn
+# Several at once:
+npm run create:final-third-crn -- --count 3
+# Watch it run:
+npm run create:final-third-crn -- --headed
+```
+
+It prints `final-third CRN ready: <CRN>` for each case. Other options, such as
+`--headed`, are passed to Playwright. The command uses the line reporter only,
+so the automatic cleanup does not run and the CRNs are kept; they are still
+recorded in `created-crns.txt` for later `npm run cleanup:crns`.
+A failed attempt is retried once with a new CRN; the failed CRN stays in that
+file too.
+
+Or use the setup journey from a Playwright test:
+
+```typescript
+const offender = await new OnlineCheckinJourney(page).createOffenderInFinalThird();
+// Use offender.crn to test final-third eligibility.
+```
+
+The method returns the same created-offender details as the Delius journey,
+after verifying that the case is in its final third. It does not set up online
+check ins. Like other created test cases, the CRN is attached to the calling
+test and recorded in `created-crns.txt`: normal cleanup deletes passing cases
+and retains failing cases for investigation.
+
+Put the following in the gitignored `.env.test` at the root of this checkout
+(loaded when `ENV=test`), or provide them as environment variables:
+
+```dotenv
+DELIUS_URL=https://ndelius.test.probation.service.justice.gov.uk
+DELIUS_USERNAME=
+DELIUS_PASSWORD=
+OASYS_URL=https://t2.oasys.service.justice.gov.uk/eor/f?p=100:101
+OASYS_USERNAME=
+OASYS_PASSWORD=
+AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk
+AUTH_CLIENT_ID=
+AUTH_CLIENT_SECRET=
+ESUPERVISION_API_URL=https://esupervision-api-dev.hmpps.service.justice.gov.uk
+```
+
+The Delius account must be able to create a custodial sentence, record release
+and maintain Throughcare dates. The OASys account must be able to complete and
+sign the assessment. Use the existing eSupervision test API client for reads.
+No DPS username, Prison API client or custody-key-date API access is required.
+
+The method validates that service URLs target dev/test before creating data.
+It reuses the shared Delius helpers, creates a six-month
+`Adult Custody < 12m` sentence starting five months ago, records release after
+three months, manually records the calculated final-third date using
+Throughcare's **T/C Dates** form, then completes OASys Layer 1. It then adds a
+**Low RoSH** registration in Delius if the case has no current RoSH
+registration, and waits for a tier that is not provisional.
+
+The registration matters because Tier marks a case provisional when it has no
+RoSH or MAPPA registration and its tier is below C. Supervision Packages
+treats a provisional tier as "not yet known" (`SPNK`), so the case reports
+`onSupervisionPackage: false` even while in its final third. OASys sign-and-lock
+should create the registration, but it does not always arrive. Adding it also
+triggers a Tier and Supervision Packages recalculation.
+It does not create or link a NOMIS record, call Prison API or request a
+custody-date refresh. It does not depend on the
+`calculate-key-dates-from-delius` feature flag.
+
+Success requires eSupervision to report
+`onSupervisionPackage: true, inFinalThird: true`; the latter reflects
+Supervision Packages' current `FTHRD` phase.
+Eligibility alone is not enough. The sentence expires about a month after creation.
+The RoSH step was proven by hand on Y092038 and Y092039; the full combined
+setup has not yet been run end to end.
+
+The method does not retry creation itself; any retry of the calling test creates
+a new CRN, just like the other setup journeys. Manual cleanup can delete a
+failed case's Delius/eSupervision records.
+Date-planning tests can be run without creating any data:
+
+```bash
+npm run test:unit
+```
+
 ## Missed Check-in Expiry
 
 Run the expiry journey separately with `npm run test:missed-checkin`. It creates
