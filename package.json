@@ -18,6 +18,7 @@
     "test:dashboard": "playwright test --project=dashboard",
     "test:dashboard:headed": "playwright test --project=dashboard --headed",
     "create:final-third-crn": "ENV=test tsx src/scripts/createCrns.ts final-third",
+    "create:recalled-crn": "ENV=test tsx src/scripts/createCrns.ts recalled",
     "cleanup:crns": "ENV=test tsx src/scripts/cleanupCrns.ts",
     "cleanup:crns:headed": "ENV=test HEADED=true tsx src/scripts/cleanupCrns.ts",
     "test:unit": "tsx --test src/support/utils/*.test.ts",

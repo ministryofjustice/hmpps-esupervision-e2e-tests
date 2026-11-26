@@ -181,6 +181,31 @@ Date-planning tests can be run without creating any data:
 npm run test:unit
 ```
 
+### Create a recalled CRN
+
+```bash
+npm run create:recalled-crn
+npm run create:recalled-crn -- --count 3
+npm run create:recalled-crn -- --headed
+```
+
+The options, output and cleanup are the same as for `create:final-third-crn`,
+and it needs the same variables. From a Playwright test, use
+`new OnlineCheckinJourney(page).createRecalledOffender()`.
+
+It creates a six-month `Adult Custody < 12m` sentence starting three months
+ago, records release a month later, and completes OASys with the same RoSH and
+confirmed-tier steps, so the case is on a supervision package. It then records
+a **Standard Recall** dated yesterday through Throughcare's
+**Add Return To Custody** form, and waits for eSupervision to report
+`recalled: true`.
+
+eSupervision counts a case as recalled only when Delius custody status is
+**Recalled** (`C`) and the location is not **Unlawfully at Large**. Delius sets
+Recalled only when the person is not held, so the recall location is
+**Unknown**: returning them to a prison gives **In Custody** (`D`) instead,
+which eSupervision does not report as recalled.
+
 ## Missed Check-in Expiry
 
 Run the expiry journey separately with `npm run test:missed-checkin`. It creates
