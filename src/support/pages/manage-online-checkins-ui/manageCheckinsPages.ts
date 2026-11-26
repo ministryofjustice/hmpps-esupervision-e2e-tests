@@ -12,6 +12,7 @@ import CheckInConfirmationPage from "./checkInConfirmationPage";
 import StopCheckInsPage from "./stopCheckInsPage";
 import ManageCheckInsPage from "./manageCheckInsPage";
 import RationalePage from "./rationalePage";
+import SentenceSelectionPage from "./sentenceSelectionPage";
 import ReviewIdentityPage from "./reviewIdentityPage";
 import ReviewNotesPage from "./reviewNotesPage";
 import ActivityLogPage from "../mpop/activityLogPage";
@@ -37,6 +38,7 @@ import AccreditedProgrammeApprovalPage from "./accreditedProgrammeApprovalPage";
 
 import ScheduleCheckInDatePage from "./scheduleCheckInDatePage";
 import ScheduleCheckInQuestionsPage from "./scheduleCheckInQuestionsPage";
+import CancelCheckinPage from "./cancelCheckinPage";
 
 export class ManageCheckinsPages {
   readonly header: Header;
@@ -54,6 +56,7 @@ export class ManageCheckinsPages {
 
   readonly overview: OverviewPage;
   readonly rationale: RationalePage;
+  readonly sentenceSelection: SentenceSelectionPage;
   readonly checkinFrequency: CheckInFrequencyPage;
   readonly checkinDate: CheckInDatePage;
   readonly photoOptions: PhotoOptionsPage;
@@ -63,6 +66,7 @@ export class ManageCheckinsPages {
   readonly summary: CheckInSummaryPage;
   readonly manage: ManageCheckInsPage;
   readonly stop: StopCheckInsPage;
+  readonly cancelCheckin: CancelCheckinPage;
 
   readonly addQuestions: AddQuestionsPage;
   readonly chooseQuestion: ChooseQuestionPage;
@@ -101,6 +105,7 @@ export class ManageCheckinsPages {
 
     this.overview = new OverviewPage(page);
     this.rationale = new RationalePage(page);
+    this.sentenceSelection = new SentenceSelectionPage(page);
     this.checkinFrequency = new CheckInFrequencyPage(page);
     this.checkinDate = new CheckInDatePage(page);
     this.photoOptions = new PhotoOptionsPage(page);
@@ -110,6 +115,7 @@ export class ManageCheckinsPages {
     this.summary = new CheckInSummaryPage(page);
     this.manage = new ManageCheckInsPage(page);
     this.stop = new StopCheckInsPage(page);
+    this.cancelCheckin = new CancelCheckinPage(page);
 
     this.addQuestions = new AddQuestionsPage(page);
     this.chooseQuestion = new ChooseQuestionPage(page);

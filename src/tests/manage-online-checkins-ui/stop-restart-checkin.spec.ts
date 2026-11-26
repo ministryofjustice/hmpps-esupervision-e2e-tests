@@ -7,7 +7,11 @@ import {
   firstCheckinDateString,
 } from "../../support/utils/date";
 import { FrequencyOptions } from "../../support/pages/manage-online-checkins-ui/checkInFrequencyPage";
-import { deactivateOffender, getOffenderByCrn } from "../../api/offender";
+import {
+  deactivateOffender,
+  getActiveSentences,
+  getOffenderByCrn,
+} from "../../api/offender";
 import { ensureActiveCheckin } from "../../support/utils/activeCheckin";
 import { Preference } from "../../data/models";
 import { absoluteUrl, urlPattern } from "../../support/utils/url";
@@ -83,6 +87,17 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
     page,
   }) => {
     const journey = new ManageCheckInsJourney(page);
+    const sentences = await getActiveSentences(crn, token);
+    expect(
+      sentences.length,
+      `${crn} needs 2+ active sentences - is ESUP-2305 on in the API?`,
+    ).toBeGreaterThanOrEqual(2);
+    const linkedBefore = (await getOffenderByCrn(crn, token)).currentEvent;
+    const linked = sentences.find((s) => s.eventNumber === linkedBefore);
+    expect(
+      linked,
+      `${crn} should still have its linked sentence`,
+    ).toBeDefined();
     await journey.login();
     await journey.restartCheckIns(crn, {
       date: firstCheckinDateString(7),
@@ -107,6 +122,12 @@ test.describe("stop then restart online check ins (existing CRN)", () => {
       manage.settingsFrequency(),
       "Restart should save the frequency that was selected",
     ).toContainText("Every 8 weeks");
+    // TEST_MPOP_STOP_RESTART_CRN has 2 sentences, so restart asks for one and
+    // should keep the sentence that was linked before check ins were stopped.
+    await expect(manage.sentenceDescription()).toHaveText(linked!.description);
+    expect((await getOffenderByCrn(crn, token)).currentEvent).toBe(
+      linkedBefore,
+    );
   });
 
   // Nothing here submits anything, so it leaves the CRN as the restart above

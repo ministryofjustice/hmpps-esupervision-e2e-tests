@@ -24,6 +24,10 @@ import {
 import { IdentityDecision } from "../../support/pages/manage-online-checkins-ui/reviewIdentityPage";
 import { QuestionToAdd } from "../../data/models";
 import { OffenderProfile } from "../../support/journeys/ndelius/deliusOffenderJourney";
+import {
+  requirePilotPractitioner,
+  resetPilotCase,
+} from "../../support/assertions/api/eligibilityAPI";
 
 interface CheckinScenario {
   name: string;
@@ -69,7 +73,10 @@ async function changeFrequencyWhileActive(
       manage.changeNextCheckinDateLink(),
       "An active check in cannot be moved",
     ).toHaveCount(0);
-
+    await expect(
+      manage.changeSentenceLink(),
+      "A person with 1 sentence has no sentence to change",
+    ).toHaveCount(0);
     const { uuid } = await getOffenderByCrn(crn, token);
     const awaiting = await listOffenderCheckins(
       env.practitionerName(),
@@ -158,10 +165,21 @@ const scenarios: CheckinScenario[] = [
 // a failure in one test does not skip the other test
 
 test.describe("Online check in for a new offender", () => {
+  test.afterEach(resetPilotCase);
+
   for (const scenario of scenarios) {
     test(`Create offender and setup online checkin and Completes a checkin when ${scenario.name} -> complete check in`, async ({
       page,
     }) => {
+      // A new Tier C person, and a new Tier A/B one (in early engagement, so not eligible through an
+      // accredited programme), are only eligible for a practitioner who has had a pilot case
+      if (
+        (scenario.profile === "tierCAge25" ||
+          scenario.profile === "highRiskAge25") &&
+        env.eligibilityEndpoint()
+      ) {
+        await requirePilotPractitioner(true);
+      }
       const journey = new OnlineCheckinJourney(page);
       const offender = await journey.createOffenderAndSetupCheckins(
         firstCheckinDateString(scenario.firstCheckinDaysAhead),
@@ -196,14 +214,27 @@ test.describe("Online check in for a new offender", () => {
         scenario.customQuestions?.map((q) => q.text) ?? [],
       );
 
-      await journey.reviewCheckin(offender.crn, scenario.review, details, {
-        assertMpopHandoff: scenario.assertMpopHandoff,
-      });
+      await journey.reviewCheckin(
+        offender.crn,
+        checkinUuid,
+        scenario.review,
+        details,
+        {
+          assertMpopHandoff: scenario.assertMpopHandoff,
+        },
+      );
       if (scenario.assertMpopHandoff) {
-        await journey.assertReviewedCheckinBackLinkLandsInMpop(offender.crn);
+        await journey.assertReviewedCheckinBackLinkLandsInMpop(
+          offender.crn,
+          checkinUuid,
+        );
       }
 
-      await journey.annotateCheckin(offender.crn, scenario.annotation);
+      await journey.annotateCheckin(
+        offender.crn,
+        checkinUuid,
+        scenario.annotation,
+      );
 
       // Recurring always has a next check in. With the first check in today it
       // moves on by the interval (a week, or 2 weeks after the frequency

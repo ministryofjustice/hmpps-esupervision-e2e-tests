@@ -5,6 +5,7 @@ import { assertOk, authHeader, withApiContext } from "./apiHelper";
 export interface Offender {
   uuid: string;
   status: string;
+  currentEvent?: number | null;
 }
 
 export const findOffenderByCrn = async (
@@ -76,6 +77,12 @@ export interface CheckinScheduleOpts {
   firstCheckin?: string;
   checkinInterval?: string;
   contactPreference?: "PHONE" | "EMAIL";
+  /** Restart now runs the eligibility check, which needs these answers */
+  eligibilityAnswers?: {
+    accreditedProgramme: boolean;
+    deviceRestriction: boolean;
+    youthSentence: boolean;
+  };
 }
 
 export const reactivateOffender = async (
@@ -92,10 +99,18 @@ export const reactivateOffender = async (
         data: {
           requestedBy,
           reason: "E2E test",
-          checkInSchedule: {
+          checkinSchedule: {
             requestedBy,
             firstCheckin: opts.firstCheckin ?? isoDateString(today),
             checkinInterval: opts.checkinInterval ?? "WEEKLY",
+            // restore weekly check ins for the next run, even if a test left this CRN on ad hoc
+            mode: "SCHEDULED",
+          },
+          // Default: no programme, no device restriction, no youth sentence
+          eligibilityAnswers: opts.eligibilityAnswers ?? {
+            accreditedProgramme: false,
+            deviceRestriction: false,
+            youthSentence: false,
           },
           ...(opts.contactPreference
             ? {
@@ -148,4 +163,75 @@ export const deleteOffenderRecord = async (
     }
     await assertOk(response, `Delete offender record for ${crn}`);
     return true;
+  });
+
+export interface PilotCase {
+  crn: string;
+  inPilot: boolean;
+  /** The value before this change */
+  previousInPilot: boolean;
+  practitionerId: string;
+  status: string;
+}
+
+/**
+ * DEV only. Marks a person as a pilot case (in online check ins before 1 October 2026), or not.
+ * Returns null for a 404: the endpoint isn't deployed, or the API doesn't know the CRN.
+ */
+export const setPilotCase = async (
+  crn: string,
+  inPilot: boolean,
+  token: string,
+): Promise<PilotCase | null> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.put(
+      `/v2/test-support/offenders/crn/${crn}/pilot`,
+      { headers: authHeader(token), data: { inPilot } },
+    );
+    if (response.status() === 404) {
+      return null;
+    }
+    await assertOk(response, `Set pilot case for ${crn}`);
+    return (await response.json()) as PilotCase;
+  });
+
+export interface ActiveSentence {
+  eventNumber: number;
+  description: string;
+  expectedEndDate: string | null;
+}
+
+interface PersonalDetailsResponse {
+  events?: {
+    number: number;
+    sentence: { description: string; expectedEndDate?: string | null } | null;
+  }[];
+}
+
+export const getActiveSentences = async (
+  crn: string,
+  token: string,
+): Promise<ActiveSentence[]> =>
+  withApiContext(async (ctx) => {
+    const response = await ctx.get(
+      `/v2/offenders/crn/${crn}/personal-details`,
+      { headers: authHeader(token) },
+    );
+    await assertOk(response, `Get personal details ${crn}`);
+    const body = (await response.json()) as PersonalDetailsResponse;
+    return (body.events ?? [])
+      .flatMap(({ number, sentence }) =>
+        sentence
+          ? [
+              {
+                eventNumber: number,
+                description: sentence.description,
+                expectedEndDate: sentence.expectedEndDate ?? null,
+              },
+            ]
+          : [],
+      )
+      .sort((a, b) =>
+        (b.expectedEndDate ?? "").localeCompare(a.expectedEndDate ?? ""),
+      );
   });
