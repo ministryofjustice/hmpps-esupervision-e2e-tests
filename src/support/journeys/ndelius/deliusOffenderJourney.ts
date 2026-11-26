@@ -1,5 +1,9 @@
 import { expect, Page, test } from "@playwright/test";
 import { DateTime } from "luxon";
+import {
+  findCustodyForEventByCRN,
+  findEventByCRN,
+} from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/event/find-events.mjs";
 import { login as loginToDelius } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/login.mjs";
 import { deliusPerson } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/person.mjs";
 import { createOffender } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/create-offender.mjs";
@@ -15,6 +19,7 @@ import { attachCreatedCrn, recordCreatedCrn } from "../../utils/createdCrns";
 import {
   dismissModals,
   findFirstOffender,
+  findOffenderByCRN,
 } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/offender/find-offender.mjs";
 import { selectOption } from "@ministryofjustice/hmpps-probation-integration-e2e-tests/steps/delius/utils/inputs.mjs";
 import {
@@ -25,6 +30,9 @@ import NationalSearchPage from "../../pages/ndelius/nationalSearchPage";
 import OffenderRecordPage from "../../pages/ndelius/offenderRecordPage";
 
 export type OffenderProfile = "custodialAge25" | "highRiskAge25" | "tierCAge25";
+
+export type RoshRegisterType =
+  "Low RoSH" | "Medium RoSH" | "High RoSH" | "Very High RoSH";
 
 export interface CreatedDeliusOffender extends NewOffender {
   deliusPerson: Person;
@@ -102,8 +110,10 @@ export default class DeliusOffenderJourney {
 
   async createTestOffender({
     profile,
+    convictionDate = Yesterday.toJSDate(),
   }: {
     profile?: OffenderProfile;
+    convictionDate?: Date;
   } = {}): Promise<CreatedDeliusOffender> {
     const profileConfig = profile ? OFFENDER_PROFILES[profile] : undefined;
     const person = deliusPerson(profileConfig?.person);
@@ -129,7 +139,6 @@ export default class DeliusOffenderJourney {
     // Attach before setup so failures retain this CRN for investigation.
     await attachCreatedCrn(test.info(), crn);
 
-    const convictionDate = Yesterday.toJSDate();
     // Failure here is an unpopulated allocation dropdown, which happens before the
     // transfer is submitted - so retrying the whole thing can't double-transfer.
     await expect(async () => {
@@ -168,6 +177,176 @@ export default class DeliusOffenderJourney {
         dob: person.dob,
       },
     };
+  }
+
+  async recordFinalThirdDate(crn: string, date: Date): Promise<void> {
+    await test.step("Record the final-third Throughcare date in Delius", async () => {
+      await findCustodyForEventByCRN(this.page, crn, 1);
+      await this.page
+        .getByRole("button", { name: "T/C Dates", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Maintain Throughcare Dates/);
+
+      const type = this.page.locator(
+        '[id="throughcareDateType:selectOneMenu"]',
+      );
+      const option = type.locator("option").filter({ hasText: /final third/i });
+      await expect(
+        option,
+        "Delius must offer the final-third date type",
+      ).toHaveCount(1);
+      const value = await option.getAttribute("value");
+      expect(value, "The final-third date type must have a value").toBeTruthy();
+      await type.selectOption(value!);
+      const formatted = DeliusDateFormatter(date);
+      await this.page
+        .locator('[id="throughcareDate:datePicker"]')
+        .fill(formatted);
+      await this.page
+        .getByRole("button", { name: "Add/Update", exact: true })
+        .click();
+      await expect(
+        this.page
+          .locator("#throughcaredatesTable tr")
+          .filter({ hasText: /final third/i }),
+      ).toContainText(formatted);
+      await this.page
+        .getByRole("button", { name: "Save", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Throughcare Details/);
+      // Re-open the form to verify the date was persisted, not just added to the draft.
+      await this.page
+        .getByRole("button", { name: "T/C Dates", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Maintain Throughcare Dates/);
+      await expect(
+        this.page
+          .locator("#throughcaredatesTable tr")
+          .filter({ hasText: /final third/i }),
+      ).toContainText(formatted);
+      await this.page
+        .getByRole("button", { name: "Save", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Throughcare Details/);
+    });
+  }
+
+  /**
+   * Records a standard recall through Throughcare's **Add Return To Custody**
+   * form, leaving custody status Recalled (C).
+   *
+   * Delius sets Recalled only when the person is recalled but not held: a
+   * prison as the location gives In Custody (D) instead, which eSupervision
+   * does not report as recalled. Unlawfully at Large also gives Recalled, but
+   * eSupervision excludes it, so the default location is "Unknown".
+   */
+  async recordRecall(
+    crn: string,
+    date: Date,
+    { location = "Unknown" }: { location?: string } = {},
+  ): Promise<void> {
+    await test.step(`Record a recall to custody for ${crn} in Delius`, async () => {
+      await findEventByCRN(this.page, crn, 1);
+      await this.page.getByRole("button", { name: "Throughcare" }).click();
+      await expect(this.page.locator("h1")).toContainText(
+        "Throughcare Details",
+      );
+      await this.page
+        .getByRole("button", { name: "Add Return To Custody", exact: true })
+        .click();
+      await expect(this.page).toHaveTitle(/Add Return To Custody/);
+
+      const formatted = DeliusDateFormatter(date);
+      await this.page
+        .locator('[id="statusChangeDate:datePicker"]')
+        .fill(formatted);
+      await selectOption(
+        this.page,
+        "#status\\:selectOneMenu",
+        "Standard Recall",
+      );
+      await selectOption(this.page, "#location\\:selectOneMenu", location);
+      await this.page
+        .getByRole("button", { name: "Save", exact: true })
+        .click();
+      // Delius warns that licence conditions will be auto-terminated and
+      // only saves the return to custody once that is confirmed.
+      await expect(this.page.getByText("Select Confirm to save")).toBeVisible();
+      await this.page
+        .getByRole("button", { name: "Confirm", exact: true })
+        .click();
+      await expect(this.page).not.toHaveTitle(/Add Return To Custody/);
+
+      await findEventByCRN(this.page, crn, 1);
+      await this.page.getByRole("button", { name: "Throughcare" }).click();
+      const details = this.page.locator("form").filter({
+        hasText: "THROUGHCARE DETAILS",
+      });
+      await expect(details, "Custody status should be Recalled").toContainText(
+        /Current Status:\s*Recalled/,
+      );
+      await expect(details).toContainText(
+        new RegExp(
+          `Current Location:\\s*${location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+        ),
+      );
+      await expect(details).toContainText(formatted);
+    });
+  }
+
+  /**
+   * Adds a RoSH registration unless the case already has a current one.
+   *
+   * Tier marks a case provisional when it has no RoSH (and no MAPPA) registration
+   * and would otherwise be below Tier C. Supervision Packages treats a provisional
+   * tier as "not yet known" (SPNK), so the case gets no package. OASys sign-and-lock
+   * normally creates this registration, but it does not always arrive. Adding it
+   * publishes probation-case.registration.added, which makes both Tier and
+   * Supervision Packages recalculate the case.
+   */
+  async ensureRoshRegistration(
+    crn: string,
+    registerType: RoshRegisterType = "Low RoSH",
+  ): Promise<void> {
+    await test.step(`Ensure ${crn} has a RoSH registration`, async () => {
+      // Callers usually arrive from OASys, so sign in to Delius first.
+      await loginToDelius(this.page);
+      await findOffenderByCRN(this.page, crn);
+      await this.page.locator("a", { hasText: "Personal Details" }).click();
+      await this.page.locator("a", { hasText: "Registration Summary" }).click();
+      await expect(this.page).toHaveTitle("Register Summary");
+
+      // Only the CURRENT REGISTRATIONS table has this id; history is separate.
+      const currentRosh = this.page
+        .locator("#registrationTable tbody tr")
+        .filter({ hasText: /\bRoSH\b/ });
+      if ((await currentRosh.count()) > 0) {
+        console.log(`${crn} already has a current RoSH registration`);
+        return;
+      }
+
+      await this.page.locator("input", { hasText: "Add Registration" }).click();
+      await expect(this.page).toHaveTitle("Add Registration");
+      await selectOption(
+        this.page,
+        "#Trust\\:selectOneMenu",
+        TEST_TEAM.provider,
+      );
+      await selectOption(
+        this.page,
+        "#RegisterType\\:selectOneMenu",
+        registerType,
+      );
+      await selectOption(this.page, "#Team\\:selectOneMenu");
+      await selectOption(this.page, "#Staff\\:selectOneMenu");
+      await this.page.locator("input", { hasText: "Save" }).click();
+      await expect(this.page).toHaveTitle("Register Summary");
+      await expect(
+        this.page.locator("#registrationTable tbody tr").filter({
+          hasText: registerType,
+        }),
+      ).toHaveCount(1);
+    });
   }
 
   private async recoverCrnByName(

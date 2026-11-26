@@ -55,6 +55,8 @@ export interface SupervisionPackageStatus {
   onSupervisionPackage: boolean;
   inFinalThird: boolean;
   inEarlyEngagement: boolean;
+  /** Custody status Recalled (C) on any sentence, and not unlawfully at large. */
+  recalled: boolean;
 }
 
 export const findSupervisionPackageStatus = async (
