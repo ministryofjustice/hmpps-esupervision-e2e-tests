@@ -149,6 +149,7 @@ export default class OasysAssessmentJourney {
       );
 
       await this.assessmentPage.selfAssessmentLink().click();
+      await expect(this.assessmentPage.markAsCompleteButton()).toBeVisible();
       const selfAssessmentRationale =
         this.assessmentPage.incompleteSelfAssessmentRationale();
       if (await selfAssessmentRationale.isVisible()) {
@@ -156,6 +157,9 @@ export default class OasysAssessmentJourney {
           "Not all self-assessment questions were completed during this test setup.",
         );
         await this.assessmentPage.saveButton().click();
+        await expect(selfAssessmentRationale).toHaveValue(
+          "Not all self-assessment questions were completed during this test setup.",
+        );
       }
       await this.assessmentPage.markAsCompleteButton().click();
       if (
@@ -182,9 +186,15 @@ export default class OasysAssessmentJourney {
     });
   }
 
+  /**
+   * Waits for a Tier A-G (or expectedTier), then for a supervision package.
+   * Set confirmed to also wait for the tier to stop being provisional:
+   * Supervision Packages gives no package for a provisional tier.
+   */
   async waitForCalculatedTier(
     crn: string,
     expectedTier?: ExistingTier,
+    { confirmed = false }: { confirmed?: boolean } = {},
   ): Promise<void> {
     test
       .info()
@@ -196,12 +206,17 @@ export default class OasysAssessmentJourney {
           async () => {
             const header = await getOffenderHeader(crn, token);
             const tier = header.tierScore?.charAt(0).toUpperCase() ?? "";
-            return expectedTier ? tier === expectedTier : /^[A-G]$/.test(tier);
+            const matches = expectedTier
+              ? tier === expectedTier
+              : /^[A-G]$/.test(tier);
+            return matches && (!confirmed || header.tierProvisional === false);
           },
           {
-            message: expectedTier
-              ? `${crn} should receive expected Tier ${expectedTier}`
-              : `${crn} should have a calculated Tier`,
+            message:
+              (expectedTier
+                ? `${crn} should receive expected Tier ${expectedTier}`
+                : `${crn} should have a calculated Tier`) +
+              (confirmed ? " that is not provisional" : ""),
             timeout: TIER_PROPAGATION_TIMEOUT,
           },
         )

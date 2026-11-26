@@ -6,12 +6,17 @@ export function finalThirdDates(now: DateTime = DateTime.now()) {
   }
   const today = now.setZone("Europe/London").startOf("day");
   const sentenceDate = today.minus({ months: 5 });
+  const expiryDate = sentenceDate.plus({ months: 6 }).minus({ days: 1 });
+  const lengthInDays = Math.round(
+    expiryDate.plus({ days: 1 }).diff(sentenceDate, "days").days,
+  );
 
   // Matches the six-month custodialAge25 profile: released after three months,
   // past the four-month final-third boundary, with about a month remaining.
   return {
     sentenceDate,
     releaseDate: sentenceDate.plus({ months: 3 }),
-    expiryDate: sentenceDate.plus({ months: 6 }).minus({ days: 1 }),
+    expiryDate,
+    finalThirdDate: expiryDate.minus({ days: Math.ceil(lengthInDays / 3) }),
   };
 }

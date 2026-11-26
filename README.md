@@ -109,34 +109,55 @@ check ins. Like other created test cases, the CRN is attached to the calling
 test and recorded in `created-crns.txt`: normal cleanup deletes passing cases
 and retains failing cases for investigation.
 
-In addition to the existing Delius, OASys and eSupervision API credentials,
-configure the optional setup variables in `.env.example`. `DPS_USERNAME`
-and `HMPPS_AUTH_CLIENT_ID` / `HMPPS_AUTH_CLIENT_SECRET` are used by the shared
-Prison API helpers. That integration client needs permission to create, book,
-update custody dates and release synthetic prisoners, plus:
+Put the following in the gitignored `.env.test` at the root of this checkout
+(loaded when `ENV=test`), or provide them as environment variables:
 
-- `PROBATION_API__CUSTODY_DATES__RW`
-- `PROBATION_API__SUPERVISION_PACKAGE__READ`
+```dotenv
+DELIUS_URL=https://ndelius.test.probation.service.justice.gov.uk
+DELIUS_USERNAME=
+DELIUS_PASSWORD=
+OASYS_URL=https://t2.oasys.service.justice.gov.uk/eor/f?p=100:101
+OASYS_USERNAME=
+OASYS_PASSWORD=
+AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk
+AUTH_CLIENT_ID=
+AUTH_CLIENT_SECRET=
+ESUPERVISION_API_URL=https://esupervision-api-dev.hmpps.service.justice.gov.uk
+```
+
+The Delius account must be able to create a custodial sentence, record release
+and maintain Throughcare dates. The OASys account must be able to complete and
+sign the assessment. Use the existing eSupervision test API client for reads.
+No DPS username, Prison API client or custody-key-date API access is required.
 
 The method validates that service URLs target dev/test before creating data.
-It reuses the shared Delius and Prison API helpers, creates a six-month
+It reuses the shared Delius helpers, creates a six-month
 `Adult Custody < 12m` sentence starting five months ago, records release after
-three months, requests derived key dates **only for its new NOMIS ID**, then
-completes our OASys/tier journey. The dev custody-date integration must have
-`calculate-key-dates-from-delius` enabled: the new prison booking need not
-have a matching Delius booking reference, so final-third derivation relies
-on the Delius sentence dates.
+three months, manually records the calculated final-third date using
+Throughcare's **T/C Dates** form, then completes OASys Layer 1. It then adds a
+**Low RoSH** registration in Delius if the case has no current RoSH
+registration, and waits for a tier that is not provisional.
 
-Success requires both Supervision Packages' current phase to be `FTHRD` and
-eSupervision to report `onSupervisionPackage: true, inFinalThird: true`.
+The registration matters because Tier marks a case provisional when it has no
+RoSH or MAPPA registration and its tier is below C. Supervision Packages
+treats a provisional tier as "not yet known" (`SPNK`), so the case reports
+`onSupervisionPackage: false` even while in its final third. OASys sign-and-lock
+should create the registration, but it does not always arrive. Adding it also
+triggers a Tier and Supervision Packages recalculation.
+It does not create or link a NOMIS record, call Prison API or request a
+custody-date refresh. It does not depend on the
+`calculate-key-dates-from-delius` feature flag.
+
+Success requires eSupervision to report
+`onSupervisionPackage: true, inFinalThird: true`; the latter reflects
+Supervision Packages' current `FTHRD` phase.
 Eligibility alone is not enough. The sentence expires about a month after creation.
-The combined setup still needs to be proven against dev services.
+The RoSH step was proven by hand on Y092038 and Y092039; the full combined
+setup has not yet been run end to end.
 
-The linked synthetic NOMIS record is retained; its booking
-is released when the custody setup finishes, including if that step fails.
 The method does not retry creation itself; any retry of the calling test creates
 a new CRN, just like the other setup journeys. Manual cleanup can delete a
-failed case's Delius/eSupervision records, but does not delete the NOMIS record.
+failed case's Delius/eSupervision records.
 Date-planning tests can be run without creating any data:
 
 ```bash

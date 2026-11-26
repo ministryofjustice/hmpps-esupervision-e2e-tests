@@ -6,13 +6,15 @@ import { finalThirdDates } from "./finalThirdDates";
 for (const date of ["2026-11-10", "2027-03-31", "2027-10-31", "2028-02-29"]) {
   test(`sentence is released, unexpired and in its final third on ${date}`, () => {
     const now = DateTime.fromISO(date, { zone: "Europe/London" });
-    const { sentenceDate, releaseDate, expiryDate } = finalThirdDates(now);
+    const { sentenceDate, releaseDate, expiryDate, finalThirdDate } =
+      finalThirdDates(now);
     const lengthInDays = Math.round(
       expiryDate.plus({ days: 1 }).diff(sentenceDate, "days").days,
     );
-    const finalThirdDate = expiryDate.minus({
-      days: Math.ceil(lengthInDays / 3),
-    });
+    assert.equal(
+      finalThirdDate.toISODate(),
+      expiryDate.minus({ days: Math.ceil(lengthInDays / 3) }).toISODate(),
+    );
 
     assert.ok(sentenceDate < releaseDate);
     assert.ok(releaseDate < finalThirdDate);
