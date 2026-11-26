@@ -46,11 +46,6 @@ import {
 
 test.afterEach(resetPilotCase);
 
-const requireCrn = (crn: string | undefined, envVar: string): string => {
-  test.skip(!crn, `Set ${envVar} to an existing CRN for this case`);
-  return crn!;
-};
-
 /** Opens setup from MPOP for a person ruled out on data: checks the card, then MOCI's page. */
 const openNotEligible = async (
   page: Page,
@@ -146,15 +141,13 @@ test.describe("Not eligible on data, before any question", () => {
 
   const existingCrnCases: {
     name: string;
-    envVar: string;
-    crn: () => string | undefined;
+    crn: () => string;
     ruleCode: string;
     reason: string;
     mociReason?: string | RegExp;
   }[] = [
     {
       name: "no active sentence",
-      envVar: "TEST_NO_ACTIVE_SENTENCE_CRN",
       crn: env.noActiveSentenceCrn,
       ruleCode: "HAS_ACTIVE_EVENT",
       reason: NO_ACTIVE_SENTENCE_REASON,
@@ -162,21 +155,18 @@ test.describe("Not eligible on data, before any question", () => {
     },
     {
       name: "in reset (contact suspended)",
-      envVar: "TEST_IN_RESET_CRN",
       crn: env.inResetCrn,
       ruleCode: "IS_CONTACT_SUSPENDED",
       reason: IN_RESET_REASON,
     },
     {
       name: "recalled to prison",
-      envVar: "TEST_RECALLED_CRN",
       crn: env.recalledCrn,
       ruleCode: "IS_RECALLED",
       reason: RECALLED_REASON,
     },
     {
       name: "provisional tier",
-      envVar: "TEST_PROVISIONAL_TIER_CRN",
       crn: env.provisionalTierCrn,
       ruleCode: "IS_TIER_PROVISIONAL",
       reason: PROVISIONAL_TIER_REASON,
@@ -184,7 +174,6 @@ test.describe("Not eligible on data, before any question", () => {
     },
     {
       name: "no practitioner (unallocated)",
-      envVar: "TEST_UNALLOCATED_CRN",
       crn: env.unallocatedCrn,
       ruleCode: "IS_PRACTITIONER_ASSIGNED",
       reason: UNALLOCATED_REASON,
@@ -193,14 +182,13 @@ test.describe("Not eligible on data, before any question", () => {
 
   for (const {
     name,
-    envVar,
     crn: crnFor,
     ruleCode,
     reason,
     mociReason,
   } of existingCrnCases) {
     test(`${name} is not eligible`, async ({ page }) => {
-      const crn = requireCrn(crnFor(), envVar);
+      const crn = crnFor();
       await assertEligibility(crn, null, { outcome: "INELIGIBLE", ruleCode });
 
       const moci = await openNotEligible(page, crn, reason);
@@ -343,7 +331,7 @@ test.describe("Not eligible because of an answer", () => {
   });
 });
 
-test.describe("Not eligible without a pilot practitioner (Tier A and C off an accredited programme)", () => {
+test.describe("Not eligible without a pilot practitioner (Tier A to C off an accredited programme)", () => {
   for (const tier of ["A", "C"] as const) {
     test(`Tier ${tier} is not eligible when the practitioner has never had a pilot case`, async ({
       page,
