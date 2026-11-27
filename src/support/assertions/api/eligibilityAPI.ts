@@ -7,15 +7,12 @@ import {
 } from "../../../api/eligibility";
 import { setPilotCase } from "../../../api/offender";
 import { env } from "../../../config/env";
-
 const NO_ANSWERS_TIER_C: EligibilityAnswers = {
   accreditedProgramme: null,
   deviceRestriction: false,
   youthSentence: null,
 };
-
 let pilotPractitioner: Promise<boolean> | undefined;
-
 /**
  * Whether the e2e practitioner has ever had a pilot case (someone in online check ins before
  * 1 October 2026), which decides Tier C, and Tier A/B off an accredited programme. Read from the
@@ -44,11 +41,9 @@ export const practitionerHasPilotCase = (): Promise<boolean> => {
   })();
   return pilotPractitioner;
 };
-
-// TEST_MANAGE_CRN's own pilot value before a test changed it, so the reset puts back what was there
-// rather than wiping a genuine pilot case. Undefined while nothing has been changed.
-let originalInPilot: boolean | undefined;
-
+// Whether a test has changed TEST_MANAGE_CRN's pilot value. It is never a real pilot case, so the
+// reset always puts back false: a run killed mid-test can't leave it a pilot case for the next run.
+let pilotCaseChanged = false;
 /**
  * Makes the e2e practitioner a pilot practitioner, or not, by marking TEST_MANAGE_CRN - an active
  * person of theirs that no test stops or restarts - as a pilot case through the API's dev-only test
@@ -63,7 +58,7 @@ export const requirePilotPractitioner = async (
   let unavailable = "";
   const pilotCase = await setPilotCase(crn, want, await getToken());
   if (pilotCase) {
-    originalInPilot ??= pilotCase.previousInPilot;
+    pilotCaseChanged = true;
     pilotPractitioner = undefined;
     if (
       pilotCase.practitionerId.toUpperCase() !==
@@ -85,15 +80,13 @@ export const requirePilotPractitioner = async (
       : `Needs the e2e practitioner never to have had a pilot case, and they have${unavailable || " another pilot case"}`,
   );
 };
-
-/** Puts TEST_MANAGE_CRN's pilot value back, if a test changed it. */
+/** Puts TEST_MANAGE_CRN back to not a pilot case, if a test changed it. */
 export const resetPilotCase = async (): Promise<void> => {
-  if (originalInPilot === undefined) return;
-  await setPilotCase(env.manageCrn(), originalInPilot, await getToken());
-  originalInPilot = undefined;
+  if (!pilotCaseChanged) return;
+  await setPilotCase(env.manageCrn(), false, await getToken());
+  pilotCaseChanged = false;
   pilotPractitioner = undefined;
 };
-
 /** Checks the API decides a CRN as a test expects, so a data change fails with the API's reason. */
 export const assertEligibility = async (
   crn: string,

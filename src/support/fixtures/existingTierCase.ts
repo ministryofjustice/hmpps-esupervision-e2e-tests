@@ -13,8 +13,8 @@ import { assertTier } from "../assertions/manage-online-checkins-ui/manageChecki
 export const openExistingTierSetup = async (
   page: Page,
   tier: ExistingTier,
+  crn: string = env.tierCrn(tier),
 ): Promise<{ crn: string; moci: ManageCheckinsPages }> => {
-  const crn = env.tierCrn(tier);
   await assertTierCrnPreconditions(crn, tier);
   const journey = new SetupOnlineCheckinsJourney(page);
   await journey.login();

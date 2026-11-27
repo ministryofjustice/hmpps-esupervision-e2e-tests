@@ -202,7 +202,7 @@ test.describe("Validation errors", () => {
 
   test.describe("Setup wizard - eligibility", () => {
     // The validation checks reuse existing CRNs.
-    // The no-tier case is covered in eligibility-outcomes.spec.ts, with a new person.
+    // The no-tier case is covered in eligibility-ineligible.spec.ts, with a new person.
 
     test("shows a validation error when no eligibility answer is selected", async ({
       page,

@@ -106,6 +106,14 @@ export default class OasysAssessmentJourney {
           await this.assessmentPage
             .firstSanctionAgeField()
             .fill(String(firstSanctionAge));
+          // Typing the age clears Date of first sanction, which OASys needs to sign
+          await this.assessmentPage.setDateOfFirstSanction(
+            OasysDateFormatter(
+              DateTime.fromJSDate(person.dob)
+                .plus({ years: firstSanctionAge })
+                .toJSDate(),
+            ),
+          );
         }
         if (currentOffenceSexuallyMotivated === false) {
           await this.assessmentPage
@@ -178,10 +186,6 @@ export default class OasysAssessmentJourney {
       await expect(this.assessmentPage.sentencePlanServiceHeading()).toHaveText(
         "Sentence Plan Service (Layer 1)",
       );
-      await this.assessmentPage.openSentencePlanServiceButton().click();
-      await this.assessmentPage.sentencePlanAgreementCheckbox().check();
-      await this.assessmentPage.confirmButton().click();
-      await this.assessmentPage.returnToOasysButton().click();
       await signAndlock(this.page);
     });
   }
