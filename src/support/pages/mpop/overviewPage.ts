@@ -59,11 +59,11 @@ export default class OverviewPage extends PractitionerBasePage {
   }
 
   async assertCheckinCardNotEligible(reason: string | RegExp): Promise<void> {
+    await expect(this.nextCheckinValue()).toContainText(reason);
     await expect(
       this.setupLink(),
       "Online check ins card should not offer setup to a person who is not eligible",
     ).toHaveCount(0);
-    await expect(this.nextCheckinValue()).toContainText(reason);
   }
 
   nextCheckinValue(): Locator {

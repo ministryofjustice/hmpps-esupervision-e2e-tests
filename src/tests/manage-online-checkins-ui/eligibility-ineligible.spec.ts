@@ -43,6 +43,7 @@ import {
   TIER_C_REASON,
   NOT_ON_PROGRAMME_REASON,
 } from "../../data/manage-online-checkins-ui/eligibilityReasons";
+
 test.skip(
   !env.eligibilityEndpoint(),
   "Needs MOCI's useEligibilityEndpoint flag on",
@@ -247,11 +248,17 @@ test.describe("Not eligible because of an answer", () => {
   test("Tier A: accredited programme with a youth sentence is not eligible without a pilot practitioner", async ({
     page,
   }) => {
-    const { crn, moci } = await openExistingTierSetup(
-      page,
-      "A",
-      env.noPilotTierCrn("A"),
+    const crn = env.noPilotTierCrn("A");
+    await assertEligibility(
+      crn,
+      {
+        accreditedProgramme: true,
+        deviceRestriction: false,
+        youthSentence: true,
+      },
+      { outcome: "INELIGIBLE", ruleCode: "ON_YOUTH_SENTENCE" },
     );
+    const { moci } = await openExistingTierSetup(page, "A", crn);
 
     await moci.eligibilityCheck.completePage([
       "accreditedProgramme",
@@ -327,11 +334,27 @@ test.describe("Not eligible without a pilot practitioner (Tier A to C off an acc
     test(`Tier ${tier} is not eligible when the practitioner has never had a pilot case`, async ({
       page,
     }) => {
-      const { crn, moci } = await openExistingTierSetup(
-        page,
-        tier,
-        env.noPilotTierCrn(tier),
+      const crn = env.noPilotTierCrn(tier);
+      // Fails with the API's rule if their practitioner has gained a pilot case
+      await assertEligibility(
+        crn,
+        tier === "C"
+          ? {
+              accreditedProgramme: null,
+              deviceRestriction: false,
+              youthSentence: null,
+            }
+          : {
+              accreditedProgramme: false,
+              deviceRestriction: false,
+              youthSentence: false,
+            },
+        {
+          outcome: "INELIGIBLE",
+          ruleCode: tier === "C" ? "IS_TIER_C" : "ON_ACCREDITED_PROGRAMME",
+        },
       );
+      const { moci } = await openExistingTierSetup(page, tier, crn);
 
       await moci.eligibilityCheck.completePage(["none"]);
 
@@ -350,11 +373,17 @@ test.describe("Not eligible without a pilot practitioner (Tier A to C off an acc
   test("Tier A: youth sentence alone is not eligible without a pilot practitioner", async ({
     page,
   }) => {
-    const { crn, moci } = await openExistingTierSetup(
-      page,
-      "A",
-      env.noPilotTierCrn("A"),
+    const crn = env.noPilotTierCrn("A");
+    await assertEligibility(
+      crn,
+      {
+        accreditedProgramme: false,
+        deviceRestriction: false,
+        youthSentence: true,
+      },
+      { outcome: "INELIGIBLE", ruleCode: "ON_ACCREDITED_PROGRAMME" },
     );
+    const { moci } = await openExistingTierSetup(page, "A", crn);
 
     await moci.eligibilityCheck.completePage(["youthSentence"]);
 
