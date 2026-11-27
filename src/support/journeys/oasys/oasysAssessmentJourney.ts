@@ -106,7 +106,7 @@ export default class OasysAssessmentJourney {
           await this.assessmentPage
             .firstSanctionAgeField()
             .fill(String(firstSanctionAge));
-          // Typing the age clears Date of first sanction, whish OASys needs to sign
+          // Typing the age clears Date of first sanction, which OASys needs to sign
           await this.assessmentPage.setDateOfFirstSanction(
             OasysDateFormatter(
               DateTime.fromJSDate(person.dob)
