@@ -67,6 +67,14 @@ export default class Layer1AssessmentPage {
     await field.pressSequentially(value, { delay: 100 });
   }
 
+  dateOfFirstSanctionField(): Locator {
+    return this.page.getByLabel("Date of first sanction");
+  }
+
+  async setDateOfFirstSanction(value: string): Promise<void> {
+    await this.setMaskedDate(this.dateOfFirstSanctionField(), value);
+  }
+
   predictorQuestionsLink(): Locator {
     return this.page.getByRole("link", { name: "Predictor Questions" });
   }
