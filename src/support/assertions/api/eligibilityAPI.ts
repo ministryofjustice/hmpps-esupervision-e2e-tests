@@ -7,15 +7,12 @@ import {
 } from "../../../api/eligibility";
 import { setPilotCase } from "../../../api/offender";
 import { env } from "../../../config/env";
- 
 const NO_ANSWERS_TIER_C: EligibilityAnswers = {
   accreditedProgramme: null,
   deviceRestriction: false,
   youthSentence: null,
 };
- 
 let pilotPractitioner: Promise<boolean> | undefined;
- 
 /**
  * Whether the e2e practitioner has ever had a pilot case (someone in online check ins before
  * 1 October 2026), which decides Tier C, and Tier A/B off an accredited programme. Read from the
@@ -44,7 +41,6 @@ export const practitionerHasPilotCase = (): Promise<boolean> => {
   })();
   return pilotPractitioner;
 };
- 
 // Whether a test has changed TEST_MANAGE_CRN's pilot value. It is never a real pilot case, so the
 // reset always puts back false: a run killed mid-test can't leave it a pilot case for the next run.
 let pilotCaseChanged = false;
@@ -84,7 +80,6 @@ export const requirePilotPractitioner = async (
       : `Needs the e2e practitioner never to have had a pilot case, and they have${unavailable || " another pilot case"}`,
   );
 };
- 
 /** Puts TEST_MANAGE_CRN back to not a pilot case, if a test changed it. */
 export const resetPilotCase = async (): Promise<void> => {
   if (!pilotCaseChanged) return;
